@@ -134,12 +134,19 @@ func (c *ClaudeCode) buildNestedClaudeMd(d *parser.Document, cfg *config.Config)
 	return op
 }
 
+// buildRuleFile 输出 .claude/rules/<name>.md
+//
+// Claude Code 官方仅支持 frontmatter `paths` 字段（glob 列表，触发条件加载）。
+// 见: https://docs.claude.com/en/docs/claude-code/memory.md
+//   - alwaysApply: 不支持（Cursor 私有字段）
+//   - applyTo: 不支持（GitHub Copilot 字段名）
+//   - globs: 不支持（Cursor / Continue.dev 字段名）
+//
+// description 写入 frontmatter 是 stdagent 的人类可读 metadata（Claude Code 忽略，
+// 但整个 markdown 文件含 frontmatter 都会被 inline 进 system prompt，所以不浪费）。
 func (c *ClaudeCode) buildRuleFile(d *parser.Document, cfg *config.Config) writer.FileOp {
 	var fm FmBuilder
-	fm.AddList("applyTo", EffectiveApplyTo(d, c.Name()))
-	if d.AlwaysApply {
-		fm.AddBool("alwaysApply", true)
-	}
+	fm.AddList("paths", EffectiveApplyTo(d, c.Name()))
 	fm.Add("description", d.Description)
 	opts := MakeOpts(cfg, c.Name(), d.Path, false)
 	return BuildMarkdownFile(
