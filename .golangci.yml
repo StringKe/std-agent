@@ -1,0 +1,54 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - revive
+    - misspell
+    - unconvert
+    - unparam
+    - gosec
+    - bodyclose
+    - errorlint
+    - nilerr
+    - prealloc
+  settings:
+    revive:
+      rules:
+        - name: var-naming
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+        - name: unused-parameter
+        - name: error-return
+        - name: error-naming
+        - name: if-return
+        - name: increment-decrement
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unreachable-code
+        - name: redefines-builtin-id
+    gosec:
+      excludes:
+        - G104
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+          - unparam
+
+# formatters 由独立的 mise fmt task 负责（gofumpt + goimports），
+# 不在 golangci-lint 内运行，避免 v2 内置 gofumpt 与本地 0.10 版本的细微差异
+# 触发 file-level "not properly formatted" 误报

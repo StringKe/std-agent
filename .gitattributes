@@ -1,0 +1,17 @@
+# 默认所有文本文件 checkout 为 LF，避免 Windows runner 上 go mod tidy
+# 与 git autocrlf 互相覆写换行符
+* text=auto eol=lf
+
+# Windows 原生脚本必须保留 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制类型
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.tar binary

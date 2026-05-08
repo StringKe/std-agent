@@ -1,0 +1,16 @@
+package writer
+
+// FileOp 描述单个文件的写盘动作
+type FileOp struct {
+	Path    string // 相对项目根
+	Content []byte
+	Marker  bool   // 是否注入 stdagent marker
+	Skip    bool   // 与现有文件一致时跳过
+	Reason  string // 诊断（dry-run 输出）
+}
+
+// Plan 是 target transformer 计算出的写入计划
+type Plan struct {
+	Target string
+	Files  []FileOp
+}

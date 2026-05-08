@@ -1,0 +1,389 @@
+package runner
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
+
+	"std-ai/internal/budget"
+	"std-ai/internal/config"
+	"std-ai/internal/parser"
+	"std-ai/internal/source"
+	"std-ai/internal/state"
+	"std-ai/internal/transformer"
+	"std-ai/internal/writer"
+)
+
+// Options 控制 sync 行为
+type Options struct {
+	ProjectRoot string
+	ConfigPath  string
+	DryRun      bool
+	NoPull      bool
+	NoBackup    bool
+	Strict      bool
+	Targets     []string
+	Version     string
+}
+
+// Result 是 sync 报告
+type Result struct {
+	Plans       []*writer.Plan
+	Written     int
+	Skipped     int
+	BackupDir   string
+	SourceFiles int
+	Docs        int
+	Warnings    []string
+}
+
+// Sync 执行完整同步流
+func Sync(opts Options) (*Result, error) {
+	transformer.SetVersion(opts.Version)
+
+	cfg, err := config.Load(opts.ConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
+	}
+	if opts.DryRun {
+		cfg.DryRun = true
+	}
+
+	res := &Result{}
+
+	// 1. pull (如启用)
+	if !opts.NoPull && cfg.AutoPull {
+		for _, name := range sortedKeys(cfg.Sources) {
+			src := cfg.Sources[name]
+			if !src.Enabled {
+				continue
+			}
+			cacheDir := filepath.Join(opts.ProjectRoot, ".stdai/cache", name)
+			g := &source.Git{
+				NameValue: name,
+				URL:       src.URL,
+				Branch:    src.Branch,
+				CacheDir:  cacheDir,
+				Paths:     src.Paths,
+				Auth:      src.Auth,
+				TokenEnv:  src.TokenEnv,
+			}
+			if err := g.Pull(); err != nil {
+				if opts.Strict {
+					return nil, fmt.Errorf("pull %s: %w", name, err)
+				}
+				res.Warnings = append(res.Warnings, fmt.Sprintf("pull %s: %v", name, err))
+			}
+		}
+	}
+
+	// 2. collect docs (local + sources)
+	var allFiles []source.File
+
+	localRoot := filepath.Join(opts.ProjectRoot, ".stdai/standards")
+	localFiles, err := source.NewLocal(localRoot).Files()
+	if err != nil {
+		return nil, fmt.Errorf("read local: %w", err)
+	}
+	allFiles = append(allFiles, localFiles...)
+
+	for _, name := range sortedKeys(cfg.Sources) {
+		src := cfg.Sources[name]
+		if !src.Enabled {
+			continue
+		}
+		g := &source.Git{
+			NameValue: name,
+			CacheDir:  filepath.Join(opts.ProjectRoot, ".stdai/cache", name),
+			Paths:     src.Paths,
+		}
+		files, err := g.Files()
+		if err != nil {
+			if opts.Strict {
+				return nil, err
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("source %s: %v", name, err))
+			continue
+		}
+		allFiles = append(allFiles, files...)
+	}
+	// 2.5 .stdaiignore 过滤（gitignore 风格 glob，支持 doublestar `**`）
+	ignorePath := filepath.Join(opts.ProjectRoot, ".stdaiignore")
+	ignore, ierr := source.LoadIgnoreFile(ignorePath)
+	if ierr != nil {
+		if opts.Strict {
+			return nil, fmt.Errorf("load .stdaiignore: %w", ierr)
+		}
+		res.Warnings = append(res.Warnings, fmt.Sprintf(".stdaiignore: %v", ierr))
+	} else if len(ignore.Patterns()) > 0 {
+		filtered := make([]source.File, 0, len(allFiles))
+		ignored := 0
+		for _, f := range allFiles {
+			if ignore.Match(f.Path) {
+				ignored++
+				continue
+			}
+			filtered = append(filtered, f)
+		}
+		allFiles = filtered
+		if ignored > 0 {
+			res.Warnings = append(res.Warnings, fmt.Sprintf("[ignore] skipped %d files via .stdaiignore", ignored))
+		}
+	}
+
+	res.SourceFiles = len(allFiles)
+
+	// 3. parse
+	//   - 仅 .md / .markdown 文件参与 parse
+	//   - skills/<name>/SKILL.md 是 SKILL package 主文件
+	//   - skills/<name>/<subdir>/*.md（references / templates 等）是辅助文件，
+	//     不 parse 为 Document，由 collectSkillPackageFiles 关联到主 SKILL Document
+	docs := make([]*parser.Document, 0, len(allFiles))
+	for _, f := range allFiles {
+		if !isMarkdownPath(f.Path) {
+			continue
+		}
+		if isSkillSubdirMarkdown(f.Path) {
+			continue
+		}
+		d, err := parser.Parse(f.Path, f.Raw)
+		if err != nil {
+			if opts.Strict {
+				return nil, err
+			}
+			res.Warnings = append(res.Warnings, err.Error())
+			continue
+		}
+		docs = append(docs, d)
+	}
+	res.Docs = len(docs)
+
+	// 3.1 收集 SKILL package 辅助文件（scripts/ references/ assets/ 等）
+	collectSkillPackageFiles(docs, allFiles)
+
+	// 3.2 budget 检查：每个 doc body 字节 + 全部 rules 累加 vs target 上限
+	for _, d := range docs {
+		for _, msg := range budget.CheckDocument(d) {
+			res.Warnings = append(res.Warnings, "[budget] "+msg)
+		}
+	}
+	for _, msg := range budget.CheckTotalRules(docs) {
+		res.Warnings = append(res.Warnings, "[budget] "+msg)
+	}
+
+	// 3.5. load mcp.json (optional)
+	mcpPath := filepath.Join(opts.ProjectRoot, ".stdai/standards/mcp.json")
+	if data, rerr := os.ReadFile(mcpPath); rerr == nil { //nolint:gosec
+		var mcp config.MCPConfig
+		if jerr := json.Unmarshal(data, &mcp); jerr != nil {
+			if opts.Strict {
+				return nil, fmt.Errorf("parse mcp.json: %w", jerr)
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("mcp.json: %v", jerr))
+		} else if len(mcp.Servers) > 0 {
+			cfg.MCP = &mcp
+		}
+	} else if !errors.Is(rerr, fs.ErrNotExist) {
+		if opts.Strict {
+			return nil, fmt.Errorf("read mcp.json: %w", rerr)
+		}
+		res.Warnings = append(res.Warnings, fmt.Sprintf("mcp.json: %v", rerr))
+	}
+
+	// 3.6. load hooks.json (optional)
+	hooksPath := filepath.Join(opts.ProjectRoot, ".stdai/standards/hooks.json")
+	if data, rerr := os.ReadFile(hooksPath); rerr == nil { //nolint:gosec
+		var hooks config.HooksConfig
+		if jerr := json.Unmarshal(data, &hooks); jerr != nil {
+			if opts.Strict {
+				return nil, fmt.Errorf("parse hooks.json: %w", jerr)
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("hooks.json: %v", jerr))
+		} else if len(hooks.Hooks) > 0 {
+			cfg.Hooks = &hooks
+		}
+	} else if !errors.Is(rerr, fs.ErrNotExist) {
+		if opts.Strict {
+			return nil, fmt.Errorf("read hooks.json: %w", rerr)
+		}
+		res.Warnings = append(res.Warnings, fmt.Sprintf("hooks.json: %v", rerr))
+	}
+
+	// 4. plan + apply per target
+	enabledTargets := opts.Targets
+	if len(enabledTargets) == 0 {
+		for _, name := range sortedKeys(cfg.Targets) {
+			if cfg.Targets[name].Enabled {
+				enabledTargets = append(enabledTargets, name)
+			}
+		}
+	} else {
+		sort.Strings(enabledTargets)
+	}
+
+	st, _ := state.Load(filepath.Join(opts.ProjectRoot, state.StateFile))
+	if st.Targets == nil {
+		st.Targets = map[string]state.Target{}
+	}
+
+	w := writer.NewWriter(opts.ProjectRoot, cfg.DryRun)
+	bk := writer.NewBackup(filepath.Join(opts.ProjectRoot, ".stdai/backups"), cfg.BackupKeep)
+
+	for _, name := range enabledTargets {
+		tr, ok := transformer.Get(name)
+		if !ok {
+			if opts.Strict {
+				return nil, fmt.Errorf("unknown target %q", name)
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("unknown target %q", name))
+			continue
+		}
+		plan, err := tr.Plan(docs, cfg)
+		if err != nil {
+			if opts.Strict {
+				return nil, fmt.Errorf("transform %s: %w", name, err)
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("transform %s: %v", name, err))
+			continue
+		}
+		res.Plans = append(res.Plans, plan)
+
+		// 收集 transformer 标记的 WARN reason（如 copilot/opencode SkillFiles 被忽略）
+		for _, f := range plan.Files {
+			if f.Skip || f.Reason == "" {
+				continue
+			}
+			if strings.HasPrefix(f.Reason, "WARN") {
+				res.Warnings = append(res.Warnings, fmt.Sprintf("%s/%s: %s", name, f.Path, f.Reason))
+			}
+		}
+
+		if !opts.NoBackup && cfg.Backup && !cfg.DryRun {
+			paths := make([]string, 0, len(plan.Files))
+			for _, f := range plan.Files {
+				paths = append(paths, f.Path)
+			}
+			dir, berr := bk.Snapshot(opts.ProjectRoot, paths)
+			if berr == nil && dir != "" {
+				res.BackupDir = dir
+			}
+		}
+
+		written, skipped, aerr := w.Apply(plan)
+		if aerr != nil {
+			return nil, fmt.Errorf("apply %s: %w", name, aerr)
+		}
+		res.Written += written
+		res.Skipped += skipped
+
+		out := map[string]string{}
+		for _, f := range plan.Files {
+			if f.Skip {
+				continue
+			}
+			out[f.Path] = writer.Checksum(f.Content)
+		}
+		st.Targets[name] = state.Target{
+			LastSync: time.Now().UTC(),
+			Outputs:  out,
+		}
+	}
+
+	st.Version = "1.0"
+	st.LastSync = time.Now().UTC()
+	if !cfg.DryRun {
+		_ = state.Save(filepath.Join(opts.ProjectRoot, state.StateFile), st)
+	}
+
+	return res, nil
+}
+
+// collectSkillPackageFiles 把每个 type=skills 的 Document 关联其 skill 目录下的辅助文件
+//
+// SKILL.md path 形如 "skills/code-review/SKILL.md"；同目录下其他文件（scripts/lint.sh、
+// references/checklist.md、assets/template.md 等）作为 SkillFile 附到 Document.SkillFiles，
+// path 字段是相对 skill 目录的相对路径。
+//
+// 仅扫已 parse 的 source.File（即 .md / .markdown）。非 markdown 辅助文件需要 source 层
+// 扩展支持（v1.3 待办）。
+func collectSkillPackageFiles(docs []*parser.Document, allFiles []source.File) {
+	// 建立 skill 根目录（"skills/<name>/"）-> Document 的索引
+	skillRoots := map[string]*parser.Document{}
+	for _, d := range docs {
+		if d.Type != parser.TypeSkills {
+			continue
+		}
+		// SKILL.md 路径必须以 SKILL.md 结尾才视为 package 主文件
+		dir, base := splitSkillPath(d.Path)
+		if base != "SKILL.md" {
+			continue
+		}
+		skillRoots[dir+"/"] = d
+	}
+	if len(skillRoots) == 0 {
+		return
+	}
+
+	// 扫所有 source.File，按 skill 根目录前缀归类
+	for _, f := range allFiles {
+		for root, doc := range skillRoots {
+			if !strings.HasPrefix(f.Path, root) {
+				continue
+			}
+			rel := strings.TrimPrefix(f.Path, root)
+			// 跳过 SKILL.md 本身（由 parser 已处理）
+			if rel == "SKILL.md" {
+				continue
+			}
+			doc.SkillFiles = append(doc.SkillFiles, parser.SkillFile{
+				Path: rel,
+				Raw:  f.Raw,
+			})
+			break
+		}
+	}
+}
+
+// splitSkillPath 把 "skills/code-review/SKILL.md" 拆为 ("skills/code-review", "SKILL.md")
+func splitSkillPath(p string) (string, string) {
+	idx := strings.LastIndex(p, "/")
+	if idx < 0 {
+		return "", p
+	}
+	return p[:idx], p[idx+1:]
+}
+
+// isMarkdownPath 判断 path 后缀是否为 markdown
+func isMarkdownPath(p string) bool {
+	lower := strings.ToLower(p)
+	return strings.HasSuffix(lower, ".md") || strings.HasSuffix(lower, ".markdown")
+}
+
+// isSkillSubdirMarkdown 判断是否为 SKILL package 子目录里的 markdown 辅助文件
+//
+//	"skills/code-review/SKILL.md"               -> false（顶层 SKILL.md）
+//	"skills/code-review/references/check.md"    -> true（子目录辅助）
+//	"skills/code-review/scripts/setup.md"       -> true
+//	"rules/style.md"                            -> false（非 skills/ 子树）
+func isSkillSubdirMarkdown(p string) bool {
+	if !strings.HasPrefix(p, "skills/") {
+		return false
+	}
+	// skills/<n>/SKILL.md 共 3 段；子目录辅助路径段数 >= 4
+	return strings.Count(p, "/") >= 3
+}
+
+func sortedKeys[V any](m map[string]V) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}

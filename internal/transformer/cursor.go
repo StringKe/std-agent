@@ -1,0 +1,106 @@
+package transformer
+
+import (
+	"encoding/json"
+	"strings"
+
+	"std-ai/internal/config"
+	"std-ai/internal/parser"
+	"std-ai/internal/writer"
+)
+
+func init() {
+	Register(&Cursor{})
+}
+
+// Cursor 是 Cursor IDE transformer
+type Cursor struct{}
+
+// Name 返回 "cursor"
+func (c *Cursor) Name() string { return "cursor" }
+
+// Plan 计算输出
+func (c *Cursor) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan, error) {
+	plan := &writer.Plan{Target: c.Name()}
+
+	if cfg.MCP != nil && len(cfg.MCP.Servers) > 0 {
+		plan.Files = append(plan.Files, c.buildMCPJSON(cfg.MCP))
+	}
+
+	docs = FilterDocs(docs, c.Name())
+	if len(docs) == 0 {
+		return plan, nil
+	}
+	rules := FilterByType(docs, parser.TypeRules)
+	skills := FilterByType(docs, parser.TypeSkills)
+	commands := FilterByType(docs, parser.TypeCommands)
+	SortDocs(rules)
+	SortDocs(skills)
+	SortDocs(commands)
+
+	for _, d := range rules {
+		plan.Files = append(plan.Files, c.buildRule(d, cfg))
+	}
+	for _, d := range skills {
+		plan.Files = append(plan.Files, c.buildSkill(d, cfg)...)
+	}
+	for _, d := range commands {
+		plan.Files = append(plan.Files, c.buildCommand(d, cfg))
+	}
+	return plan, nil
+}
+
+func (c *Cursor) buildMCPJSON(mcp *config.MCPConfig) writer.FileOp {
+	wrapper := struct {
+		MCPServers map[string]config.MCPServer `json:"mcpServers"`
+	}{MCPServers: mcp.Servers}
+	body, _ := json.MarshalIndent(wrapper, "", "  ")
+	body = append(body, '\n')
+	return writer.FileOp{Path: ".cursor/mcp.json", Content: body}
+}
+
+func (c *Cursor) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
+	var fm FmBuilder
+	if d.AlwaysApply {
+		fm.AddBool("alwaysApply", true)
+	}
+	if len(d.ApplyTo) > 0 {
+		// Cursor globs 接受逗号分隔字符串
+		fm.Add("globs", strings.Join(d.ApplyTo, ","))
+	}
+	fm.Add("description", d.Description)
+	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	return BuildMarkdownFile(
+		FilePath(".cursor/rules", d.Name, ".mdc"),
+		fm.String(), d.Body, opts,
+	)
+}
+
+func (c *Cursor) buildSkill(d *parser.Document, cfg *config.Config) []writer.FileOp {
+	skillDir := SkillDir(".cursor/skills", d.Name)
+	var fm FmBuilder
+	fm.Add("name", d.Name)
+	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
+	fm.AddList("paths", d.ApplyTo)
+	if d.DisableModelInvocation {
+		fm.AddBool("disable-model-invocation", true)
+	}
+	fm.Add("license", d.License)
+	fm.Add("compatibility", d.Compatibility)
+	fm.AddMap("metadata", d.Metadata)
+	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	skillMd := BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
+	return BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
+}
+
+func (c *Cursor) buildCommand(d *parser.Document, cfg *config.Config) writer.FileOp {
+	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	body := d.Body
+	if d.Description != "" {
+		body = d.Description + "\n\n" + d.Body
+	}
+	return BuildMarkdownFile(
+		FilePath(".cursor/commands", d.Name, ".md"),
+		"", body, opts,
+	)
+}

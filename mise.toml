@@ -1,0 +1,50 @@
+[tools]
+go = "1.26"
+golangci-lint = "latest"
+"go:mvdan.cc/gofumpt" = "latest"
+
+[env]
+GOPATH = "{{config_root}}/.go"
+GOBIN = "{{config_root}}/.go/bin"
+_.path = ["{{config_root}}/.go/bin", "{{config_root}}/bin"]
+
+[tasks.fmt]
+description = "格式化代码 (gofumpt + goimports，独立运行)"
+run = """
+gofumpt -w -extra .
+go run golang.org/x/tools/cmd/goimports@latest -local std-ai -w .
+"""
+
+[tasks.lint]
+description = "运行 golangci-lint"
+run = "golangci-lint run ./..."
+
+[tasks."lint:fix"]
+description = "运行 golangci-lint 并自动修复"
+run = "golangci-lint run --fix ./..."
+
+[tasks.test]
+description = "运行单元测试 (race + coverage)"
+run = "go test -race -cover -coverprofile=coverage.out ./..."
+
+[tasks."test:cover"]
+description = "生成 HTML 覆盖率报告"
+depends = ["test"]
+run = "go tool cover -html=coverage.out -o coverage.html"
+
+[tasks.tidy]
+description = "整理 go.mod"
+run = "go mod tidy"
+
+[tasks.build]
+description = "构建二进制 bin/stdagent (静态链接)"
+env = { CGO_ENABLED = "0" }
+run = "go build -trimpath -ldflags='-s -w' -o bin/stdagent ./cmd/stdagent"
+
+[tasks.check]
+description = "fmt + lint + test 一键检查"
+depends = ["fmt", "lint", "test"]
+
+[tasks.run]
+description = "运行 stdagent"
+run = "go run ./cmd/stdagent"

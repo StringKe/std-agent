@@ -1,0 +1,26 @@
+# 构建产物
+bin/
+*.exe
+*.test
+*.out
+
+# 覆盖率
+coverage.out
+coverage.html
+
+# goreleaser 产物
+dist/
+
+# mise 本地覆盖
+.mise.local.toml
+
+# Go 工作区
+go.work.sum
+
+# 本地缓存
+.go/
+
+# IDE / 系统
+.idea/
+.vscode/
+.DS_Store

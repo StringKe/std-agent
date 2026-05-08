@@ -1,0 +1,45 @@
+# git-cliff 配置（由 release.yml 调用）
+# 文档: https://git-cliff.org/docs/configuration
+# 主要修复点: 输出不再含 commit author email，改为短 sha 链接 + scope。
+
+[changelog]
+header = ""
+body = """
+{% if version -%}
+## {{ version | trim_start_matches(pat="v") }} - {{ timestamp | date(format="%Y-%m-%d") }}
+{%- else -%}
+## Unreleased
+{%- endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}\
+- {{ commit.message | upper_first }}{% if commit.scope %} (`{{ commit.scope }}`){% endif %} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/StringKe/std-ai/commit/{{ commit.id }}))
+{% endfor %}\
+{% endfor %}
+"""
+trim = true
+footer = ""
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+commit_parsers = [
+    { message = "^feat", group = "新增" },
+    { message = "^fix", group = "修复" },
+    { message = "^perf", group = "性能" },
+    { message = "^refactor", group = "重构" },
+    { message = "^revert", group = "撤销" },
+    { message = "^docs", group = "文档" },
+    { message = "^test", group = "测试" },
+    { message = "^build", group = "构建" },
+    { message = "^ci", group = "CI" },
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^chore\\(deps\\)", group = "依赖" },
+    { message = "^chore", group = "其他" },
+    { message = "^style", skip = true },
+    { message = "^Merge", skip = true },
+]
+filter_commits = true
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+"
+sort_commits = "newest"
