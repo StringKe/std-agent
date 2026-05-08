@@ -12,8 +12,6 @@ stdagent <command> [flags]
   status         显示 targets 状态与 drift
   clean          清空根目录与平台目录的生成文件
   budget         检查 rule / skill / command body 字符与 token 估算
-  apply-hooks    把 stdagent-hooks.json merge 到目标工具实际配置
-  install-hook   安装 git pre-commit 钩子调 status --strict
   upgrade        自我升级到最新版本
   version        版本与构建信息
   help           帮助
@@ -208,54 +206,6 @@ stdagent intro | llm "现在请帮我把项目里的 CLAUDE.md 迁移成 std-age
 # 团队 AI 助手 system prompt
 stdagent intro --json | jq -r .prompt
 ```
-
-## `stdagent apply-hooks`
-
-```
-stdagent apply-hooks [--target claude-code|codex]
-```
-
-把 sync 写入的中间文件 `.claude/stdagent-hooks.json` 或 `.codex/stdagent-hooks.json` merge 到目标工具实际加载的配置。
-
-设计动机：stdagent 不直接覆盖 `.claude/settings.json`（避免破坏用户其他设置如 `model`、`permissions`），sync 阶段只写中间文件，落盘 settings 由本命令显式触发。
-
-| target | 行为 |
-|---|---|
-| `claude-code`（默认） | 读 `.claude/stdagent-hooks.json` 与现有 `.claude/settings.json`，merge `hooks` 字段（保留其他 key），原子写回 |
-| `codex` | UNKNOWN：codex hooks schema 公开文档不完整，此模式仅打印提示，不写 `.codex/config.toml`。v1.5 计划自动适配 |
-
-源 hooks 由 `.stdai/standards/hooks.json` 在 sync 期间加载：
-
-```json
-{
-  "version": "1.0",
-  "hooks": {
-    "PreToolUse": [
-      {"matcher": "Bash", "type": "command", "command": "echo running bash", "timeout": 30}
-    ]
-  }
-}
-```
-
-退出码：0 成功；1 中间文件不存在（提示先 `stdagent sync`）；2 不支持的 target。
-
-## `stdagent install-hook`
-
-```
-stdagent install-hook [--force]
-```
-
-在 `.git/hooks/pre-commit` 写入：
-
-```sh
-#!/bin/sh
-set -e
-exec stdagent status --strict
-```
-
-非 git 仓库报错；已存在 hook 需 `--force` 覆盖。
-
-退出码：0 成功；1 非 git 仓库或 hook 已存在（无 --force）。
 
 ## `stdagent upgrade`
 

@@ -55,7 +55,7 @@ func (c *Cline) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp 
 		prefix = 900
 	}
 	var fm FmBuilder
-	fm.AddList("paths", d.ApplyTo)
+	fm.AddList("paths", EffectiveApplyTo(d, c.Name()))
 	opts := MakeOpts(cfg, c.Name(), d.Path, false)
 	return BuildMarkdownFile(
 		path.Join(".clinerules", fmt.Sprintf("%03d-%s.md", prefix, d.Name)),

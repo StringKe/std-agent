@@ -9,6 +9,10 @@ const (
 	TypeSkills     DocType = "skills"
 	TypeCommands   DocType = "commands"
 	TypeReferences DocType = "references"
+	// TypeSubagents 是 Claude Code 原生的 subagent 定义（spawnable 子代理，独立 context）。
+	// 输出到 .claude/agents/<name>.md，frontmatter 含 name / description / model / tools。
+	// 与 SKILL（按需触发能力包，main session 内联使用）区别：subagent 是隔离 context 的子进程。
+	TypeSubagents DocType = "subagents"
 )
 
 // Priority 控制 rule 在拼接输出中的相对位置
@@ -32,17 +36,31 @@ type SkillFile struct {
 
 // Document 是解析后的 std 源文件抽象表达
 type Document struct {
-	Path                   string
-	Type                   DocType
-	Name                   string
-	Version                string
-	Description            string
-	Targets                []string
-	ExcludeTargets         []string
-	Priority               Priority
-	Tags                   []string
-	ApplyTo                []string
-	AlwaysApply            bool
+	Path           string
+	Type           DocType
+	Name           string
+	Version        string
+	Description    string
+	Targets        []string
+	ExcludeTargets []string
+	Priority       Priority
+	Tags           []string
+	ApplyTo        []string
+	AlwaysApply    bool
+	// Root 标识此 rule 是根文件（CLAUDE.md / AGENTS.md / GEMINI.md / .github/copilot-instructions.md）的项目总结主体。
+	// transformer 把 Body 写到根文件头部，再由 stdagent 自动追加 rule manifest 段（指向其他 nonRoot rule）。
+	// root rule 本身不再 fan-out 到 .claude/rules/<n>.md（它已是根文件主体）。
+	// 用户写 root rule 时**不应**在 body 里手写 rule 索引清单（stdagent 自动追加）。
+	Root bool
+	// NestedPath 非空时，本 rule 是嵌套子目录的说明文档（.stdai/standards/nested/<path>/root.md），
+	// transformer 把 Body 写到 <NestedPath>/CLAUDE.md 与 <NestedPath>/AGENTS.md，**不**追加 manifest（嵌套位置只是说明文档）。
+	// AI 在该子目录工作时 Claude Code 自动叠加加载顶级 + 嵌套 CLAUDE.md。
+	NestedPath string
+	// TargetPaths 是 target 专属 paths 覆盖（rulesync 风格嵌套字段）。
+	// key 是 rulesync target 名（claudecode / codexcli / cursor / copilot / 等），
+	// value 是该 target 用的 glob 列表，覆盖全局 ApplyTo。
+	// transformer 通过 RulesyncTargetName 映射决定优先级。
+	TargetPaths            map[string][]string
 	AllowedTools           []string
 	ArgumentHint           string
 	Model                  string
@@ -72,7 +90,7 @@ type Document struct {
 // IsValidType 检查 type 在四种枚举内
 func IsValidType(t string) bool {
 	switch DocType(t) {
-	case TypeRules, TypeSkills, TypeCommands, TypeReferences:
+	case TypeRules, TypeSkills, TypeCommands, TypeReferences, TypeSubagents:
 		return true
 	}
 	return false

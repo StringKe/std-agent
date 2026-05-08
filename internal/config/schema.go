@@ -22,9 +22,6 @@ type Config struct {
 
 	// MCP 是 runtime 注入的 MCP 配置（来自 .stdai/standards/mcp.json）
 	MCP *MCPConfig `toml:"-"`
-
-	// Hooks 是 runtime 注入的 hooks 配置（来自 .stdai/standards/hooks.json）
-	Hooks *HooksConfig `toml:"-"`
 }
 
 // TargetConfig 是单个 target 的开关

@@ -24,11 +24,16 @@ func TestInitCommandCreatesStdaiTree(t *testing.T) {
 		".stdai/standards/rules/.gitkeep",
 		".stdai/standards/skills/.gitkeep",
 		".stdai/standards/commands/.gitkeep",
+		".stdai/standards/subagents/.gitkeep",
 		".stdai/standards/references/.gitkeep",
 		".stdai/cache/.gitkeep",
 		".stdai/backups/.gitkeep",
-		".stdai/standards/rules/example.md",
-		".stdai/standards/skills/code-review/SKILL.md",
+		".stdai/standards/root.md",
+		".stdai/help/what-is-rules.md",
+		".stdai/help/what-is-skills.md",
+		".stdai/help/what-is-commands.md",
+		".stdai/help/what-is-subagents.md",
+		".stdai/help/stdagent-workflow.md",
 	} {
 		full := filepath.Join(tmp, want)
 		if _, err := os.Stat(full); err != nil {

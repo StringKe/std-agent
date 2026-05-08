@@ -19,8 +19,8 @@
 - **唯一の真実の源** — `rules` / `skills` / `commands` / `references` を YAML frontmatter + Markdown で一度だけ記述。
 - **11 個のターゲット** — Claude Code、Codex、Cursor、GitHub Copilot、Windsurf、Gemini CLI、Aider、Cline、OpenCode、Continue.dev、Antigravity。
 - **ロックインなし** — writer は許可リスト内の少数のパスにのみ触れます。sync ごとに自動バックアップ、`clean` ですべて元に戻せます。
-- **drift 検出** — `status` で外部から変更されたファイルを表示、`fix` で再適用、`install-hook` で drift があるコミットをブロック。
-- **MCP + hooks** — 単一ファイル `.stdai/standards/mcp.json` を `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` に展開。単一ファイル `hooks.json` から `stdagent-hooks` 中間ファイルを生成し、`apply-hooks` が `.claude/settings.json` へ非破壊的にマージ。
+- **drift 検出** — `status` で外部から変更されたファイルを表示、`fix` で再適用。
+- **MCP** — 単一ファイル `.stdai/standards/mcp.json` を `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` に展開。
 - **monorepo 対応** — `cwd` から上方向に設定を探索。任意のサブディレクトリから実行可能。
 - **自己アップグレード** — `stdagent upgrade` が GitHub Releases から sha256 検証付きでアーカイブを取得し、原子的に置換。
 
@@ -68,9 +68,6 @@ stdagent sync
 # drift の確認 / 修正
 stdagent status
 stdagent fix
-
-# 任意：drift があればコミットをブロック
-stdagent install-hook
 ```
 
 ## コマンド一覧
@@ -84,8 +81,6 @@ stdagent install-hook
 | `stdagent status` | 各 target の drift と最終同期時刻 |
 | `stdagent clean` | 生成ファイルを削除（`.stdai/` は保持） |
 | `stdagent budget` | LLM コンテキスト予算チェック（文字数 + token 推定） |
-| `stdagent apply-hooks` | `stdagent-hooks.json` を target の実設定へマージ |
-| `stdagent install-hook` | `status --strict` を呼ぶ git pre-commit フックをインストール |
 | `stdagent intro` | 既存設定を std 形式に変換させるための AI 助手向けプロンプトを出力 |
 | `stdagent upgrade` | GitHub Releases から自己アップグレード（sha256 + 原子置換） |
 | `stdagent version` | ビルド情報 |
@@ -120,19 +115,6 @@ MCP サーバ（`.stdai/standards/mcp.json`）：
   "servers": {
     "github": { "type": "stdio", "command": "gh", "args": ["api"] },
     "linear": { "type": "http", "url": "https://mcp.linear.app/sse" }
-  }
-}
-```
-
-Hooks（`.stdai/standards/hooks.json`）— `.claude/stdagent-hooks.json` 中間ファイルとして書かれ、`stdagent apply-hooks` で実 settings へマージ：
-
-```json
-{
-  "version": "1.0",
-  "hooks": {
-    "PreToolUse": [
-      {"matcher": "Bash", "type": "command", "command": "echo running bash"}
-    ]
   }
 }
 ```
@@ -182,8 +164,7 @@ your-project/
 │   │   ├── skills/
 │   │   ├── commands/
 │   │   ├── references/
-│   │   ├── mcp.json           MCP サーバ（任意）
-│   │   └── hooks.json         hooks 定義（任意；apply-hooks でマージ）
+│   │   └── mcp.json           MCP サーバ（任意）
 │   ├── cache/                 git ソースキャッシュ
 │   ├── backups/               sync ごとに自動スナップショット
 │   └── state.json             ランタイム状態

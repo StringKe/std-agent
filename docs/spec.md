@@ -574,43 +574,6 @@ tokenization 经验值约 2-4 字节/token，超 8000 字符约 2000-4000 tokens
 
 `stdagent init` 默认生成模板（含示例注释），用户按需取消注释。
 
-### 4.12 hooks 转换
-
-源：`.stdai/standards/hooks.json`（顶层 `version` + `hooks` 两字段）。runner 在 parse 后自动加载注入到 `Config.Hooks`，由各 transformer 决定是否输出。
-
-```json
-{
-  "version": "1.0",
-  "hooks": {
-    "PreToolUse": [
-      {"matcher": "Bash", "type": "command", "command": "echo pre", "timeout": 30}
-    ],
-    "PostToolUse": []
-  }
-}
-```
-
-输出策略：
-
-| 目标 | 中间文件 | 落地方式 |
-|---|---|---|
-| claude-code | `.claude/stdagent-hooks.json` | `stdagent apply-hooks --target claude-code` 把 `hooks` 字段 merge 到 `.claude/settings.json`（保留其他 key） |
-| codex | `.codex/stdagent-hooks.json` | UNKNOWN：codex hooks schema 公开文档不完整。中间文件作为 user 手动迁移参考；v1.5 计划自动适配 |
-| 其他 9 个 target | 无 | 这些工具公开文档无 hooks 概念，不输出 |
-
-设计动机：直接覆盖 `.claude/settings.json` 会破坏用户的 `model`、`permissions` 等其他配置。中间文件 + 显式 apply 把"是否应用"的决定权交回用户。
-
-### 4.13 pre-commit hook
-
-`stdagent install-hook` 在 `.git/hooks/pre-commit` 写入：
-
-```sh
-#!/bin/sh
-set -e
-exec stdagent status --strict
-```
-
-`stdagent status --strict` drift 时 exit 1，阻塞 commit。配合 `stdagent fix` 一键修复。
 
 ## 附录: 文档索引
 

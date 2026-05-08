@@ -265,3 +265,157 @@ func TestPriorityRank(t *testing.T) {
 		}
 	}
 }
+
+func TestParseGlobsAlias(t *testing.T) {
+	raw := []byte(`---
+type: rules
+name: g
+globs:
+  - "**/*.go"
+  - "**/*.ts"
+---
+body
+`)
+	d, err := Parse("rules/g.md", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d.ApplyTo) != 2 || d.ApplyTo[0] != "**/*.go" {
+		t.Errorf("globs not merged into ApplyTo: %v", d.ApplyTo)
+	}
+}
+
+func TestParseApplyToAndGlobsMerged(t *testing.T) {
+	raw := []byte(`---
+type: rules
+name: g
+applyTo:
+  - "**/*.go"
+globs:
+  - "**/*.go"
+  - "**/*.ts"
+---
+body
+`)
+	d, _ := Parse("rules/g.md", raw)
+	// applyTo 优先 + globs 兜底，去重后应剩 2 个
+	if len(d.ApplyTo) != 2 {
+		t.Errorf("expected dedup to 2, got %v", d.ApplyTo)
+	}
+}
+
+func TestParseTargetSpecificPaths(t *testing.T) {
+	raw := []byte(`---
+type: rules
+name: g
+applyTo:
+  - "**/*.go"
+claudecode:
+  paths:
+    - "**/*Service.java"
+    - "**/*Logic.java"
+cursor:
+  paths:
+    - "src/**/*.ts"
+---
+body
+`)
+	d, err := Parse("rules/g.md", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := d.TargetPaths["claudecode"]; len(got) != 2 || got[0] != "**/*Service.java" {
+		t.Errorf("claudecode.paths not parsed: %v", d.TargetPaths)
+	}
+	if got := d.TargetPaths["cursor"]; len(got) != 1 || got[0] != "src/**/*.ts" {
+		t.Errorf("cursor.paths not parsed: %v", d.TargetPaths)
+	}
+	// 全局 ApplyTo 仍保留
+	if len(d.ApplyTo) != 1 || d.ApplyTo[0] != "**/*.go" {
+		t.Errorf("global applyTo lost: %v", d.ApplyTo)
+	}
+}
+
+func TestParseTargetPathsIgnoresUnknownKeys(t *testing.T) {
+	raw := []byte(`---
+type: rules
+name: g
+custom-tool:
+  paths: ["x"]
+---
+body
+`)
+	d, _ := Parse("rules/g.md", raw)
+	if _, ok := d.TargetPaths["custom-tool"]; ok {
+		t.Error("unknown target key should be ignored")
+	}
+}
+
+func TestParseSubagentsType(t *testing.T) {
+	raw := []byte(`---
+type: subagents
+name: code-reviewer
+description: Reviews code carefully
+model: claude-sonnet-4-5
+allowed_tools: [Read, Grep]
+---
+You are a strict code reviewer.
+`)
+	d, err := Parse("agents/code-reviewer.md", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Type != TypeSubagents {
+		t.Errorf("type = %s, want subagents", d.Type)
+	}
+	if d.Name != "code-reviewer" {
+		t.Errorf("name = %s", d.Name)
+	}
+	if len(d.AllowedTools) != 2 {
+		t.Errorf("allowed_tools = %v", d.AllowedTools)
+	}
+}
+
+func TestParseNestedRoot(t *testing.T) {
+	raw := []byte(`---
+type: rules
+name: auth-module
+description: Auth 模块说明
+---
+# Auth 模块
+内容
+`)
+	d, err := Parse("nested/igx-modules/auth/root.md", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !d.Root {
+		t.Error("nested root should set Root=true")
+	}
+	if d.NestedPath != "igx-modules/auth" {
+		t.Errorf("NestedPath = %q, want igx-modules/auth", d.NestedPath)
+	}
+}
+
+func TestParseNestedRootNoFrontmatter(t *testing.T) {
+	raw := []byte(`# 子模块
+直接内容
+`)
+	d, err := Parse("nested/src/api/v1/root.md", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !d.Root || d.NestedPath != "src/api/v1" {
+		t.Errorf("Root=%v NestedPath=%q", d.Root, d.NestedPath)
+	}
+}
+
+func TestParseTopRootNotNested(t *testing.T) {
+	d, _ := Parse("root.md", []byte("body"))
+	if !d.Root {
+		t.Error("top root.md should set Root=true")
+	}
+	if d.NestedPath != "" {
+		t.Errorf("top root should have empty NestedPath, got %q", d.NestedPath)
+	}
+}

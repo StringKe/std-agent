@@ -34,11 +34,20 @@ var Limits = []Limit{
 	{"*", "command", 4000, 0, "command 主体 > 4000 字符；GitHub Copilot Code Review 仅读前 4000 字符"},
 
 	// target 硬上限（部分由 transformer 自行处理 spill / 截断）
-	{"codex", "agents-md-total", 0, 32768, "AGENTS.md 总字节超过 32768，将自动 spill 到 .codex/rules/"},
+	{"codex", "agents-md-total", 0, 32768, "AGENTS.md 总字节超过 32768，所有 nonRoot rule 会 spill 到 .codex/memories/"},
 	{"cursor", "rule", 80000, 100000, "Cursor rule 字符上限 100000，>80000 接近上限；超 100000 触发截断"},
 	{"windsurf", "rule", 0, 12000, "Windsurf rule 单文件硬上限 12000 字符"},
 	{"antigravity", "rule", 0, 12000, "Antigravity rule 单文件硬上限 12000 字符"},
 	{"windsurf", "global-rules", 0, 6000, "Windsurf global_rules.md 上限 6000 字符"},
+
+	// 根文件体积（CLAUDE.md / AGENTS.md / GEMINI.md / .github/copilot-instructions.md）
+	// 这些文件**每次 AI session 启动都会被整体加载到 system prompt**，体积直接影响
+	// 起始 context 占用，与按需加载的 .claude/rules/<name>.md 不同。root rule body
+	// 写得过大会导致 session 一开始就吃掉大量 token，建议把详细规则拆到非 root rule。
+	{"claude-code", "root-file", 8000, 32000, "CLAUDE.md 每次 session 启动整体加载到 system prompt；> 8k 字符（~2k tokens）建议把详细规则拆到非 root rule，用 @import 按需加载；> 32k 严重侵占可用 context"},
+	{"codex", "root-file", 8000, 32768, "AGENTS.md 由 codex 启动加载；codex project_doc_max_bytes 硬上限 32768，> 8k（~2k tokens）建议把规则拆到非 root rule（自动 spill 到 .codex/memories/ 按需加载）"},
+	{"gemini", "root-file", 8000, 32000, "GEMINI.md 由 Gemini CLI 启动加载到 system prompt；> 8k 字符建议精简根文件，把详细规则拆到非 root rule"},
+	{"copilot", "root-file", 4000, 8000, "GitHub Copilot 实测仅读 .github/copilot-instructions.md 前约 8KB，超过部分被截断丢弃；> 4k 接近截断阈值"},
 }
 
 // CheckDocument 对单个 Document body 做 budget 检查，返回 WARN 消息列表
@@ -91,6 +100,31 @@ func CheckTotalRules(docs []*parser.Document) []string {
 		}
 		if total > l.Hard {
 			out = append(out, fmt.Sprintf("HARD AGENTS.md [%s] total rules %d > %d (%s)", l.Target, total, l.Hard, l.Note))
+		}
+	}
+	return out
+}
+
+// CheckRootFile 对 transformer 生成的根文件（CLAUDE.md / AGENTS.md / 等）做体积检查。
+//
+// path 是相对项目根的路径（用于 WARN 输出定位），target 是 transformer 名（"claude-code" 等），
+// sizeBytes 是 final content 字节数（含 stdagent header/footer marker）。返回 WARN 字符串列表。
+//
+// 与 CheckDocument 不同：CheckDocument 检查源端 std rule body 字节，CheckRootFile 检查
+// 输出端实际写盘的根文件字节。两者都重要：源 rule 大 -> 单 rule 占 context；根文件大 ->
+// 启动即占 context。
+func CheckRootFile(target, path string, sizeBytes int) []string {
+	var out []string
+	for _, l := range Limits {
+		if l.Kind != "root-file" || l.Target != target {
+			continue
+		}
+		if l.Hard > 0 && sizeBytes > l.Hard {
+			out = append(out, fmt.Sprintf("HARD %s [%s] root-file %d > %d (%s)", path, target, sizeBytes, l.Hard, l.Note))
+			continue
+		}
+		if l.Soft > 0 && sizeBytes > l.Soft {
+			out = append(out, fmt.Sprintf("SOFT %s [%s] root-file %d > %d (%s)", path, target, sizeBytes, l.Soft, l.Note))
 		}
 	}
 	return out

@@ -47,7 +47,7 @@ func (c *ContinueDev) buildRule(d *parser.Document, cfg *config.Config) writer.F
 	var fm FmBuilder
 	fm.Add("name", d.Name)
 	fm.Add("description", d.Description)
-	fm.AddList("globs", d.ApplyTo)
+	fm.AddList("globs", EffectiveApplyTo(d, c.Name()))
 	if d.AlwaysApply {
 		fm.AddBool("alwaysApply", true)
 	}

@@ -39,13 +39,13 @@ func (c *Copilot) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pla
 	SortDocs(skills)
 	SortDocs(commands)
 
-	// rules 拆分：无 applyTo -> 拼到 copilot-instructions.md；有 applyTo -> 单文件
+	// rules 拆分：root 或 无 applyTo -> 拼到 copilot-instructions.md；其他 -> 单文件
 	var general, pathSpecific []*parser.Document
 	for _, d := range rules {
-		if len(d.ApplyTo) > 0 {
-			pathSpecific = append(pathSpecific, d)
-		} else {
+		if d.Root || len(EffectiveApplyTo(d, c.Name())) == 0 {
 			general = append(general, d)
+		} else {
+			pathSpecific = append(pathSpecific, d)
 		}
 	}
 
@@ -77,14 +77,26 @@ func (c *Copilot) buildMCPJSON(mcp *config.MCPConfig) writer.FileOp {
 
 func (c *Copilot) buildInstructions(general []*parser.Document, cfg *config.Config) writer.FileOp {
 	opts := MakeOpts(cfg, c.Name(), "", true)
-	body := JoinAGENTSStyle("Copilot Repository Instructions", general)
-	return BuildMarkdownFile(".github/copilot-instructions.md", "", body, opts)
+	roots, nonRoot := PartitionRoot(general)
+	var body strings.Builder
+	if len(roots) > 0 {
+		body.WriteString(RenderRootBody(roots))
+		if len(nonRoot) > 0 {
+			body.WriteString("\n")
+			body.WriteString(JoinAGENTSStyle("", nonRoot))
+		}
+	} else {
+		body.WriteString(JoinAGENTSStyle("Copilot Repository Instructions", nonRoot))
+	}
+	op := BuildMarkdownFile(".github/copilot-instructions.md", "", body.String(), opts)
+	op.IsRoot = true
+	return op
 }
 
 func (c *Copilot) buildPathInstruction(d *parser.Document, cfg *config.Config) writer.FileOp {
 	var fm FmBuilder
 	// applyTo 接受逗号分隔的多 glob 字符串
-	fm.Add("applyTo", strings.Join(d.ApplyTo, ","))
+	fm.Add("applyTo", strings.Join(EffectiveApplyTo(d, c.Name()), ","))
 	opts := MakeOpts(cfg, c.Name(), d.Path, false)
 	body := d.Body
 	if d.Description != "" {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -196,25 +197,6 @@ func Sync(opts Options) (*Result, error) {
 		res.Warnings = append(res.Warnings, fmt.Sprintf("mcp.json: %v", rerr))
 	}
 
-	// 3.6. load hooks.json (optional)
-	hooksPath := filepath.Join(opts.ProjectRoot, ".stdai/standards/hooks.json")
-	if data, rerr := os.ReadFile(hooksPath); rerr == nil { //nolint:gosec
-		var hooks config.HooksConfig
-		if jerr := json.Unmarshal(data, &hooks); jerr != nil {
-			if opts.Strict {
-				return nil, fmt.Errorf("parse hooks.json: %w", jerr)
-			}
-			res.Warnings = append(res.Warnings, fmt.Sprintf("hooks.json: %v", jerr))
-		} else if len(hooks.Hooks) > 0 {
-			cfg.Hooks = &hooks
-		}
-	} else if !errors.Is(rerr, fs.ErrNotExist) {
-		if opts.Strict {
-			return nil, fmt.Errorf("read hooks.json: %w", rerr)
-		}
-		res.Warnings = append(res.Warnings, fmt.Sprintf("hooks.json: %v", rerr))
-	}
-
 	// 4. plan + apply per target
 	enabledTargets := opts.Targets
 	if len(enabledTargets) == 0 {
@@ -231,6 +213,11 @@ func Sync(opts Options) (*Result, error) {
 	if st.Targets == nil {
 		st.Targets = map[string]state.Target{}
 	}
+
+	// 防 race / 误写：列出 git submodule 路径，sync 拒绝写入跨 submodule 边界。
+	// 用户可能用 nested/<submodule>/root.md 误把 submodule 顶级 CLAUDE.md 当本仓嵌套；
+	// runner 检测后 skip 这些 op + 报 warning。
+	submodulePaths := listSubmodulePaths(opts.ProjectRoot)
 
 	w := writer.NewWriter(opts.ProjectRoot, cfg.DryRun)
 	bk := writer.NewBackup(filepath.Join(opts.ProjectRoot, ".stdai/backups"), cfg.BackupKeep)
@@ -253,6 +240,30 @@ func Sync(opts Options) (*Result, error) {
 			continue
 		}
 		res.Plans = append(res.Plans, plan)
+
+		// submodule 边界保护：拒绝写入到 submodule 内（防止误把 submodule 顶级 CLAUDE.md
+		// 当作本仓嵌套从而覆盖 submodule 内容）。
+		for i := range plan.Files {
+			op := &plan.Files[i]
+			if op.Skip {
+				continue
+			}
+			if sp := submoduleContaining(op.Path, submodulePaths); sp != "" {
+				op.Skip = true
+				op.Reason = fmt.Sprintf("WARN: refused write into submodule %q (run stdagent inside that submodule instead)", sp)
+				res.Warnings = append(res.Warnings, fmt.Sprintf("%s/%s: %s", name, op.Path, op.Reason))
+			}
+		}
+
+		// 根文件体积检查（CLAUDE.md / AGENTS.md / GEMINI.md / 等）
+		for _, f := range plan.Files {
+			if !f.IsRoot {
+				continue
+			}
+			for _, msg := range budget.CheckRootFile(name, f.Path, len(f.Content)) {
+				res.Warnings = append(res.Warnings, "[budget] "+msg)
+			}
+		}
 
 		// 收集 transformer 标记的 WARN reason（如 copilot/opencode SkillFiles 被忽略）
 		for _, f := range plan.Files {
@@ -377,6 +388,36 @@ func isSkillSubdirMarkdown(p string) bool {
 	}
 	// skills/<n>/SKILL.md 共 3 段；子目录辅助路径段数 >= 4
 	return strings.Count(p, "/") >= 3
+}
+
+// listSubmodulePaths 跑 `git -C <root> submodule status`，返回 submodule 相对路径列表。
+// 非 git 仓库 / 没 submodule 返回 nil。
+func listSubmodulePaths(root string) []string {
+	cmd := exec.Command("git", "-C", root, "submodule", "status") //nolint:gosec // root 由 caller 控制
+	out, err := cmd.Output()
+	if err != nil {
+		return nil
+	}
+	var paths []string
+	for _, line := range strings.Split(string(out), "\n") {
+		fields := strings.Fields(line)
+		// 形如：" <hash> <path> (<branch>)" 或 "-<hash> <path>"
+		if len(fields) >= 2 {
+			paths = append(paths, fields[1])
+		}
+	}
+	return paths
+}
+
+// submoduleContaining 检查 filePath 是否落在某 submodule 内。返回匹配的 submodule 路径，
+// 没匹配返回空串。filePath 是相对项目根的 forward-slash 路径。
+func submoduleContaining(filePath string, submodulePaths []string) string {
+	for _, sp := range submodulePaths {
+		if filePath == sp || strings.HasPrefix(filePath, sp+"/") {
+			return sp
+		}
+	}
+	return ""
 }
 
 func sortedKeys[V any](m map[string]V) []string {

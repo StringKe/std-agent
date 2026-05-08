@@ -19,8 +19,8 @@
 - **单一来源** — `rules` / `skills` / `commands` / `references` 用 YAML frontmatter + Markdown 写一次。
 - **11 个目标** — Claude Code、Codex、Cursor、GitHub Copilot、Windsurf、Gemini CLI、Aider、Cline、OpenCode、Continue.dev、Antigravity。
 - **零锁定** — writer 只动白名单内的少数路径；每次 sync 前自动备份；`clean` 一键清回去。
-- **drift 检测** — `status` 列出被外部改过的文件，`fix` 重新落盘，`install-hook` 在 commit 前阻塞 dirty 状态。
-- **MCP + hooks** — 单文件 `.stdai/standards/mcp.json` 扩散到 `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`；单文件 `hooks.json` 写出 `stdagent-hooks` 中间文件，由 `apply-hooks` 非破坏性 merge 进 `.claude/settings.json`。
+- **drift 检测** — `status` 列出被外部改过的文件，`fix` 重新落盘。
+- **MCP** — 单文件 `.stdai/standards/mcp.json` 扩散到 `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`。
 - **monorepo 友好** — 配置查找从 cwd 向上 walk，从任何子目录都能跑。
 - **自我升级** — `stdagent upgrade` 从 GitHub Releases 拉签名归档，sha256 校验 + 原子替换。
 
@@ -68,9 +68,6 @@ stdagent sync
 # 检查 / 修复 drift
 stdagent status
 stdagent fix
-
-# 可选：drift 时阻塞 commit
-stdagent install-hook
 ```
 
 ## 命令清单
@@ -84,8 +81,6 @@ stdagent install-hook
 | `stdagent status` | 各 target 的 drift 与最后同步时间 |
 | `stdagent clean` | 清空生成文件（保留 `.stdai/`） |
 | `stdagent budget` | LLM context 预算检查（字符 + token 估算） |
-| `stdagent apply-hooks` | 把 `stdagent-hooks.json` merge 进 target 实际配置 |
-| `stdagent install-hook` | 装 git pre-commit 钩子调 `status --strict` |
 | `stdagent intro` | 输出迁移提示词（喂给 AI 助手把现有配置转 std 格式） |
 | `stdagent upgrade` | 从 GitHub Releases 自我升级（sha256 + 原子替换） |
 | `stdagent version` | 构建信息 |
@@ -120,19 +115,6 @@ MCP 服务器（`.stdai/standards/mcp.json`）：
   "servers": {
     "github": { "type": "stdio", "command": "gh", "args": ["api"] },
     "linear": { "type": "http", "url": "https://mcp.linear.app/sse" }
-  }
-}
-```
-
-Hooks（`.stdai/standards/hooks.json`）— 写成 `.claude/stdagent-hooks.json` 中间文件，由 `stdagent apply-hooks` merge 进真实 settings：
-
-```json
-{
-  "version": "1.0",
-  "hooks": {
-    "PreToolUse": [
-      {"matcher": "Bash", "type": "command", "command": "echo running bash"}
-    ]
   }
 }
 ```
@@ -182,8 +164,7 @@ your-project/
 │   │   ├── skills/
 │   │   ├── commands/
 │   │   ├── references/
-│   │   ├── mcp.json           MCP 服务器（可选）
-│   │   └── hooks.json         hooks 定义（可选；由 apply-hooks merge）
+│   │   └── mcp.json           MCP 服务器（可选）
 │   ├── cache/                 git 源缓存
 │   ├── backups/               每次 sync 前自动快照
 │   └── state.json             运行时状态

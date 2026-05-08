@@ -5,6 +5,7 @@ type FileOp struct {
 	Path    string // 相对项目根
 	Content []byte
 	Marker  bool   // 是否注入 stdagent marker
+	IsRoot  bool   // 是否为 target 根文件（CLAUDE.md / AGENTS.md / GEMINI.md / .github/copilot-instructions.md），runner 触发 budget root-file 检查
 	Skip    bool   // 与现有文件一致时跳过
 	Reason  string // 诊断（dry-run 输出）
 }

@@ -131,3 +131,42 @@ func TestCheckTotalRulesUnderLimit(t *testing.T) {
 		t.Errorf("under limit should not warn, got %v", out)
 	}
 }
+
+func TestCheckRootFileSoftWarnClaudeCode(t *testing.T) {
+	out := CheckRootFile("claude-code", "CLAUDE.md", 20000)
+	if len(out) != 1 || !strings.Contains(out[0], "SOFT") {
+		t.Errorf("expected SOFT for 20000 byte CLAUDE.md, got %v", out)
+	}
+}
+
+func TestCheckRootFileHardWarnCodex(t *testing.T) {
+	out := CheckRootFile("codex", "AGENTS.md", 40000)
+	if len(out) != 1 || !strings.Contains(out[0], "HARD") {
+		t.Errorf("expected HARD for 40000 byte AGENTS.md, got %v", out)
+	}
+}
+
+func TestCheckRootFileCopilotTightLimit(t *testing.T) {
+	soft := CheckRootFile("copilot", ".github/copilot-instructions.md", 5000)
+	if len(soft) != 1 || !strings.Contains(soft[0], "SOFT") {
+		t.Errorf("expected SOFT for 5000 byte copilot instructions, got %v", soft)
+	}
+	hard := CheckRootFile("copilot", ".github/copilot-instructions.md", 10000)
+	if len(hard) != 1 || !strings.Contains(hard[0], "HARD") {
+		t.Errorf("expected HARD for 10000 byte copilot instructions, got %v", hard)
+	}
+}
+
+func TestCheckRootFileNoWarnSmall(t *testing.T) {
+	for _, target := range []string{"claude-code", "codex", "gemini", "copilot"} {
+		if out := CheckRootFile(target, "x", 500); len(out) != 0 {
+			t.Errorf("small file should not warn for %s, got %v", target, out)
+		}
+	}
+}
+
+func TestCheckRootFileUnknownTarget(t *testing.T) {
+	if out := CheckRootFile("aider", "x", 99999); len(out) != 0 {
+		t.Errorf("aider has no root-file limit, got %v", out)
+	}
+}

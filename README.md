@@ -19,8 +19,8 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 - **Single source** — write `rules` / `skills` / `commands` / `references` once in YAML frontmatter + Markdown.
 - **Eleven targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Cline, OpenCode, Continue.dev, Antigravity.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
-- **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source; `install-hook` blocks dirty commits.
-- **MCP + hooks** — single `.stdai/standards/mcp.json` fans out to `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`; single `hooks.json` writes a stdagent-hooks intermediate that `apply-hooks` merges into `.claude/settings.json` non-destructively.
+- **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.
+- **MCP** — single `.stdai/standards/mcp.json` fans out to `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`
 - **Monorepo aware** — config lookup walks up from `cwd`; works from any subdirectory.
 - **Self-upgrading** — `stdagent upgrade` pulls signed releases from GitHub with sha256 verification and atomic replace.
 
@@ -68,9 +68,6 @@ stdagent sync
 # Inspect / fix drift
 stdagent status
 stdagent fix
-
-# Optional: block commits when drift exists
-stdagent install-hook
 ```
 
 ## Commands
@@ -84,8 +81,6 @@ stdagent install-hook
 | `stdagent status` | Per-target drift + last sync time |
 | `stdagent clean` | Remove generated files (preserves `.stdai/`) |
 | `stdagent budget` | LLM context budget check (chars + token estimate) |
-| `stdagent apply-hooks` | Merge `stdagent-hooks.json` into the target's real config |
-| `stdagent install-hook` | Install a git pre-commit hook running `status --strict` |
 | `stdagent intro` | Print a migration prompt for an LLM to convert your existing config |
 | `stdagent upgrade` | Self-upgrade from GitHub Releases (sha256 + atomic replace) |
 | `stdagent version` | Build info |
@@ -120,19 +115,6 @@ MCP servers (`.stdai/standards/mcp.json`):
   "servers": {
     "github": { "type": "stdio", "command": "gh", "args": ["api"] },
     "linear": { "type": "http", "url": "https://mcp.linear.app/sse" }
-  }
-}
-```
-
-Hooks (`.stdai/standards/hooks.json`) — written to `.claude/stdagent-hooks.json` and merged via `stdagent apply-hooks`:
-
-```json
-{
-  "version": "1.0",
-  "hooks": {
-    "PreToolUse": [
-      {"matcher": "Bash", "type": "command", "command": "echo running bash"}
-    ]
   }
 }
 ```
@@ -182,8 +164,7 @@ your-project/
 │   │   ├── skills/
 │   │   ├── commands/
 │   │   ├── references/
-│   │   ├── mcp.json           MCP servers (optional)
-│   │   └── hooks.json         hooks definition (optional; merged via apply-hooks)
+│   │   └── mcp.json           MCP servers (optional)
 │   ├── cache/                 Git source cache
 │   ├── backups/               Auto-snapshot before each sync
 │   └── state.json             Runtime state

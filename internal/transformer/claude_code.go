@@ -2,7 +2,7 @@ package transformer
 
 import (
 	"encoding/json"
-	"fmt"
+	"path"
 	"strings"
 
 	"std-ai/internal/config"
@@ -28,10 +28,6 @@ func (c *ClaudeCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.
 		plan.Files = append(plan.Files, c.buildMCPJSON(cfg.MCP))
 	}
 
-	if cfg.Hooks != nil && len(cfg.Hooks.Hooks) > 0 {
-		plan.Files = append(plan.Files, c.buildHooksJSON(cfg.Hooks))
-	}
-
 	docs = FilterDocs(docs, c.Name())
 	if len(docs) == 0 {
 		return plan, nil
@@ -40,12 +36,22 @@ func (c *ClaudeCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.
 	rules := FilterByType(docs, parser.TypeRules)
 	skills := FilterByType(docs, parser.TypeSkills)
 	commands := FilterByType(docs, parser.TypeCommands)
+	subagents := FilterByType(docs, parser.TypeSubagents)
 	SortDocs(rules)
 	SortDocs(skills)
 	SortDocs(commands)
+	SortDocs(subagents)
 
-	plan.Files = append(plan.Files, c.buildClaudeMd(rules, cfg))
-	for _, d := range rules {
+	// 嵌套 root 单独输出到 <NestedPath>/CLAUDE.md（无 manifest）
+	topRules, nestedRoots := PartitionNested(rules)
+	for _, d := range nestedRoots {
+		plan.Files = append(plan.Files, c.buildNestedClaudeMd(d, cfg))
+	}
+
+	roots, nonRoot := PartitionRoot(topRules)
+	plan.Files = append(plan.Files, c.buildClaudeMd(roots, nonRoot, cfg))
+	// root rule 不 fan-out 成 .claude/rules/<root>.md（已是 CLAUDE.md 主体）
+	for _, d := range nonRoot {
 		plan.Files = append(plan.Files, c.buildRuleFile(d, cfg))
 	}
 	for _, d := range skills {
@@ -54,8 +60,26 @@ func (c *ClaudeCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.
 	for _, d := range commands {
 		plan.Files = append(plan.Files, c.buildCommandFile(d, cfg))
 	}
+	for _, d := range subagents {
+		plan.Files = append(plan.Files, c.buildSubagentFile(d, cfg))
+	}
 
 	return plan, nil
+}
+
+// buildSubagentFile 输出 .claude/agents/<name>.md（Claude Code 原生 subagent 定义）。
+// frontmatter: name / description / model / tools；body 即 subagent 的系统提示词。
+func (c *ClaudeCode) buildSubagentFile(d *parser.Document, cfg *config.Config) writer.FileOp {
+	var fm FmBuilder
+	fm.Add("name", d.Name)
+	fm.Add("description", d.Description)
+	fm.Add("model", d.Model)
+	fm.AddList("tools", d.AllowedTools)
+	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	return BuildMarkdownFile(
+		FilePath(".claude/agents", d.Name, ".md"),
+		fm.String(), d.Body, opts,
+	)
 }
 
 func (c *ClaudeCode) buildMCPJSON(mcp *config.MCPConfig) writer.FileOp {
@@ -67,41 +91,52 @@ func (c *ClaudeCode) buildMCPJSON(mcp *config.MCPConfig) writer.FileOp {
 	return writer.FileOp{Path: ".mcp.json", Content: body}
 }
 
-// buildHooksJSON 输出 .claude/stdagent-hooks.json
+// buildClaudeMd 拼 CLAUDE.md = root body（项目总结）+ stdagent 自动 manifest 清单。
 //
-// Claude Code 实际只读 .claude/settings.json 的 hooks 字段。stdagent 不直接覆盖
-// settings.json（避免破坏用户其他配置），改写中间文件 stdagent-hooks.json，
-// 由 `stdagent apply-hooks` 命令负责 merge 到 settings.json。
-func (c *ClaudeCode) buildHooksJSON(hooks *config.HooksConfig) writer.FileOp {
-	wrapper := struct {
-		Hooks map[string][]config.HookEntry `json:"hooks"`
-	}{Hooks: hooks.Hooks}
-	body, _ := json.MarshalIndent(wrapper, "", "  ")
-	body = append(body, '\n')
-	return writer.FileOp{
-		Path:    ".claude/stdagent-hooks.json",
-		Content: body,
-		Reason:  "INFO: 跑 `stdagent apply-hooks --target claude-code` 把此文件 merge 进 .claude/settings.json",
-	}
-}
-
-func (c *ClaudeCode) buildClaudeMd(rules []*parser.Document, cfg *config.Config) writer.FileOp {
+// 设计契约：
+//   - root rule body 写项目总结（项目说明、技术栈、关键铁律、子模块入口）
+//   - stdagent 始终在 root body 尾部追加 ## Imported Rules 段（含 nonRoot rule 索引）
+//   - 用户**不应**在 root body 里手写 rule 清单（stdagent 自动管，避免重复）
+//   - 无 root rule 时，body = "# Project CLAUDE Manifest" 占位标题 + manifest
+func (c *ClaudeCode) buildClaudeMd(roots, nonRoot []*parser.Document, cfg *config.Config) writer.FileOp {
 	opts := MakeOpts(cfg, c.Name(), "", true)
 	var body strings.Builder
-	body.WriteString("# Project CLAUDE Manifest\n\n")
-	if len(rules) == 0 {
-		body.WriteString("No rules synced.\n")
+	if len(roots) > 0 {
+		body.WriteString(RenderRootBody(roots))
 	} else {
-		for _, d := range rules {
-			fmt.Fprintf(&body, "@%s\n", FilePath(".claude/rules", d.Name, ".md"))
-		}
+		body.WriteString("# Project CLAUDE Manifest\n\n")
 	}
-	return BuildMarkdownFile("CLAUDE.md", "", body.String(), opts)
+	if len(nonRoot) > 0 {
+		body.WriteString(BuildRuleManifestSection(
+			"Imported Rules",
+			c.Name(),
+			nonRoot,
+			func(d *parser.Document) string { return FilePath(".claude/rules", d.Name, ".md") },
+			true,
+		))
+	} else if len(roots) == 0 {
+		body.WriteString("No rules synced.\n")
+	}
+	op := BuildMarkdownFile("CLAUDE.md", "", body.String(), opts)
+	op.IsRoot = true
+	return op
+}
+
+// buildNestedClaudeMd 把嵌套 root doc 输出到 <NestedPath>/CLAUDE.md，纯 body + marker，无 manifest。
+// AI 在该子目录工作时，Claude Code 自动叠加加载顶级 + 嵌套 CLAUDE.md。
+func (c *ClaudeCode) buildNestedClaudeMd(d *parser.Document, cfg *config.Config) writer.FileOp {
+	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	op := BuildMarkdownFile(
+		path.Join(d.NestedPath, "CLAUDE.md"),
+		"", d.Body, opts,
+	)
+	op.IsRoot = true
+	return op
 }
 
 func (c *ClaudeCode) buildRuleFile(d *parser.Document, cfg *config.Config) writer.FileOp {
 	var fm FmBuilder
-	fm.AddList("applyTo", d.ApplyTo)
+	fm.AddList("applyTo", EffectiveApplyTo(d, c.Name()))
 	if d.AlwaysApply {
 		fm.AddBool("alwaysApply", true)
 	}
@@ -128,7 +163,7 @@ func (c *ClaudeCode) buildSkillFile(d *parser.Document, cfg *config.Config) []wr
 	fm.Add("agent", d.Agent)
 	fm.Add("shell", d.Shell)
 	fm.AddList("tools", d.AllowedTools)
-	fm.AddList("paths", d.ApplyTo)
+	fm.AddList("paths", EffectiveApplyTo(d, c.Name()))
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
 	}

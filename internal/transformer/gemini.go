@@ -41,8 +41,20 @@ func (g *Gemini) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan
 
 func (g *Gemini) buildGEMINIMd(rules []*parser.Document, cfg *config.Config) writer.FileOp {
 	opts := MakeOpts(cfg, g.Name(), "", true)
-	body := JoinAGENTSStyle("Project GEMINI Manifest", rules)
-	return BuildMarkdownFile("GEMINI.md", "", body, opts)
+	roots, nonRoot := PartitionRoot(rules)
+	var body strings.Builder
+	if len(roots) > 0 {
+		body.WriteString(RenderRootBody(roots))
+		if len(nonRoot) > 0 {
+			body.WriteString("\n")
+			body.WriteString(JoinAGENTSStyle("", nonRoot))
+		}
+	} else {
+		body.WriteString(JoinAGENTSStyle("Project GEMINI Manifest", nonRoot))
+	}
+	op := BuildMarkdownFile("GEMINI.md", "", body.String(), opts)
+	op.IsRoot = true
+	return op
 }
 
 func (g *Gemini) buildCommand(d *parser.Document, cfg *config.Config) writer.FileOp {

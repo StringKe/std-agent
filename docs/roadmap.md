@@ -22,7 +22,6 @@ Tier 1 9 个 target 的核心同步流，覆盖 85%+ 用户场景。
   `.cursor/mcp.json` / `.vscode/mcp.json`（顶级键 mcpServers vs servers 自动适配）
 - 已落地 monorepo 支持：cwd 向上 walk 找 `.stdai/config.toml`
 - 已落地 `stdagent fix` drift auto-fix 命令
-- 已落地 `stdagent install-hook` git pre-commit 钩子
 - 已落地 `stdagent upgrade` 自我升级（sha256 校验 + 原子替换）
 - 已落地 git-cliff changelog（按 conventional commits 分组，无 email 暴露）
 - 已落地 Tier 2 transformer：`continue-dev` + `antigravity`
@@ -49,10 +48,6 @@ Tier 1 9 个 target 的核心同步流，覆盖 85%+ 用户场景。
   WARN（详见 docs/spec.md 4.10）
 - `.stdaiignore`：gitignore 风格 glob，runner parse 前过滤源文件，doublestar 支持 `**`；
   `stdagent init` 默认生成模板（详见 docs/spec.md 4.11）
-- hooks 转换：`.stdai/standards/hooks.json` 经 runner 注入 Config.Hooks，
-  claude-code / codex transformer 输出 `.claude/stdagent-hooks.json` /
-  `.codex/stdagent-hooks.json` 中间文件，由 `stdagent apply-hooks` 命令把 hooks 字段
-  merge 到 `.claude/settings.json`（详见 docs/spec.md 4.12）
 - 测试覆盖率：budget 100%、transformer 94.4%、parser 93.7%、source 84.5%、
   writer 83.2%、config 81.6%、state 73.9%、cli 70.2%、runner 68.8%
 

@@ -218,12 +218,11 @@ codex = { enabled = true, convert = true }
 	}
 	s := string(agentsContent)
 	for _, want := range []string{
-		"## style",                // rule 段
-		"Use clear names.",        // rule body
-		"## Slash Commands",       // commands 段
-		"### /review",             // command name
-		"Run code review",         // command description
-		"Please review the diff.", // command body
+		".codex/memories/style.md", // rule 索引引用
+		"## Slash Commands",        // commands 段
+		"### /review",              // command name
+		"Run code review",          // command description
+		"Please review the diff.",  // command body
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("AGENTS.md missing %q", want)
@@ -385,101 +384,6 @@ claude-code = { enabled = true, convert = true }
 	}
 	if _, err := os.Stat(filepath.Join(tmp, ".claude/rules/keep.md")); err != nil {
 		t.Errorf("keep.md should exist: %v", err)
-	}
-}
-
-func TestSyncHooksConversion(t *testing.T) {
-	tmp := t.TempDir()
-	stdai := filepath.Join(tmp, ".stdai")
-	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
-	mustWrite(t, filepath.Join(stdai, "standards/rules/x.md"), `---
-type: rules
-name: x
----
-body`)
-	mustWrite(t, filepath.Join(stdai, "standards/hooks.json"), `{
-  "version": "1.0",
-  "hooks": {
-    "PreToolUse": [
-      {"matcher": "Bash", "type": "command", "command": "echo hi"}
-    ]
-  }
-}
-`)
-	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
-inject = false
-backup = false
-auto_pull = false
-
-[targets]
-claude-code = { enabled = true, convert = true }
-codex = { enabled = true, convert = true }
-`)
-
-	_, err := Sync(Options{
-		ProjectRoot: tmp,
-		ConfigPath:  filepath.Join(stdai, "config.toml"),
-		Version:     "test",
-	})
-	if err != nil {
-		t.Fatalf("Sync: %v", err)
-	}
-
-	for _, want := range []string{
-		".claude/stdagent-hooks.json",
-		".codex/stdagent-hooks.json",
-	} {
-		full := filepath.Join(tmp, want)
-		data, rerr := os.ReadFile(full) //nolint:gosec
-		if rerr != nil {
-			t.Errorf("%s should exist: %v", want, rerr)
-			continue
-		}
-		s := string(data)
-		for _, sub := range []string{"PreToolUse", "echo hi", "Bash"} {
-			if !strings.Contains(s, sub) {
-				t.Errorf("%s missing %q in:\n%s", want, sub, s)
-			}
-		}
-	}
-}
-
-func TestSyncHooksMalformedNonStrict(t *testing.T) {
-	tmp := t.TempDir()
-	stdai := filepath.Join(tmp, ".stdai")
-	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
-	mustWrite(t, filepath.Join(stdai, "standards/rules/x.md"), `---
-type: rules
-name: x
----
-body`)
-	mustWrite(t, filepath.Join(stdai, "standards/hooks.json"), `{not json`)
-	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
-inject = false
-backup = false
-auto_pull = false
-
-[targets]
-claude-code = { enabled = true, convert = true }
-`)
-
-	res, err := Sync(Options{
-		ProjectRoot: tmp,
-		ConfigPath:  filepath.Join(stdai, "config.toml"),
-		Version:     "test",
-	})
-	if err != nil {
-		t.Fatalf("non-strict should swallow parse err: %v", err)
-	}
-	found := false
-	for _, w := range res.Warnings {
-		if strings.Contains(w, "hooks.json") {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected hooks.json warning, got %v", res.Warnings)
 	}
 }
 

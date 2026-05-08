@@ -78,44 +78,53 @@ func TestCodexAGENTSMd(t *testing.T) {
 	tr := &Codex{}
 	cfg := &config.Config{Inject: true, InjectWhatIs: false}
 	docs := []*parser.Document{
-		{Type: parser.TypeRules, Name: "rule-a", Body: "body of a"},
-		{Type: parser.TypeRules, Name: "rule-b", Body: "body of b"},
+		{Type: parser.TypeRules, Name: "rule-a", Description: "Rule A 描述", Body: "body of a"},
+		{Type: parser.TypeRules, Name: "rule-b", Description: "Rule B 描述", Body: "body of b"},
 	}
 	plan, _ := tr.Plan(docs, cfg)
-	if len(plan.Files) != 1 || plan.Files[0].Path != "AGENTS.md" {
-		t.Fatalf("expected 1 AGENTS.md file, got %d", len(plan.Files))
-	}
-	c := string(plan.Files[0].Content)
-	for _, want := range []string{"## rule-a", "## rule-b", "Project AGENTS Manifest"} {
-		if !strings.Contains(c, want) {
-			t.Errorf("missing %q in AGENTS.md:\n%s", want, c)
-		}
-	}
-}
-
-func TestCodexAGENTSMdSpills(t *testing.T) {
-	tr := &Codex{}
-	cfg := &config.Config{Inject: false}
-	bigBody := strings.Repeat("very long text content. ", 1500) // ~36k chars
-	// 按字母排序，aaa-tiny 先进 body，zzz-huge 超 budget 被 spill
-	docs := []*parser.Document{
-		{Type: parser.TypeRules, Name: "aaa-tiny", Body: "tiny"},
-		{Type: parser.TypeRules, Name: "zzz-huge", Body: bigBody},
-	}
-	plan, _ := tr.Plan(docs, cfg)
+	// 现行行为：AGENTS.md（自描述清单，不内联 ## section）+ .codex/memories/<name>.md per nonRoot
 	paths := pathSet(plan)
 	if !paths["AGENTS.md"] {
 		t.Error("missing AGENTS.md")
 	}
-	if !paths[".codex/rules/zzz-huge.md"] {
-		t.Errorf("expected zzz-huge to spill, plan paths: %v", paths)
+	if !paths[".codex/memories/rule-a.md"] || !paths[".codex/memories/rule-b.md"] {
+		t.Errorf("expected nonRoot rules spilled to .codex/memories/, got %v", paths)
 	}
 	main, _ := contentOf(plan, "AGENTS.md")
-	if !strings.Contains(main, "Rules Reference") {
-		t.Error("expected Rules Reference link menu in AGENTS.md")
+	for _, want := range []string{
+		"Project AGENTS Manifest",
+		"Reference Rules",
+		".codex/memories/rule-a.md",
+		"Rule A 描述",
+		".codex/memories/rule-b.md",
+	} {
+		if !strings.Contains(main, want) {
+			t.Errorf("missing %q in AGENTS.md:\n%s", want, main)
+		}
 	}
-	if !strings.Contains(main, "## aaa-tiny") {
-		t.Error("expected aaa-tiny inlined in AGENTS.md")
+	// 不应再 ## section 内联 nonRoot rule body
+	if strings.Contains(main, "body of a") {
+		t.Error("nonRoot rule body should not be inlined in AGENTS.md")
+	}
+}
+
+func TestCodexAGENTSMdAllSpilled(t *testing.T) {
+	tr := &Codex{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "aaa-tiny", Body: "tiny"},
+		{Type: parser.TypeRules, Name: "zzz-huge", Body: strings.Repeat("x", 1000)},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	paths := pathSet(plan)
+	for _, want := range []string{"AGENTS.md", ".codex/memories/aaa-tiny.md", ".codex/memories/zzz-huge.md"} {
+		if !paths[want] {
+			t.Errorf("missing %s in plan: %v", want, paths)
+		}
+	}
+	main, _ := contentOf(plan, "AGENTS.md")
+	if !strings.Contains(main, "Reference Rules") {
+		t.Error("expected Reference Rules manifest in AGENTS.md")
 	}
 }
 
@@ -438,4 +447,80 @@ func contentOf(plan *writer.Plan, path string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func TestClaudeCodeSubagentOutput(t *testing.T) {
+	tr := &ClaudeCode{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeSubagents, Name: "code-reviewer", Description: "Reviews code", Model: "claude-sonnet-4-5", AllowedTools: []string{"Read", "Grep"}, Body: "You are a code reviewer..."},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	c, ok := contentOf(plan, ".claude/agents/code-reviewer.md")
+	if !ok {
+		t.Fatalf("expected .claude/agents/code-reviewer.md, paths: %v", pathSet(plan))
+	}
+	for _, want := range []string{"name: code-reviewer", "description: Reviews code", "model: claude-sonnet-4-5", "Read", "Grep", "You are a code reviewer"} {
+		if !strings.Contains(c, want) {
+			t.Errorf("missing %q in subagent file:\n%s", want, c)
+		}
+	}
+}
+
+func TestCodexAGENTSMdManifestWhenNoRoot(t *testing.T) {
+	tr := &Codex{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "naming", Description: "命名规范", Body: "naming body"},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	main, _ := contentOf(plan, "AGENTS.md")
+	if !strings.Contains(main, "Reference Rules") {
+		t.Errorf("无 root rule 时应自动追加 Reference Rules:\n%s", main)
+	}
+}
+
+func TestNestedRootOutputsToSubpath(t *testing.T) {
+	tr := &ClaudeCode{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "auth", Root: true, NestedPath: "igx-modules/auth", Body: "# Auth 模块\nbody"},
+		{Type: parser.TypeRules, Name: "naming", Description: "命名", Body: "naming body"},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	paths := pathSet(plan)
+	if !paths["igx-modules/auth/CLAUDE.md"] {
+		t.Errorf("expected igx-modules/auth/CLAUDE.md, paths: %v", paths)
+	}
+	if !paths["CLAUDE.md"] {
+		t.Error("top-level CLAUDE.md should still exist")
+	}
+	// nested CLAUDE.md 不应含 manifest
+	nested, _ := contentOf(plan, "igx-modules/auth/CLAUDE.md")
+	if strings.Contains(nested, "Imported Rules") {
+		t.Errorf("nested CLAUDE.md should not have manifest:\n%s", nested)
+	}
+	// 顶级 CLAUDE.md 应含 manifest
+	top, _ := contentOf(plan, "CLAUDE.md")
+	if !strings.Contains(top, "Imported Rules") {
+		t.Error("top CLAUDE.md should have manifest section")
+	}
+	// nested rule 不应再 fan-out 到 .claude/rules/
+	if paths[".claude/rules/auth.md"] {
+		t.Error("nested root should not fan-out to .claude/rules/")
+	}
+}
+
+func TestNestedAGENTSMd(t *testing.T) {
+	tr := &Codex{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "auth", Root: true, NestedPath: "src/auth", Body: "# Auth\nbody"},
+		{Type: parser.TypeRules, Name: "x", Description: "x rule", Body: "x body"},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	paths := pathSet(plan)
+	if !paths["src/auth/AGENTS.md"] {
+		t.Errorf("expected src/auth/AGENTS.md, paths: %v", paths)
+	}
 }

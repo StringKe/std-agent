@@ -64,9 +64,10 @@ func (c *Cursor) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp
 	if d.AlwaysApply {
 		fm.AddBool("alwaysApply", true)
 	}
-	if len(d.ApplyTo) > 0 {
+	applyTo := EffectiveApplyTo(d, c.Name())
+	if len(applyTo) > 0 {
 		// Cursor globs 接受逗号分隔字符串
-		fm.Add("globs", strings.Join(d.ApplyTo, ","))
+		fm.Add("globs", strings.Join(applyTo, ","))
 	}
 	fm.Add("description", d.Description)
 	opts := MakeOpts(cfg, c.Name(), d.Path, false)
@@ -81,7 +82,7 @@ func (c *Cursor) buildSkill(d *parser.Document, cfg *config.Config) []writer.Fil
 	var fm FmBuilder
 	fm.Add("name", d.Name)
 	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
-	fm.AddList("paths", d.ApplyTo)
+	fm.AddList("paths", EffectiveApplyTo(d, c.Name()))
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
 	}

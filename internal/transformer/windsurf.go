@@ -49,12 +49,13 @@ func (w *Windsurf) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 
 func (w *Windsurf) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
 	var fm FmBuilder
+	applyTo := EffectiveApplyTo(d, w.Name())
 	switch {
 	case d.AlwaysApply:
 		fm.Add("trigger", "always_on")
-	case len(d.ApplyTo) > 0:
+	case len(applyTo) > 0:
 		fm.Add("trigger", "glob")
-		fm.AddList("globs", d.ApplyTo)
+		fm.AddList("globs", applyTo)
 	case d.Description != "":
 		fm.Add("trigger", "model_decision")
 		fm.Add("description", d.Description)

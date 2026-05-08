@@ -1,7 +1,6 @@
 package transformer
 
 import (
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -21,17 +20,9 @@ type Codex struct{}
 // Name 返回 "codex"
 func (c *Codex) Name() string { return "codex" }
 
-// codexAGENTSMaxBytes 是 Codex 默认的 project_doc_max_bytes
-const codexAGENTSMaxBytes = 32768
-
 // Plan 计算输出
 func (c *Codex) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan, error) {
 	plan := &writer.Plan{Target: c.Name()}
-
-	// hooks 不依赖 docs，提前到 early return 之前确保仅 hooks 时也能输出
-	if cfg.Hooks != nil && len(cfg.Hooks.Hooks) > 0 {
-		plan.Files = append(plan.Files, c.buildHooksJSON(cfg.Hooks))
-	}
 
 	docs = FilterDocs(docs, c.Name())
 	if len(docs) == 0 {
@@ -45,7 +36,13 @@ func (c *Codex) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan,
 	SortDocs(skills)
 	SortDocs(commands)
 
-	main, spilled := c.buildAGENTSMdWithCommands(rules, commands, cfg)
+	// 嵌套 root 输出到 <NestedPath>/AGENTS.md（无 manifest）
+	topRules, nestedRoots := PartitionNested(rules)
+	for _, d := range nestedRoots {
+		plan.Files = append(plan.Files, c.buildNestedAGENTSMd(d, cfg))
+	}
+
+	main, spilled := c.buildAGENTSMdWithCommands(topRules, commands, cfg)
 	plan.Files = append(plan.Files, main)
 	for _, sp := range spilled {
 		plan.Files = append(plan.Files, c.buildSpillRuleFile(sp, cfg))
@@ -109,56 +106,46 @@ func injectBeforeFooter(content []byte, block string) []byte {
 	return []byte(s[:idx] + block + s[idx:])
 }
 
-// buildAGENTSMd 拼 AGENTS.md，超字节时返回溢出 docs
+// buildAGENTSMd 拼 AGENTS.md = root body（项目总结）+ stdagent 自动 manifest 清单。
+//
+// codex 不支持 @import，所有 nonRoot rule 写到 .codex/memories/<name>.md（codex CLI
+// 自动加载该目录所有 .md）。AGENTS.md 头部是 root body（项目总结），尾部是 manifest 段
+// 让 AI 看清单时知道有哪些规则文件可读、各做什么。
+//
+// 返回 op 与 nonRoot rules（caller 写到 .codex/memories/）。root rule 不 fan-out。
 func (c *Codex) buildAGENTSMd(rules []*parser.Document, cfg *config.Config) (writer.FileOp, []*parser.Document) {
 	opts := MakeOpts(cfg, c.Name(), "", true)
-	header := writer.HeaderComment(opts)
-	footer := writer.FooterMarker(opts)
-	envelope := len(header) + len(footer) + 64
-	budget := codexAGENTSMaxBytes - envelope
-	if budget < 0 {
-		budget = 0
-	}
-
+	roots, nonRoot := PartitionRoot(rules)
 	var body strings.Builder
-	body.WriteString("# Project AGENTS Manifest\n\n")
-
-	included := []*parser.Document{}
-	spilled := []*parser.Document{}
-	for _, d := range rules {
-		section := docToCodexSection(d)
-		if body.Len()+len(section) > budget && len(included) > 0 {
-			spilled = append(spilled, d)
-			continue
-		}
-		body.WriteString(section)
-		included = append(included, d)
+	if len(roots) > 0 {
+		body.WriteString(RenderRootBody(roots))
+	} else {
+		body.WriteString("# Project AGENTS Manifest\n\n")
 	}
-
-	if len(spilled) > 0 {
-		body.WriteString("\n## Rules Reference\n\n")
-		body.WriteString("AGENTS.md 已达字节上限，下列 rules 移至 .codex/rules/：\n\n")
-		for _, d := range spilled {
-			fmt.Fprintf(&body, "- [%s](%s)\n", d.Name, FilePath(".codex/rules", d.Name, ".md"))
-		}
+	if len(nonRoot) > 0 {
+		body.WriteString(BuildRuleManifestSection(
+			"Reference Rules",
+			c.Name(),
+			nonRoot,
+			func(d *parser.Document) string { return FilePath(".codex/memories", d.Name, ".md") },
+			false,
+		))
 	}
-
 	op := BuildMarkdownFile("AGENTS.md", "", body.String(), opts)
-	return op, spilled
+	op.IsRoot = true
+	return op, nonRoot
 }
 
-func docToCodexSection(d *parser.Document) string {
-	var b strings.Builder
-	fmt.Fprintf(&b, "## %s\n\n", d.Name)
-	if d.Description != "" {
-		fmt.Fprintf(&b, "%s\n\n", d.Description)
-	}
-	body := strings.TrimSpace(d.Body)
-	if body != "" {
-		b.WriteString(body)
-		b.WriteString("\n\n")
-	}
-	return b.String()
+// buildNestedAGENTSMd 把嵌套 root doc 输出到 <NestedPath>/AGENTS.md，纯 body + marker，无 manifest。
+// codex 在该子目录工作时按 codex 自动加载机制叠加加载。
+func (c *Codex) buildNestedAGENTSMd(d *parser.Document, cfg *config.Config) writer.FileOp {
+	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	op := BuildMarkdownFile(
+		path.Join(d.NestedPath, "AGENTS.md"),
+		"", d.Body, opts,
+	)
+	op.IsRoot = true
+	return op
 }
 
 func (c *Codex) buildSpillRuleFile(d *parser.Document, cfg *config.Config) writer.FileOp {
@@ -168,28 +155,9 @@ func (c *Codex) buildSpillRuleFile(d *parser.Document, cfg *config.Config) write
 		body = d.Description + "\n\n" + body
 	}
 	return BuildMarkdownFile(
-		FilePath(".codex/rules", d.Name, ".md"),
+		FilePath(".codex/memories", d.Name, ".md"),
 		"", body, opts,
 	)
-}
-
-// buildHooksJSON 输出 .codex/stdagent-hooks.json
-//
-// Codex 自身的 hooks schema 在公开文档中部分 UNKNOWN（仅知 hooks.json 路径与
-// [features].codex_hooks 开关）。stdagent 输出 schema 镜像 std-ai 自身格式，
-// 由用户在 codex 文档明确 schema 后手动转换或后续 v1.5 自动适配。
-func (c *Codex) buildHooksJSON(hooks *config.HooksConfig) writer.FileOp {
-	wrapper := struct {
-		Version string                        `json:"version"`
-		Hooks   map[string][]config.HookEntry `json:"hooks"`
-	}{Version: hooks.Version, Hooks: hooks.Hooks}
-	body, _ := json.MarshalIndent(wrapper, "", "  ")
-	body = append(body, '\n')
-	return writer.FileOp{
-		Path:    ".codex/stdagent-hooks.json",
-		Content: body,
-		Reason:  "INFO: codex hooks schema 部分 UNKNOWN，stdagent 输出 std-ai 镜像格式；user 需对照 codex 文档手动转换或跑 `stdagent apply-hooks --target codex`",
-	}
 }
 
 func (c *Codex) buildSkillFile(d *parser.Document, cfg *config.Config) []writer.FileOp {

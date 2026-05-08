@@ -65,8 +65,10 @@ func TestIntroPromptHelper(t *testing.T) {
 	if len(got) < 1000 {
 		t.Errorf("prompt too short: %d chars", len(got))
 	}
-	if !strings.Contains(got, "11 个 AI 工具") {
-		t.Error("prompt should mention 11 target tools")
+	for _, want := range []string{".stdai/standards/", "stdagent sync"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("prompt should mention %q", want)
+		}
 	}
 }
 

@@ -90,7 +90,7 @@ func TestFmBuilderFields(t *testing.T) {
 	}
 	for _, want := range []string{
 		"name: coding-style", "description: general style",
-		"applyTo:", "  - **/*.go", "  - **/*.ts",
+		"applyTo:", `  - "**/*.go"`, `  - "**/*.ts"`,
 		"alwaysApply: true",
 	} {
 		if !strings.Contains(out, want) {
@@ -109,6 +109,12 @@ func TestYAMLScalarQuoting(t *testing.T) {
 	}
 	if !strings.Contains(YAMLScalar(`with "quote"`), `\"`) {
 		t.Error("quote should escape")
+	}
+	for _, s := range []string{"**/*.go", "*Service.java", "[draft]", "{a,b}", "a&b", "!important"} {
+		q := YAMLScalar(s)
+		if !strings.HasPrefix(q, `"`) || !strings.HasSuffix(q, `"`) {
+			t.Errorf("YAML-special %q should be quoted, got %q", s, q)
+		}
 	}
 }
 
@@ -182,7 +188,7 @@ func TestCodexAGENTSMdMultipleSpills(t *testing.T) {
 	}
 	spillCount := 0
 	for p := range paths {
-		if strings.HasPrefix(p, ".codex/rules/") {
+		if strings.HasPrefix(p, ".codex/memories/") {
 			spillCount++
 		}
 	}
@@ -260,4 +266,36 @@ func equalSlices(a, b []string) bool {
 		}
 	}
 	return true
+}
+
+func TestEffectiveApplyToFallsBackToGlobal(t *testing.T) {
+	d := &parser.Document{ApplyTo: []string{"**/*.go"}}
+	got := EffectiveApplyTo(d, "claude-code")
+	if len(got) != 1 || got[0] != "**/*.go" {
+		t.Errorf("expected global ApplyTo fallback, got %v", got)
+	}
+}
+
+func TestEffectiveApplyToUsesTargetSpecific(t *testing.T) {
+	d := &parser.Document{
+		ApplyTo: []string{"**/*.go"},
+		TargetPaths: map[string][]string{
+			"claudecode": {"**/*Service.java"},
+		},
+	}
+	got := EffectiveApplyTo(d, "claude-code")
+	if len(got) != 1 || got[0] != "**/*Service.java" {
+		t.Errorf("expected claudecode override, got %v", got)
+	}
+	// 其他 target 落到全局
+	got2 := EffectiveApplyTo(d, "cursor")
+	if len(got2) != 1 || got2[0] != "**/*.go" {
+		t.Errorf("expected global fallback for cursor, got %v", got2)
+	}
+}
+
+func TestEffectiveApplyToNilDoc(t *testing.T) {
+	if got := EffectiveApplyTo(nil, "claude-code"); got != nil {
+		t.Errorf("nil doc should return nil, got %v", got)
+	}
 }
