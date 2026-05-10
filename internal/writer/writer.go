@@ -38,6 +38,14 @@ func (w *Writer) Apply(plan *Plan) (written, skipped int, err error) {
 			skipped++
 			continue
 		}
+		// marker 含每次 sync 不同的 timestamp（footer.HeaderComment 注入 GeneratedAt），
+		// 归一化 marker 后再比一次：源文档未变则不重写，避免污染 git diff / mtime。
+		if len(exist) > 0 && bytes.Equal(stripGeneratedMarker(exist), stripGeneratedMarker(op.Content)) {
+			op.Skip = true
+			op.Reason = "unchanged"
+			skipped++
+			continue
+		}
 		if w.DryRun {
 			continue
 		}
