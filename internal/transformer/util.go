@@ -6,7 +6,6 @@ import (
 	"path"
 	"sort"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -86,7 +85,6 @@ func MakeOpts(cfg *config.Config, target, source string, withWhatIs bool) writer
 		Version:      transformerVersion,
 		SourcePath:   source,
 		TargetName:   target,
-		GeneratedAt:  time.Now(),
 	}
 }
 
