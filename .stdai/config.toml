@@ -5,9 +5,10 @@ auto_pull = false
 backup = true
 backup_keep = 5
 
-# 仓库全开 11 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
+# 仓库全开 22 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
 # 在你自己项目里通常只开 2~3 个用得到的 target，无关的留 false 即可。
 [targets]
+# Tier 1
 claude-code  = { enabled = true,  convert = true }
 codex        = { enabled = true,  convert = true }
 cursor       = { enabled = true,  convert = true }
@@ -17,5 +18,17 @@ gemini       = { enabled = true,  convert = true }
 aider        = { enabled = true,  convert = true }
 cline        = { enabled = true,  convert = true }
 opencode     = { enabled = true,  convert = true }
+roo-code     = { enabled = true,  convert = true }
+crush        = { enabled = true,  convert = true }
+amp          = { enabled = true,  convert = true }
+warp         = { enabled = true,  convert = true }
+factory      = { enabled = true,  convert = true }
+# Tier 2
 continue-dev = { enabled = true,  convert = true }
 antigravity  = { enabled = true,  convert = true }
+qwen-code    = { enabled = true,  convert = true }
+pi           = { enabled = true,  convert = true }
+kilo-code    = { enabled = true,  convert = true }
+augment-code = { enabled = true,  convert = true }
+jules        = { enabled = true,  convert = true }
+grok-cli     = { enabled = true,  convert = true }

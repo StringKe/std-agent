@@ -29,6 +29,17 @@ func TestAllTransformersSmoke(t *testing.T) {
 		"opencode":     true,
 		"continue-dev": true,
 		"antigravity":  true,
+		"roo-code":     true,
+		"crush":        true,
+		"amp":          true,
+		"qwen-code":    true,
+		"factory":      true,
+		"kilo-code":    true,
+		"pi":           true,
+		"warp":         true,
+		"augment-code": true,
+		"grok-cli":     true,
+		"jules":        true,
 	}
 
 	for name, tr := range Registry {

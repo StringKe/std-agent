@@ -1,0 +1,49 @@
+package transformer
+
+import (
+	"std-ai/internal/config"
+	"std-ai/internal/parser"
+	"std-ai/internal/transformer/protocol"
+	"std-ai/internal/writer"
+)
+
+func init() { Register(&Factory{}) }
+
+// Factory 是 Factory.ai Droids transformer。
+//
+// 协议族：AgentsMD。读 AGENTS.md（含 ~/.factory/AGENTS.md 全局），
+// `.factory/rules/*.md`（无 glob 支持，frontmatter 跳过 applyTo），
+// `.factory/skills/<name>/SKILL.md`，`.factory/droids/<name>.md`（subagent），
+// `.factory/settings.json`。企业付费市场显眼，AGENTS.md 标准核心采纳方之一。
+type Factory struct{}
+
+// Name 返回 "factory"
+func (f *Factory) Name() string { return "factory" }
+
+// Plan 委托 AgentsMD 协议按 factoryAdapter 计算输出
+func (f *Factory) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan, error) {
+	return protocol.AgentsMD{}.Plan(FilterDocs(docs, f.Name()), factoryAdapter, cfg)
+}
+
+// factoryAdapter 配置 AgentsMD 协议族的 factory 变体。
+//
+//   - SubagentsDir = `.factory/droids`（factory 把 subagents 叫 droids）
+//   - GlobsFieldName = ""（factory rules 无 glob 支持，frontmatter 跳过 applyTo）
+//   - CommandsDir / ReferencesDir 留空 -> 走 graceful degradation 到 FallbackDir
+var factoryAdapter = protocol.Adapter{
+	Name:                 "factory",
+	RootFileName:         "AGENTS.md",
+	ManifestSection:      "Reference Rules",
+	NestedSupported:      true,
+	RulesDir:             ".factory/rules",
+	SkillsDir:            ".factory/skills",
+	SubagentsDir:         ".factory/droids",
+	CommandsDir:          "",
+	ReferencesDir:        "",
+	FallbackDir:          ".factory/rules",
+	InjectExplainer:      true,
+	InjectStdaiTypeField: true,
+	GlobsFieldName:       "",
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata"},
+	InjectTypeGlossary:   true,
+}

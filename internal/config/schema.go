@@ -47,13 +47,15 @@ type Override struct {
 	InjectWhatIs *bool `toml:"inject_whatis"`
 }
 
-// ValidTargets 是合法 target 名清单（与文档对齐）
+// ValidTargets 是合法 target 名清单（与 plan.md 附录 A Tier 权威表对齐）
 var ValidTargets = []string{
-	// Tier 1
+	// Tier 1（用户基数大 / 协议主流）
 	"claude-code", "codex", "cursor", "copilot", "windsurf",
 	"gemini", "aider", "cline", "opencode",
-	// Tier 2 (v1.1+)
+	"roo-code", "crush", "amp", "warp", "factory",
+	// Tier 2（新兴 / 小众 / 半实验）
 	"continue-dev", "antigravity",
+	"qwen-code", "pi", "kilo-code", "augment-code", "jules", "grok-cli",
 }
 
 // IsValidTarget 检查 target 名合法
@@ -77,17 +79,30 @@ func Default() *Config {
 		BackupKeep:         5,
 		AutoPull:           true,
 		Targets: map[string]TargetConfig{
-			"claude-code":  {Enabled: true, Convert: true},
-			"codex":        {Enabled: true, Convert: true},
-			"cursor":       {Enabled: false, Convert: true},
-			"copilot":      {Enabled: false, Convert: true},
-			"windsurf":     {Enabled: false, Convert: true},
-			"gemini":       {Enabled: false, Convert: true},
-			"aider":        {Enabled: false, Convert: true},
-			"cline":        {Enabled: false, Convert: true},
-			"opencode":     {Enabled: false, Convert: true},
+			// Tier 1
+			"claude-code": {Enabled: true, Convert: true},
+			"codex":       {Enabled: true, Convert: true},
+			"cursor":      {Enabled: false, Convert: true},
+			"copilot":     {Enabled: false, Convert: true},
+			"windsurf":    {Enabled: false, Convert: true},
+			"gemini":      {Enabled: false, Convert: true},
+			"aider":       {Enabled: false, Convert: true},
+			"cline":       {Enabled: false, Convert: true},
+			"opencode":    {Enabled: false, Convert: true},
+			"roo-code":    {Enabled: false, Convert: true},
+			"crush":       {Enabled: false, Convert: true},
+			"amp":         {Enabled: false, Convert: true},
+			"warp":        {Enabled: false, Convert: true},
+			"factory":     {Enabled: false, Convert: true},
+			// Tier 2
 			"continue-dev": {Enabled: false, Convert: true},
 			"antigravity":  {Enabled: false, Convert: true},
+			"qwen-code":    {Enabled: false, Convert: true},
+			"pi":           {Enabled: false, Convert: true},
+			"kilo-code":    {Enabled: false, Convert: true},
+			"augment-code": {Enabled: false, Convert: true},
+			"jules":        {Enabled: false, Convert: true},
+			"grok-cli":     {Enabled: false, Convert: true},
 		},
 	}
 }
