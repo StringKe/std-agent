@@ -44,8 +44,9 @@ func TestAntigravityWorkflowAndSkill(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	if !paths[".agents/rules/skill-review.md"] {
-		t.Errorf("missing skill-as-rule, paths: %v", paths)
+	// v3：skill 走 Agent Skills 标准 fallback（子目录隔离，无 std-ai 私有前缀）
+	if !paths[".agents/rules/skills/review/SKILL.md"] {
+		t.Errorf("missing skill fallback (Agent Skills standard path), paths: %v", paths)
 	}
 	if !paths[".agents/workflows/deploy.md"] {
 		t.Errorf("missing workflow, paths: %v", paths)

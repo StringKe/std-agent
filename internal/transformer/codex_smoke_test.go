@@ -69,11 +69,11 @@ func TestCodexCommandsAsSkill(t *testing.T) {
 		{Type: parser.TypeCommands, Name: "review", Description: "Run code review", Body: "Steps..."},
 	}
 	plan, _ := tr.Plan(docs, cfg)
-	c, ok := contentOf(plan, ".agents/skills/cmd-review/SKILL.md")
+	c, ok := contentOf(plan, ".agents/skills/commands/review/SKILL.md")
 	if !ok {
-		t.Fatalf("expected .agents/skills/cmd-review/SKILL.md, paths: %v", pathSet(plan))
+		t.Fatalf("expected .agents/skills/commands/review/SKILL.md, paths: %v", pathSet(plan))
 	}
-	for _, want := range []string{"name: cmd-review", "/review", "Run code review"} {
+	for _, want := range []string{"name: review", "std-ai-type: commands", "/review", "Run code review"} {
 		if !strings.Contains(c, want) {
 			t.Errorf("missing %q in:\n%s", want, c)
 		}
@@ -83,7 +83,7 @@ func TestCodexCommandsAsSkill(t *testing.T) {
 func TestCodexCommandsSkillDoesNotCollideWithSkills(t *testing.T) {
 	tr := &Codex{}
 	cfg := &config.Config{Inject: false}
-	// 同 name 的 skill 与 command 同时存在，应输出到不同路径
+	// 同 name 的 skill 与 command 同时存在，子目录隔离避免冲突（v3）
 	docs := []*parser.Document{
 		{Type: parser.TypeSkills, Name: "review", Description: "Skill version", Body: "skill body"},
 		{Type: parser.TypeCommands, Name: "review", Description: "Cmd version", Body: "cmd body"},
@@ -93,7 +93,7 @@ func TestCodexCommandsSkillDoesNotCollideWithSkills(t *testing.T) {
 	if !paths[".agents/skills/review/SKILL.md"] {
 		t.Errorf("missing skill path, paths: %v", paths)
 	}
-	if !paths[".agents/skills/cmd-review/SKILL.md"] {
+	if !paths[".agents/skills/commands/review/SKILL.md"] {
 		t.Errorf("missing command-as-skill path, paths: %v", paths)
 	}
 }

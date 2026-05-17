@@ -47,7 +47,7 @@ func codexLikeAdapter() Adapter {
 		InjectStdaiTypeField:  true,
 		InjectTypeGlossary:    false,
 		SkillSupportedFields:  []string{"name", "description", "license", "compatibility", "metadata"},
-		CommandsAsSkillPrefix: "cmd-",
+		CommandsAsSkillSubdir: "commands",
 		InjectCommandsToRoot:  true,
 	}
 }
@@ -228,7 +228,7 @@ func TestAgentsMD_SkillFallbackPath(t *testing.T) {
 func TestAgentsMD_CommandsInjectedToRoot(t *testing.T) {
 	a := codexLikeAdapter()
 	a.InjectCommandsToRoot = true
-	a.CommandsAsSkillPrefix = "" // 关掉 skill prefix 才会走 inject 分支
+	a.CommandsAsSkillSubdir = "" // 关掉 skill subdir 才会走纯 inject 分支
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "root", Root: true, Body: "PROJECT"},
 		{Type: parser.TypeCommands, Name: "release", Description: "Release patch", Body: "release steps"},
@@ -261,10 +261,11 @@ func TestAgentsMD_CommandsInjectedToRoot(t *testing.T) {
 	}
 }
 
-// TestAgentsMD_CommandsAsSkillPrefix：CommandsAsSkillPrefix 非空时 command 降级为 skill
-func TestAgentsMD_CommandsAsSkillPrefix(t *testing.T) {
+// TestAgentsMD_CommandsAsSkillSubdir：CommandsAsSkillSubdir 非空时 command 降级为 skill 走子目录
+// （v3 子目录隔离，无 std-ai 私有前缀；路径 = <SkillsDir>/<Subdir>/<name>/SKILL.md）
+func TestAgentsMD_CommandsAsSkillSubdir(t *testing.T) {
 	a := codexLikeAdapter()
-	a.InjectCommandsToRoot = false // 关掉 inject 才走 skill prefix
+	a.InjectCommandsToRoot = false // 关掉 inject 才走 skill subdir
 	docs := []*parser.Document{
 		{Type: parser.TypeCommands, Name: "release", Description: "Release patch", Body: "steps"},
 	}
@@ -272,13 +273,16 @@ func TestAgentsMD_CommandsAsSkillPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	op := findAgentsMDOp(plan, ".agents/skills/cmd-release/SKILL.md")
+	op := findAgentsMDOp(plan, ".agents/skills/commands/release/SKILL.md")
 	if op == nil {
 		t.Fatalf("command-as-skill path missing, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(op.Content)
-	if !strings.Contains(content, "name: cmd-release") {
-		t.Errorf("expected name=cmd-release frontmatter, got:\n%s", content)
+	if !strings.Contains(content, "name: release") {
+		t.Errorf("expected name=release frontmatter (no cmd- prefix), got:\n%s", content)
+	}
+	if !strings.Contains(content, "std-ai-type: commands") {
+		t.Errorf("expected std-ai-type: commands frontmatter, got:\n%s", content)
 	}
 	if !strings.Contains(content, "/release") {
 		t.Errorf("description should mention slash invocation, got:\n%s", content)

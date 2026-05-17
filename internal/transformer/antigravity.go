@@ -28,15 +28,21 @@ func (a *Antigravity) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 }
 
 // antigravityAdapter 配置 AgentsMD 协议族的 antigravity 变体
+//
+// v3 修订：SkillsAsRule=false。原 SkillsAsRule=true 会产 `.agents/rules/skill-<name>.md`
+// 含 std-ai 私有 `skill-` 前缀，违反 v3 "不造私有前缀，用子目录隔离" 原则。
+// 改走 BuildDegradedSkillPackage 标准 Agent Skills fallback：`.agents/rules/skills/<name>/SKILL.md`。
 var antigravityAdapter = protocol.Adapter{
-	Name:            "antigravity",
-	RootFileName:    "", // 复用 codex 写的根 AGENTS.md，不重复写
-	NestedSupported: false,
-	RulesDir:        ".agents/rules",
-	SkillsAsRule:    true, // 无原生 skills，降级为 model_decision rule
-	CommandsDir:     ".agents/workflows",
-	FallbackDir:     ".agents/rules",
-	RuleTriggerMode: protocol.TriggerTrigger, // trigger frontmatter（always_on / glob / model_decision / manual）
-	MaxBytesPerFile: 12000,                   // antigravity 单 rule / workflow 字符上限（实测）
-	SoftBytes:       8000,
+	Name:                 "antigravity",
+	RootFileName:         "", // 复用 codex 写的根 AGENTS.md，不重复写
+	NestedSupported:      false,
+	RulesDir:             ".agents/rules",
+	SkillsAsRule:         false, // 走 fallback（v3 子目录隔离）
+	CommandsDir:          ".agents/workflows",
+	FallbackDir:          ".agents/rules",
+	InjectExplainer:      true,
+	InjectStdaiTypeField: true,
+	RuleTriggerMode:      protocol.TriggerTrigger, // trigger frontmatter
+	MaxBytesPerFile:      12000,                   // antigravity 单 rule / workflow 字符上限（实测）
+	SoftBytes:            8000,
 }

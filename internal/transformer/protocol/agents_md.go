@@ -16,7 +16,7 @@ import (
 // 覆盖 target：codex / opencode / antigravity / crush / amp / warp / factory /
 // qwen-code / pi / jules / grok-cli。Adapter 通过零值与字段组合控制变体（如
 // RootFileName="CRUSH.md" / RuleTriggerMode=TriggerTrigger /
-// InjectCommandsToRoot=true / CommandsAsSkillPrefix="cmd-"）。
+// InjectCommandsToRoot=true / CommandsAsSkillSubdir="commands"）。
 //
 // Cross-cutting 行为：
 //   - InjectCommandsToRoot：commands 段 inject 到 root FileOp.Content 的 footer
@@ -24,8 +24,8 @@ import (
 //     命令
 //   - RuleTriggerMode!=TriggerNone：nonRoot rules 子文件渲染 trigger frontmatter
 //     （antigravity 双协议场景）
-//   - CommandsAsSkillPrefix 非空：command 降级写为 skill 到 SkillsDir，name 前
-//     加前缀（codex 把 commands 写为 .agents/skills/cmd-<n>/SKILL.md）
+//   - CommandsAsSkillSubdir 非空：command 降级写为 skill 到 <SkillsDir>/<Subdir>/<name>/SKILL.md
+//     （codex 把 commands 写为 .agents/skills/commands/<n>/SKILL.md，v3 子目录隔离无私有前缀）
 //   - InjectTypeGlossary=true：root body 头部 prepend 类型速查段
 //   - nested root：写到 d.NestedPath/<RootFileName>，无 manifest 无 glossary
 //   - graceful degradation：Skills/CommandsDir/ReferencesDir/SubagentsDir 为空
@@ -103,15 +103,15 @@ func (p AgentsMD) Plan(docs []*parser.Document, a Adapter, cfg *config.Config) (
 
 	// commands 落盘：
 	//   - InjectCommandsToRoot=false：按 planCommand 走（CommandsDir / SkillPrefix / Degraded）
-	//   - InjectCommandsToRoot=true 且 CommandsAsSkillPrefix 非空：除了 inject 到 root，
+	//   - InjectCommandsToRoot=true 且 CommandsAsSkillSubdir 非空：除了 inject 到 root，
 	//     还要把 commands 写为 skill 文件（codex 行为：两个落点同时存在，
 	//     AGENTS.md 内有 ## Slash Commands 段让 AI 看到清单，skill 包让 AI 主动调用）
-	//   - InjectCommandsToRoot=true 且 CommandsAsSkillPrefix 空：纯 inject，无独立文件
+	//   - InjectCommandsToRoot=true 且 CommandsAsSkillSubdir 空：纯 inject，无独立文件
 	if !a.InjectCommandsToRoot {
 		for _, d := range commands {
 			plan.Files = append(plan.Files, p.planCommand(d, a, cfg)...)
 		}
-	} else if a.CommandsAsSkillPrefix != "" && a.SkillsDir != "" {
+	} else if a.CommandsAsSkillSubdir != "" && a.SkillsDir != "" {
 		for _, d := range commands {
 			plan.Files = append(plan.Files, p.buildCommandAsSkill(d, a, cfg))
 		}
@@ -359,11 +359,11 @@ func (p AgentsMD) buildSkillAsRule(d *parser.Document, a Adapter, cfg *config.Co
 
 // planCommand 输出单条 command。
 //
-//   - CommandsAsSkillPrefix 非空：command 降级为 skill 写到 SkillsDir，name 前加前缀
+//   - CommandsAsSkillSubdir 非空：command 降级为 skill 写到 <SkillsDir>/<Subdir>/<name>/SKILL.md
 //   - CommandsDir 非空：原生 markdown 写到 <CommandsDir>/<name>.md
 //   - 两者都空：graceful degradation -> BuildDegradedFileOp
 func (p AgentsMD) planCommand(d *parser.Document, a Adapter, cfg *config.Config) []writer.FileOp {
-	if a.CommandsAsSkillPrefix != "" && a.SkillsDir != "" {
+	if a.CommandsAsSkillSubdir != "" && a.SkillsDir != "" {
 		return []writer.FileOp{p.buildCommandAsSkill(d, a, cfg)}
 	}
 	if a.CommandsDir != "" {
@@ -390,12 +390,18 @@ func (p AgentsMD) buildCommandFile(d *parser.Document, a Adapter, cfg *config.Co
 	)
 }
 
-// buildCommandAsSkill 把 command 降级为 skill：写到 <SkillsDir>/<prefix><name>/SKILL.md
+// buildCommandAsSkill 把 command 降级为 skill：写到 <SkillsDir>/<CommandsAsSkillSubdir>/<name>/SKILL.md
 // description 加 slash 调用 hint 让模型理解这是 command-flavor skill
+//
+// v3 子目录隔离：原 CommandsAsSkillPrefix="cmd-" + 路径 .agents/skills/cmd-<name>/SKILL.md
+// 是 std-ai 私有前缀污染 skill 命名空间，改为 CommandsAsSkillSubdir="commands"
+// + 路径 .agents/skills/commands/<name>/SKILL.md（Agent Skills 规范允许任意 <skillDir>）。
 func (p AgentsMD) buildCommandAsSkill(d *parser.Document, a Adapter, cfg *config.Config) writer.FileOp {
-	skillName := a.CommandsAsSkillPrefix + d.Name
 	var fm transformerutil.FmBuilder
-	fm.Add("name", skillName)
+	fm.Add("name", d.Name)
+	if a.InjectStdaiTypeField {
+		fm.Add("std-ai-type", string(parser.TypeCommands))
+	}
 	desc := d.Description
 	if desc == "" {
 		desc = "Slash command: " + d.Name
@@ -405,7 +411,7 @@ func (p AgentsMD) buildCommandAsSkill(d *parser.Document, a Adapter, cfg *config
 	fm.Add("model", d.Model)
 	opts := transformerutil.MakeOpts(cfg, a.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
-		path.Join(a.SkillsDir, skillName, "SKILL.md"),
+		path.Join(a.SkillsDir, a.CommandsAsSkillSubdir, d.Name, "SKILL.md"),
 		fm.String(), d.Body, opts,
 	)
 }

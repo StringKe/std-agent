@@ -32,7 +32,7 @@ var codexAdapter = protocol.Adapter{
 	InjectStdaiTypeField:  true,
 	SkillSupportedFields:  []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandFormat:         protocol.CommandSkillPrefix,
-	CommandsAsSkillPrefix: "cmd-",
+	CommandsAsSkillSubdir: "commands", // v3：子目录隔离（避免 cmd- 私有前缀污染 skill 命名空间）
 	InjectCommandsToRoot:  true,
 	InjectTypeGlossary:    true,
 }

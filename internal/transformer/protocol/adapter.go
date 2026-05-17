@@ -77,10 +77,14 @@ type Adapter struct {
 	SkillsSubagentPermission string
 
 	// Commands
-	CommandFormat         CommandFormat
-	CommandFrontmatter    []string
-	InjectCommandsToRoot  bool
-	CommandsAsSkillPrefix string
+	CommandFormat        CommandFormat
+	CommandFrontmatter   []string
+	InjectCommandsToRoot bool
+	// CommandsAsSkillSubdir：command 降级写为 skill 时，落到 <SkillsDir>/<Subdir>/<name>/SKILL.md。
+	// 例如 codex 用 "commands"，路径形如 .agents/skills/commands/release-patch/SKILL.md
+	// （v3 子目录隔离，避免 cmd- 私有前缀污染 skill 命名空间）。
+	// 空值表示不写独立 skill 文件（commands 仅 inject 到 root 或走 fallback）。
+	CommandsAsSkillSubdir string
 	// CommandsFileSuffix 是 command 输出文件扩展（含前导点），如 ".md" / ".prompt.md"。
 	// 空值默认 ".md"。windsurf / antigravity workflows 用 ".md"，continue-dev prompts 用 ".prompt.md"。
 	CommandsFileSuffix string
@@ -130,7 +134,7 @@ const (
 	CommandMarkdown CommandFormat = iota
 	// CommandTOML 写 TOML 文件（gemini 用）
 	CommandTOML
-	// CommandSkillPrefix 把 command 转写为 skill，文件名加 CommandsAsSkillPrefix 前缀
+	// CommandSkillPrefix 把 command 转写为 skill，路径走 CommandsAsSkillSubdir 子目录
 	CommandSkillPrefix
 )
 

@@ -41,7 +41,7 @@ model: claude-sonnet-4-5                # 指定模型（可选）
 | Copilot | `.github/prompts/<name>.prompt.md` |
 | Gemini CLI | `.gemini/commands/<name>.toml` |
 | OpenCode | `.opencode/commands/<name>.md` |
-| Codex | 降级为 skill：`.agents/skills/cmd-<name>/SKILL.md`（codex 无原生 slash 命令，加 cmd- 前缀避免与同名 skill 冲突） |
+| Codex | 降级为 skill：`.agents/skills/commands/<name>/SKILL.md`（codex 无原生 slash 命令，commands 子目录隔离避免与同名 skill 冲突） |
 | Windsurf | `.windsurf/workflows/<name>.md`（workflow 概念替代 command） |
 
 ## 何时不要用 command
