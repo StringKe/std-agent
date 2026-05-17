@@ -28,6 +28,7 @@ type Options struct {
 	DryRun      bool
 	NoPull      bool
 	NoBackup    bool
+	NoPrune     bool
 	Strict      bool
 	Targets     []string
 	Version     string
@@ -38,6 +39,8 @@ type Result struct {
 	Plans       []*writer.Plan
 	Written     int
 	Skipped     int
+	Pruned      int
+	PrunedPaths []string
 	BackupDir   string
 	SourceFiles int
 	Docs        int
@@ -293,9 +296,58 @@ func Sync(opts Options) (*Result, error) {
 		res.Written += written
 		res.Skipped += skipped
 
+		// current = 本次 plan 中"应当存在于磁盘"的 path 集合：
+		// 包含未 skip 的（写入）+ Reason=="unchanged" 的（内容一致）。
+		// 排除 transformer / submodule 标的 WARN skip（这些 path 不在我们管理范围）。
+		current := make(map[string]struct{}, len(plan.Files))
+		for _, f := range plan.Files {
+			if !f.Skip || f.Reason == "unchanged" {
+				current[f.Path] = struct{}{}
+			}
+		}
+
+		// 孤儿 = 上次 state 记录、本次 current 不再包含。submodule 边界保护：
+		// 落在 submodule 内的 path 永远不主动删（即使是我们之前写过的，谨慎为上）。
+		var orphans []string
+		if prev, ok := st.Targets[name]; ok {
+			for p := range prev.Outputs {
+				if _, still := current[p]; still {
+					continue
+				}
+				if sp := submoduleContaining(p, submodulePaths); sp != "" {
+					res.Warnings = append(res.Warnings, fmt.Sprintf("%s/%s: orphan in submodule %q skipped", name, p, sp))
+					continue
+				}
+				orphans = append(orphans, p)
+			}
+		}
+		sort.Strings(orphans)
+
+		if !opts.NoPrune && len(orphans) > 0 {
+			if cfg.DryRun {
+				res.Pruned += len(orphans)
+				res.PrunedPaths = append(res.PrunedPaths, prefixed(name, orphans)...)
+			} else {
+				absOrphans := make([]string, 0, len(orphans))
+				for _, p := range orphans {
+					full := filepath.Join(opts.ProjectRoot, p)
+					if err := os.Remove(full); err != nil && !errors.Is(err, fs.ErrNotExist) {
+						res.Warnings = append(res.Warnings, fmt.Sprintf("prune %s: %v", p, err))
+						continue
+					}
+					absOrphans = append(absOrphans, full)
+					res.Pruned++
+					res.PrunedPaths = append(res.PrunedPaths, fmt.Sprintf("%s/%s", name, p))
+				}
+				cleanEmptyDirs(absOrphans)
+			}
+		}
+
+		// state.Outputs 记录本次 current（含 unchanged），确保下次 sync 能识别孤儿。
+		// 前版本只记非 skip 的 path，unchanged 文件会从 state 丢失追踪，prune 永远扫不到。
 		out := map[string]string{}
 		for _, f := range plan.Files {
-			if f.Skip {
+			if f.Skip && f.Reason != "unchanged" {
 				continue
 			}
 			out[f.Path] = writer.Checksum(f.Content)
@@ -418,6 +470,44 @@ func submoduleContaining(filePath string, submodulePaths []string) string {
 		}
 	}
 	return ""
+}
+
+// cleanEmptyDirs 删除被 prune 文件的父目录链（若已空）。
+//
+// 与 internal/cli/clean.go 的同名函数语义一致。两份拷贝（runner / cli）暂不抽公共：
+// 二者直接依赖关系会形成 cli -> runner 反向，writer 包是更合适的归宿，留待第三处用例时再抽。
+func cleanEmptyDirs(paths []string) {
+	dirs := map[string]bool{}
+	for _, p := range paths {
+		dir := filepath.Dir(p)
+		for dir != "." && dir != "" {
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dirs[dir] = true
+			dir = parent
+		}
+	}
+	dirList := make([]string, 0, len(dirs))
+	for d := range dirs {
+		dirList = append(dirList, d)
+	}
+	sort.Slice(dirList, func(i, j int) bool {
+		return len(dirList[i]) > len(dirList[j])
+	})
+	for _, d := range dirList {
+		_ = os.Remove(d)
+	}
+}
+
+// prefixed 给路径列表统一加 "<target>/" 前缀，仅 DryRun 汇报用
+func prefixed(target string, paths []string) []string {
+	out := make([]string, len(paths))
+	for i, p := range paths {
+		out[i] = fmt.Sprintf("%s/%s", target, p)
+	}
+	return out
 }
 
 func sortedKeys[V any](m map[string]V) []string {

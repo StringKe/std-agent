@@ -387,6 +387,235 @@ claude-code = { enabled = true, convert = true }
 	}
 }
 
+// TestSyncPrunesOrphans 复现"规则从 30 优化为 15"的典型场景：
+// 第一次 sync 写入完整集合，删源文件后第二次 sync 应该把过时输出删掉。
+func TestSyncPrunesOrphans(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+
+	for _, name := range []string{"keep-a", "keep-b", "drop-c", "drop-d"} {
+		mustWrite(t, filepath.Join(stdai, "standards/rules", name+".md"), `---
+type: rules
+name: `+name+`
+---
+body of `+name+`
+`)
+	}
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+claude-code = { enabled = true, convert = true }
+`)
+
+	if _, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	}); err != nil {
+		t.Fatalf("first Sync: %v", err)
+	}
+	for _, n := range []string{"keep-a", "keep-b", "drop-c", "drop-d"} {
+		if _, err := os.Stat(filepath.Join(tmp, ".claude/rules", n+".md")); err != nil {
+			t.Fatalf("first sync missing %s: %v", n, err)
+		}
+	}
+
+	mustRemove(t, filepath.Join(stdai, "standards/rules/drop-c.md"))
+	mustRemove(t, filepath.Join(stdai, "standards/rules/drop-d.md"))
+
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("second Sync: %v", err)
+	}
+	if res.Pruned != 2 {
+		t.Errorf("Pruned = %d, want 2", res.Pruned)
+	}
+	for _, n := range []string{"drop-c", "drop-d"} {
+		if _, err := os.Stat(filepath.Join(tmp, ".claude/rules", n+".md")); err == nil {
+			t.Errorf(".claude/rules/%s.md should have been pruned", n)
+		}
+	}
+	for _, n := range []string{"keep-a", "keep-b"} {
+		if _, err := os.Stat(filepath.Join(tmp, ".claude/rules", n+".md")); err != nil {
+			t.Errorf(".claude/rules/%s.md should survive: %v", n, err)
+		}
+	}
+}
+
+// TestSyncNoPruneKeepsOrphans 验证 --no-prune 跳过删除
+func TestSyncNoPruneKeepsOrphans(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/keep.md"), `---
+type: rules
+name: keep
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "standards/rules/drop.md"), `---
+type: rules
+name: drop
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+claude-code = { enabled = true, convert = true }
+`)
+
+	if _, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	mustRemove(t, filepath.Join(stdai, "standards/rules/drop.md"))
+
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		NoPrune:     true,
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Pruned != 0 {
+		t.Errorf("Pruned = %d, want 0 with NoPrune", res.Pruned)
+	}
+	if _, err := os.Stat(filepath.Join(tmp, ".claude/rules/drop.md")); err != nil {
+		t.Errorf("drop.md should remain under NoPrune: %v", err)
+	}
+}
+
+// TestSyncDryRunReportsPrune DryRun 模式只汇报、不真删
+func TestSyncDryRunReportsPrune(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/keep.md"), `---
+type: rules
+name: keep
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "standards/rules/drop.md"), `---
+type: rules
+name: drop
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+claude-code = { enabled = true, convert = true }
+`)
+	if _, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	mustRemove(t, filepath.Join(stdai, "standards/rules/drop.md"))
+
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		DryRun:      true,
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Pruned != 1 {
+		t.Errorf("Pruned = %d, want 1 (dry-run reports)", res.Pruned)
+	}
+	if _, err := os.Stat(filepath.Join(tmp, ".claude/rules/drop.md")); err != nil {
+		t.Error("dry-run should NOT actually delete drop.md")
+	}
+}
+
+// TestSyncUnchangedStillTrackedInState 修复预存 bug：上次写入 + 这次内容不变（unchanged skip）
+// 的文件必须保留在 state.Outputs 中。否则之后一旦源被删，第三次 sync 无从识别孤儿。
+func TestSyncUnchangedStillTrackedInState(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/stable.md"), `---
+type: rules
+name: stable
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+claude-code = { enabled = true, convert = true }
+`)
+	for i := 0; i < 2; i++ {
+		if _, err := Sync(Options{
+			ProjectRoot: tmp,
+			ConfigPath:  filepath.Join(stdai, "config.toml"),
+			Version:     "test",
+		}); err != nil {
+			t.Fatalf("sync %d: %v", i, err)
+		}
+	}
+
+	mustRemove(t, filepath.Join(stdai, "standards/rules/stable.md"))
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// 关键断言：stable.md 必须是 orphan 之一（即 unchanged 路径在 state 里被跟踪了）。
+	// 不限定 Pruned 总数，因为 transformer 可能同时 prune 其他衍生文件（whatis 索引等）。
+	found := false
+	for _, p := range res.PrunedPaths {
+		if strings.HasSuffix(p, ".claude/rules/stable.md") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("stable.md not in PrunedPaths = %v", res.PrunedPaths)
+	}
+	if _, err := os.Stat(filepath.Join(tmp, ".claude/rules/stable.md")); err == nil {
+		t.Error("stable.md should be pruned from disk")
+	}
+}
+
+func mustRemove(t *testing.T, p string) {
+	t.Helper()
+	if err := os.Remove(p); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func mustMkdir(t *testing.T, p string) {
 	t.Helper()
 	if err := os.MkdirAll(p, 0o755); err != nil {
