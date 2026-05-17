@@ -23,10 +23,18 @@ func TestCursorRuleModes(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			plan, _ := tr.Plan([]*parser.Document{tc.doc}, cfg)
-			if len(plan.Files) != 1 {
-				t.Fatalf("expected 1 file, got %d", len(plan.Files))
+			// 找 rule 文件（.mdc 后缀），跳过 glossary
+			var ruleOp *struct{ Content []byte }
+			for i := range plan.Files {
+				if strings.HasSuffix(plan.Files[i].Path, ".mdc") {
+					ruleOp = &struct{ Content []byte }{Content: plan.Files[i].Content}
+					break
+				}
 			}
-			c := string(plan.Files[0].Content)
+			if ruleOp == nil {
+				t.Fatalf("no .mdc rule file in plan, got %d files", len(plan.Files))
+			}
+			c := string(ruleOp.Content)
 			if !strings.Contains(c, tc.want) {
 				t.Errorf("missing %q in:\n%s", tc.want, c)
 			}

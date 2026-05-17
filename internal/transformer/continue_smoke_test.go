@@ -18,9 +18,11 @@ func TestContinueDevOutputs(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
+	// 迁移到 WindsurfStyle 协议后，skills 不再降级为 skill-<name>.md，
+	// 改走 Agent Skills 标准 fallback：.continue/rules/skills/<name>/SKILL.md
 	for _, want := range []string{
 		".continue/rules/ts-style.md",
-		".continue/rules/skill-review.md",
+		".continue/rules/skills/review/SKILL.md",
 		".continue/prompts/explain.prompt.md",
 	} {
 		if !paths[want] {

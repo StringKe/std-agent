@@ -101,10 +101,19 @@ func (p AgentsMD) Plan(docs []*parser.Document, a Adapter, cfg *config.Config) (
 		plan.Files = append(plan.Files, p.planSkill(d, a, cfg)...)
 	}
 
-	// commands（若未 inject 到 root）
+	// commands 落盘：
+	//   - InjectCommandsToRoot=false：按 planCommand 走（CommandsDir / SkillPrefix / Degraded）
+	//   - InjectCommandsToRoot=true 且 CommandsAsSkillPrefix 非空：除了 inject 到 root，
+	//     还要把 commands 写为 skill 文件（codex 行为：两个落点同时存在，
+	//     AGENTS.md 内有 ## Slash Commands 段让 AI 看到清单，skill 包让 AI 主动调用）
+	//   - InjectCommandsToRoot=true 且 CommandsAsSkillPrefix 空：纯 inject，无独立文件
 	if !a.InjectCommandsToRoot {
 		for _, d := range commands {
 			plan.Files = append(plan.Files, p.planCommand(d, a, cfg)...)
+		}
+	} else if a.CommandsAsSkillPrefix != "" && a.SkillsDir != "" {
+		for _, d := range commands {
+			plan.Files = append(plan.Files, p.buildCommandAsSkill(d, a, cfg))
 		}
 	}
 
@@ -137,8 +146,9 @@ func (p AgentsMD) buildRoot(roots, inlineNonRoot []*parser.Document, a Adapter, 
 	}
 	if len(roots) > 0 {
 		body.WriteString(transformerutil.RenderRootBody(roots))
-	} else if body.Len() == 0 && len(inlineNonRoot) == 0 {
-		// 无 root rule 且无 glossary 且无 inline -> 给个最小占位标题
+	} else {
+		// 无 root rule -> 给占位标题；与原 codex 行为一致，
+		// 让 manifest 段挂在一个有名字的章节下，无 root 时也不至于裸 manifest
 		body.WriteString("# Project AGENTS Manifest\n\n")
 	}
 	if a.RulesDir != "" && len(inlineNonRoot) > 0 {
@@ -236,16 +246,45 @@ func (p AgentsMD) buildRuleFile(d *parser.Document, a Adapter, cfg *config.Confi
 // planSkill 输出单条 skill。
 //
 //   - SkillsAsRule=true：skill 降级为 rule 文件（antigravity 系）
+//   - SkillsAsSubagent=true + SkillsDir 非空：skill 输出扁平 <SkillsDir>/<name>.md
+//     含 mode: subagent frontmatter（opencode 系；SkillFiles 非空时 WARN）
 //   - SkillsDir 非空：原生 Agent Skills 标准 <SkillsDir>/<name>/SKILL.md
 //   - SkillsDir 为空：graceful degradation -> BuildDegradedSkillPackage
 func (p AgentsMD) planSkill(d *parser.Document, a Adapter, cfg *config.Config) []writer.FileOp {
 	if a.SkillsAsRule {
 		return []writer.FileOp{p.buildSkillAsRule(d, a, cfg)}
 	}
+	if a.SkillsAsSubagent && a.SkillsDir != "" {
+		return []writer.FileOp{p.buildSkillAsSubagent(d, a, cfg)}
+	}
 	if a.SkillsDir != "" {
 		return p.buildSkillPackage(d, a, cfg)
 	}
 	return BuildDegradedSkillPackage(d, a, cfg)
+}
+
+// buildSkillAsSubagent 把 skill 输出为扁平 <SkillsDir>/<name>.md 文件
+// （opencode 风格：mode: subagent + description + model + permission）。
+//
+// SkillFiles 非空时单文件 agent 无法承载子目录辅助文件，op.Reason 加 WARN，
+// runner 收集后输出到 stderr 提示用户。
+func (p AgentsMD) buildSkillAsSubagent(d *parser.Document, a Adapter, cfg *config.Config) writer.FileOp {
+	var fm transformerutil.FmBuilder
+	fm.Add("mode", "subagent")
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
+	fm.Add("model", d.Model)
+	if a.SkillsSubagentPermission != "" {
+		fm.AddRaw("permission", a.SkillsSubagentPermission)
+	}
+	opts := transformerutil.MakeOpts(cfg, a.Name, d.Path, false)
+	op := transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(a.SkillsDir, d.Name, ".md"),
+		fm.String(), d.Body, opts,
+	)
+	if len(d.SkillFiles) > 0 {
+		op.Reason = fmt.Sprintf("WARN: %d SKILL package 辅助文件被忽略，%s skill 是单文件不支持子目录（参考 docs/spec.md 4.5 降级链）", len(d.SkillFiles), a.Name)
+	}
+	return op
 }
 
 // buildSkillPackage 在 SkillsDir 下输出 Agent Skills 标准包。

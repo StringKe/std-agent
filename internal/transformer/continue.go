@@ -3,7 +3,7 @@ package transformer
 import (
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
+	"std-ai/internal/transformer/protocol"
 	"std-ai/internal/writer"
 )
 
@@ -17,77 +17,33 @@ type ContinueDev struct{}
 // Name 返回 "continue-dev"（避免与 Go keyword `continue` 视觉冲突）
 func (c *ContinueDev) Name() string { return "continue-dev" }
 
-// Plan 计算输出
+// Plan 委托 WindsurfStyle 协议族
 func (c *ContinueDev) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan, error) {
-	plan := &writer.Plan{Target: c.Name()}
-	docs = FilterDocs(docs, c.Name())
-	if len(docs) == 0 {
-		return plan, nil
-	}
-	rules := transformerutil.FilterByType(docs, parser.TypeRules)
-	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
-	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
-	transformerutil.SortDocs(rules)
-	transformerutil.SortDocs(skills)
-	transformerutil.SortDocs(commands)
-
-	for _, d := range rules {
-		plan.Files = append(plan.Files, c.buildRule(d, cfg))
-	}
-	for _, d := range skills {
-		plan.Files = append(plan.Files, c.buildSkillAsRule(d, cfg))
-	}
-	for _, d := range commands {
-		plan.Files = append(plan.Files, c.buildPrompt(d, cfg))
-	}
-	return plan, nil
+	return protocol.WindsurfStyle{}.Plan(FilterDocs(docs, c.Name()), continueAdapter, cfg)
 }
 
-// buildRule -> .continue/rules/<n>.md，frontmatter name/description/globs/alwaysApply
-func (c *ContinueDev) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm transformerutil.FmBuilder
-	fm.Add("name", d.Name)
-	fm.Add("description", d.Description)
-	fm.AddList("globs", transformerutil.EffectiveApplyTo(d, c.Name()))
-	if d.AlwaysApply {
-		fm.AddBool("alwaysApply", true)
-	}
-	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
-	return transformerutil.BuildMarkdownFile(
-		transformerutil.FilePath(".continue/rules", d.Name, ".md"),
-		fm.String(), d.Body, opts,
-	)
-}
-
-// buildSkillAsRule 把 std skill 降级为 Continue model-decision rule
-// 输出到 .continue/rules/skill-<n>.md 避免与同 name 的 rule 冲突
-func (c *ContinueDev) buildSkillAsRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm transformerutil.FmBuilder
-	fm.Add("name", "Skill: "+d.Name)
-	desc := d.Description
-	if desc == "" {
-		desc = "Skill: " + d.Name
-	}
-	fm.Add("description", desc)
-	fm.AddBool("alwaysApply", false)
-	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
-	return transformerutil.BuildMarkdownFile(
-		transformerutil.FilePath(".continue/rules", "skill-"+d.Name, ".md"),
-		fm.String(), d.Body, opts,
-	)
-}
-
-// buildPrompt -> .continue/prompts/<n>.prompt.md，frontmatter
-// name/description/version/invokable=true（slash 触发）
-func (c *ContinueDev) buildPrompt(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm transformerutil.FmBuilder
-	fm.Add("name", d.Name)
-	fm.Add("description", d.Description)
-	fm.Add("version", d.Version)
-	fm.AddBool("invokable", true)
-	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
-	return transformerutil.BuildMarkdownFile(
-		transformerutil.FilePath(".continue/prompts", d.Name, ".prompt.md"),
-		fm.String(), d.Body, opts,
-	)
+// continueAdapter 配置 WindsurfStyle 协议族的 continue-dev 变体。
+//
+// 与 windsurf 差异：
+//   - 无原生 skills -> SkillsDir 留空，SkillsAsRule=false 走 Agent Skills 标准 fallback
+//     落到 .continue/rules/skills/<name>/SKILL.md
+//   - commands 走 .continue/prompts/<name>.prompt.md，frontmatter 含
+//     name/description/version/invokable=true
+//   - 无根文件（continue-dev 主入口就是 .continue/rules/ 多文件）
+//
+// RuleTriggerMode=TriggerTrigger 与 windsurf 一致（continue 支持 globs + 推断
+// alwaysApply / model_decision / manual 语义）。
+var continueAdapter = protocol.Adapter{
+	Name:                 "continue-dev",
+	RulesDir:             ".continue/rules",
+	SkillsDir:            "", // 无原生 skills，走 BuildDegradedSkillPackage
+	CommandsDir:          ".continue/prompts",
+	CommandsFileSuffix:   ".prompt.md",
+	CommandFrontmatter:   []string{"name", "description", "version", "invokable"},
+	FallbackDir:          ".continue/rules",
+	InjectExplainer:      true,
+	InjectStdaiTypeField: true,
+	SkillsAsRule:         false, // 走 Agent Skills 标准包
+	RuleTriggerMode:      protocol.TriggerTrigger,
+	InjectTypeGlossary:   true,
 }

@@ -99,7 +99,15 @@ func TestCursorRuleVeryLongBodyDoesNotPanic(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(plan.Files) != 1 {
-		t.Errorf("expected 1 file, got %d", len(plan.Files))
+	// 至少 1 个 rule 文件（cursor 默认 InjectTypeGlossary=true 会额外产 glossary.md）
+	hasRule := false
+	for _, f := range plan.Files {
+		if strings.HasSuffix(f.Path, "/long.mdc") {
+			hasRule = true
+			break
+		}
+	}
+	if !hasRule {
+		t.Errorf("expected long.mdc rule file, got %d files", len(plan.Files))
 	}
 }

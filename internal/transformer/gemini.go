@@ -6,15 +6,18 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/protocol"
 	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
-func init() {
-	Register(&Gemini{})
-}
+func init() { Register(&Gemini{}) }
 
 // Gemini 是 Google Gemini CLI transformer
+//
+// 特殊：commands 用 TOML 格式（`.gemini/commands/<n>.toml`），独一份方言。
+// 因此 Plan 分两段处理：rules / skills / references / subagents 走 AgentsMD 协议
+// 渲染 GEMINI.md，commands 走自己的 TOML 渲染。
 type Gemini struct{}
 
 // Name 返回 "gemini"
@@ -22,43 +25,50 @@ func (g *Gemini) Name() string { return "gemini" }
 
 // Plan 计算输出
 func (g *Gemini) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan, error) {
-	plan := &writer.Plan{Target: g.Name()}
-	docs = FilterDocs(docs, g.Name())
-	if len(docs) == 0 {
-		return plan, nil
-	}
-	rules := transformerutil.FilterByType(docs, parser.TypeRules)
-	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
-	transformerutil.SortDocs(rules)
-	transformerutil.SortDocs(commands)
+	filtered := FilterDocs(docs, g.Name())
 
-	plan.Files = append(plan.Files, g.buildGEMINIMd(rules, cfg))
-	for _, d := range commands {
-		plan.Files = append(plan.Files, g.buildCommand(d, cfg))
+	nonCommands := make([]*parser.Document, 0, len(filtered))
+	var commands []*parser.Document
+	for _, d := range filtered {
+		if d.Type == parser.TypeCommands {
+			commands = append(commands, d)
+			continue
+		}
+		nonCommands = append(nonCommands, d)
 	}
-	// skills 在 Gemini 上无原生概念，v1.0 不输出
+
+	plan, err := protocol.AgentsMD{}.Plan(nonCommands, geminiAdapter, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	transformerutil.SortDocs(commands)
+	for _, d := range commands {
+		plan.Files = append(plan.Files, buildGeminiCommandTOML(d, cfg))
+	}
 	return plan, nil
 }
 
-func (g *Gemini) buildGEMINIMd(rules []*parser.Document, cfg *config.Config) writer.FileOp {
-	opts := transformerutil.MakeOpts(cfg, g.Name(), "", true)
-	roots, nonRoot := transformerutil.PartitionRoot(rules)
-	var body strings.Builder
-	if len(roots) > 0 {
-		body.WriteString(transformerutil.RenderRootBody(roots))
-		if len(nonRoot) > 0 {
-			body.WriteString("\n")
-			body.WriteString(transformerutil.JoinAGENTSStyle("", nonRoot))
-		}
-	} else {
-		body.WriteString(transformerutil.JoinAGENTSStyle("Project GEMINI Manifest", nonRoot))
-	}
-	op := transformerutil.BuildMarkdownFile("GEMINI.md", "", body.String(), opts)
-	op.IsRoot = true
-	return op
+// geminiAdapter 描述 Gemini 的根文件协议族行为。
+//
+// 仅渲染 GEMINI.md（无原生 rules / skills / references / subagents 子目录），
+// 多余的 doc 类型走 FallbackDir `.gemini/rules` 兜底。commands 不归 protocol
+// 处理（在 Plan 里提前剥离），所以这里 CommandsDir 留空、InjectCommandsToRoot
+// 也保持 false。
+var geminiAdapter = protocol.Adapter{
+	Name:                 "gemini",
+	RootFileName:         "GEMINI.md",
+	NestedSupported:      true,
+	FallbackDir:          ".gemini/rules",
+	InjectExplainer:      true,
+	InjectStdaiTypeField: true,
+	InjectTypeGlossary:   true,
 }
 
-func (g *Gemini) buildCommand(d *parser.Document, cfg *config.Config) writer.FileOp {
+// buildGeminiCommandTOML 渲染单条 command 为 `.gemini/commands/<name>.toml`
+//
+// Gemini 自定义 TOML 格式，含可选 description 字段与必填 prompt 字段。
+func buildGeminiCommandTOML(d *parser.Document, cfg *config.Config) writer.FileOp {
 	var b strings.Builder
 	if cfg.Inject {
 		fmt.Fprintf(&b,

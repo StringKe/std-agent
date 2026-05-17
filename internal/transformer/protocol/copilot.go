@@ -259,7 +259,12 @@ func buildCopilotFallbackInstruction(d *parser.Document, adapter Adapter, cfg *c
 		body = renderExplainerHeader(d.Type, d.Name, adapter.Name) + "\n\n" + body
 	}
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
-	return transformerutil.BuildMarkdownFile(fullPath, fm.String(), body, opts)
+	op := transformerutil.BuildMarkdownFile(fullPath, fm.String(), body, opts)
+	// SkillFiles 非空时 copilot 无法承载（.instructions.md 是单文件），runner 收集 WARN。
+	if d.Type == parser.TypeSkills && len(d.SkillFiles) > 0 {
+		op.Reason = fmt.Sprintf("WARN: %d SKILL package 辅助文件被忽略，copilot .instructions.md 是单文件不支持子目录", len(d.SkillFiles))
+	}
+	return op
 }
 
 // copilotFallbackPath 计算 skills / references fallback 文件路径。
