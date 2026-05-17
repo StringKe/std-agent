@@ -127,6 +127,7 @@ stdagent intro --json              # для агентов / автоматиз�
 | `stdagent status` | Дрифт и время последней синхронизации по каждой цели |
 | `stdagent clean` | Удалить сгенерированные файлы (сохранив `.stdai/`) |
 | `stdagent budget` | Проверка бюджета LLM-контекста (символы + оценка токенов) |
+| `stdagent which <path>` | Список rules / references, применимых к файлу (контекст по требованию для AI) |
 | `stdagent intro` | Печатает промпт для LLM-миграции существующей конфигурации |
 | `stdagent upgrade` | Самообновление с GitHub Releases (sha256 + атомарная замена) |
 | `stdagent version` | Информация о сборке |

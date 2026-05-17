@@ -124,6 +124,7 @@ stdagent intro --json              # 給 agent / 自動化整合
 | `stdagent status` | 各 target 的 drift 與最後同步時間 |
 | `stdagent clean` | 清空產生的檔案（保留 `.stdai/`） |
 | `stdagent budget` | LLM context 預算檢查（字元 + token 估算） |
+| `stdagent which <path>` | 列出對該檔案適用的 rules / references（讓 AI 按需載入上下文） |
 | `stdagent intro` | 輸出遷移提示詞（餵給 AI 助手把現有設定轉 std 格式） |
 | `stdagent upgrade` | 從 GitHub Releases 自我升級（sha256 + 原子取代） |
 | `stdagent version` | 建置資訊 |

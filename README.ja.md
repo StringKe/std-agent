@@ -127,6 +127,7 @@ stdagent intro --json              # agent / 自動化統合向け
 | `stdagent status` | 各 target の drift と最終同期時刻 |
 | `stdagent clean` | 生成ファイルを削除（`.stdai/` は保持） |
 | `stdagent budget` | LLM コンテキスト予算チェック（文字数 + token 推定） |
+| `stdagent which <path>` | そのファイルに適用される rules / references を列挙（AI のオンデマンド・コンテキスト読込） |
 | `stdagent intro` | 既存設定を std 形式に変換させるための AI 助手向けプロンプトを出力 |
 | `stdagent upgrade` | GitHub Releases から自己アップグレード（sha256 + 原子置換） |
 | `stdagent version` | ビルド情報 |

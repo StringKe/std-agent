@@ -126,6 +126,7 @@ stdagent intro --json              # 에이전트 / 자동화 통합용
 | `stdagent status` | 타겟별 드리프트 + 마지막 동기화 시각 |
 | `stdagent clean` | 생성 파일 제거 (`.stdai/` 는 보존) |
 | `stdagent budget` | LLM 컨텍스트 예산 검사 (문자 + 토큰 추정) |
+| `stdagent which <path>` | 해당 파일에 적용되는 rules / references 나열 (AI 의 온디맨드 컨텍스트 로딩) |
 | `stdagent intro` | 기존 설정을 변환하기 위한 마이그레이션 프롬프트 출력 |
 | `stdagent upgrade` | GitHub Releases 에서 자가 업그레이드 (sha256 + 원자 교체) |
 | `stdagent version` | 빌드 정보 |

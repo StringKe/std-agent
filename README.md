@@ -127,6 +127,7 @@ stdagent intro --json              # for agent / automation integrations
 | `stdagent status` | Per-target drift + last sync time |
 | `stdagent clean` | Remove generated files (preserves `.stdai/`) |
 | `stdagent budget` | LLM context budget check (chars + token estimate) |
+| `stdagent which <path>` | List rules / references applicable to a file (on-demand context routing for AI) |
 | `stdagent intro` | Print a migration prompt for an LLM to convert your existing config |
 | `stdagent upgrade` | Self-upgrade from GitHub Releases (sha256 + atomic replace) |
 | `stdagent version` | Build info |

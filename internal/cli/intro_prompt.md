@@ -306,9 +306,10 @@ rulesync 的 `.rulesync/rules/<n>.md` 与 stdagent 源结构非常接近，front
 | 命令 | 用途 |
 |---|---|
 | `stdagent init` | 在项目里建 `.stdai/` 骨架与示例 |
-| `stdagent sync` | 把 `.stdai/standards/` 扩散到 enabled target |
+| `stdagent sync` | 把 `.stdai/standards/` 扩散到 enabled target（默认 prune 上次写过但本次不再产出的孤儿） |
 | `stdagent status` | 显示每个 target 的 drift 与最后同步时间 |
 | `stdagent fix` | 等价 sync（语义别名，drift 修复） |
+| `stdagent which <path>` | 查"我现在编辑 X 文件时应该加载哪些 rules / references"，按需上下文路由 |
 | `stdagent clean` | 删生成产物，保留 `.stdai/` 源 |
 | `stdagent budget` | LLM context 预算检查（字符 + token 估算） |
 | `stdagent intro` | 输出本提示词（你正在读的内容） |
@@ -316,6 +317,33 @@ rulesync 的 `.rulesync/rules/<n>.md` 与 stdagent 源结构非常接近，front
 | `stdagent version` | 版本信息 |
 
 每个命令支持 `--help`。
+
+## 按需加载上下文（重要工作流）
+
+stdagent 设计是"AI 写源，stdagent 扩散；AI 按需加载"。你（AI）每次开始处理一个具体文件前，应该用 `stdagent which` 先查这个文件触发哪些 rules，再针对性 Read 那些 source 文件，**而不是预加载全部 .claude/rules/**：
+
+```bash
+# 我准备改 internal/runner/runner.go，先查相关上下文
+stdagent which internal/runner/runner.go --json
+# -> 返回匹配的 rules / references list，含 source 路径
+# -> AI 按 source 字段 Read 这些 doc 后再开始编辑
+
+# 也可以只取路径 pipe 给 cat / Read 工具
+stdagent which internal/runner/runner.go --paths
+
+# 包含全局 docs（无 applyTo 的通用规则）
+stdagent which internal/runner/runner.go --include-global
+
+# 按 type 筛选（rules / references / subagents 等）
+stdagent which internal/runner/runner.go --type=rules,references
+```
+
+判断标准：
+- 编辑某文件前 -> `stdagent which <file>` 看适用 rules
+- 想看项目总览 / 铁律 -> Read `.stdai/standards/root.md`
+- 写新规则前 -> Read `stdagent intro` 完整规范
+
+不要在每次会话开始就 Read 全部 `.claude/rules/*.md`，那会浪费 context。**按需加载**是 stdagent 的核心使用方式。
 
 ## 你的输出形式
 
