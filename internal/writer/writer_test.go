@@ -90,7 +90,7 @@ func TestHeaderAndFooter(t *testing.T) {
 	if strings.Contains(h, " at ") {
 		t.Errorf("header should not contain timestamp: %q", h)
 	}
-	if HeaderComment(opts) != HeaderComment(opts) {
+	if HeaderComment(opts) != h {
 		t.Error("HeaderComment must be deterministic")
 	}
 	f := FooterMarker(opts)
