@@ -25,6 +25,9 @@ go.work.sum
 .stdai/cache/
 .stdai/state.json
 
+# SDLC 工作流产物（spec / plan / 设计草稿），本地工作目录，不进版本控制
+docs/sdlc/
+
 # IDE / 系统
 .idea/
 .vscode/
