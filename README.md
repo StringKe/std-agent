@@ -10,6 +10,8 @@
 
 ---
 
+![std-agent hero selection](assets/hero-selection.svg)
+
 `stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **11 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
 
 Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`, ... by hand. Edit once, sync everywhere.

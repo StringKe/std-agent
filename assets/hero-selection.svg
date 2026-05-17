@@ -1,0 +1,36 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e1c"/>
+      <stop offset="100%" stop-color="#1f3366"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4ab2ff"/>
+      <stop offset="100%" stop-color="#2d6bff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="80" y="110" fill="#e8f4ff" font-size="72" font-family="Inter,Segoe UI,Arial" font-weight="700">std-agent Hero Selection</text>
+  <text x="80" y="168" fill="#7ed1ff" font-size="34" font-family="Inter,Segoe UI,Arial">One source of truth · 11 AI CLI targets</text>
+
+  <g font-family="Inter,Segoe UI,Arial" font-size="34" fill="#eaf2ff">
+    <g transform="translate(80,260)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Claude Code</text></g>
+    <g transform="translate(410,260)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Codex</text></g>
+    <g transform="translate(740,260)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Cursor</text></g>
+    <g transform="translate(1070,260)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Copilot</text></g>
+
+    <g transform="translate(80,394)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Windsurf</text></g>
+    <g transform="translate(410,394)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Gemini CLI</text></g>
+    <g transform="translate(740,394)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Aider</text></g>
+    <g transform="translate(1070,394)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Cline</text></g>
+
+    <g transform="translate(80,528)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">OpenCode</text></g>
+    <g transform="translate(410,528)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Continue.dev</text></g>
+    <g transform="translate(740,528)"><rect width="300" height="108" rx="18" fill="#1a2748" stroke="#6ca8ff" stroke-width="3"/><text x="28" y="66">Antigravity</text></g>
+  </g>
+
+  <polygon points="1210,120 1510,450 1210,780 1100,730 1340,450 1100,170" fill="url(#beam)" opacity="0.95"/>
+  <text x="1188" y="470" fill="white" font-size="40" font-family="Inter,Segoe UI,Arial" font-weight="700">SYNC</text>
+
+  <text x="80" y="820" fill="#b7c9e8" font-size="27" font-family="Inter,Segoe UI,Arial">Hero concept: choose standards once, deploy everywhere.</text>
+</svg>
