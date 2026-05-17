@@ -4,7 +4,14 @@
 
 ## stdagent 在做什么
 
-stdagent 是一个**给 AI 用的发布器**。AI（你）负责把项目的"规则知识"整理成结构化的源文件，stdagent 负责把这些源文件**机械地**扩散到各个 AI CLI 工具的原生格式（CLAUDE.md / AGENTS.md / .cursor/rules/ 等）。
+stdagent 是一个**给 AI 用的发布器**。AI（你）负责把项目的"规则知识"整理成结构化的源文件，stdagent 负责把这些源文件**机械地**扩散到 22 个 AI CLI 工具的原生格式（CLAUDE.md / AGENTS.md / .cursor/rules/ 等）。
+
+支持的 22 个 target 分两梯队：
+
+- **Tier 1（14 个）**：claude-code / codex / cursor / copilot / windsurf / gemini / aider / cline / opencode / roo-code / crush / amp / warp / factory
+- **Tier 2（8 个）**：continue-dev / antigravity / qwen-code / pi / kilo-code / augment-code / jules / grok-cli
+
+**Graceful degradation（v0.0.4+）**：当某个 target 不原生支持某 std-ai type（如 codex 没有 skills、绝大多数 target 没有 references），stdagent 自动 fallback 到子目录隔离路径（如 `<RulesDir>/skills/<name>/SKILL.md`），并加 frontmatter `std-ai-type: <type>` + HTML 注释说明，无 std-ai-private 前缀。AI 可以照常读写源，不必关心 target 的能力差异。
 
 ```
 你（AI）                          stdagent
@@ -310,6 +317,7 @@ rulesync 的 `.rulesync/rules/<n>.md` 与 stdagent 源结构非常接近，front
 | `stdagent status` | 显示每个 target 的 drift 与最后同步时间 |
 | `stdagent fix` | 等价 sync（语义别名，drift 修复） |
 | `stdagent which <path>` | 查"我现在编辑 X 文件时应该加载哪些 rules / references"，按需上下文路由 |
+| `stdagent explain [type]` | 输出 std-ai 5 种 type（rules/skills/commands/references/subagents）的语义速查；支持 `--json` |
 | `stdagent clean` | 删生成产物，保留 `.stdai/` 源 |
 | `stdagent budget` | LLM context 预算检查（字符 + token 估算） |
 | `stdagent intro` | 输出本提示词（你正在读的内容） |

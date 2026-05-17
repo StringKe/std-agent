@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: one source of truth for 11 AI CLI tools](docs/assets/hero.png)
+![std-agent: one source of truth for 22 AI CLI tools](docs/assets/hero.png)
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -10,14 +10,14 @@
 
 ---
 
-`stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **11 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
+`stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **22 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
 
 Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`, ... by hand. Edit once, sync everywhere.
 
 ## Why std-agent?
 
-- **Single source** — write `rules` / `skills` / `commands` / `references` once in YAML frontmatter + Markdown.
-- **Eleven targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Cline, OpenCode, Continue.dev, Antigravity.
+- **Single source** — write `rules` / `skills` / `commands` / `references` / `subagents` once in YAML frontmatter + Markdown.
+- **Twenty-two targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok CLI.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
 - **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.
 - **MCP** — single `.stdai/standards/mcp.json` fans out to `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`
@@ -26,26 +26,37 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 
 ## Supported tools
 
-### Tier 1 (9)
+### Tier 1 (14)
 
 | Target | Primary outputs |
 |---|---|
-| Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands}/` + `.mcp.json` |
-| Codex (OpenAI) | `AGENTS.md` + `.agents/skills/` + `.codex/rules/` (byte-budget spillover) |
+| Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands,agents}/` + `.mcp.json` |
+| Codex (OpenAI) | `AGENTS.md` + `.codex/memories/` + `.agents/skills/` |
 | Cursor | `.cursor/{rules/*.mdc,skills,commands}/` + `.cursor/mcp.json` |
 | GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents}/` + `.vscode/mcp.json` |
 | Windsurf (Codeium) | `.windsurf/{rules,skills,workflows}/` |
 | Gemini CLI (Google) | `GEMINI.md` + `.gemini/commands/*.toml` |
 | Aider | reuses `AGENTS.md` (noop) |
-| Cline | `.clinerules/` + `.clinerules/workflows/` |
+| Cline | `.clinerules/` (100/500/900 numeric prefixes) |
 | OpenCode | `.opencode/{agents,commands}/` |
+| Roo Code | `.roo/rules/` (Cline fork, 18k stars) |
+| Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` |
+| Amp (Sourcegraph) | `AGENTS.md` (inline) |
+| Warp | `AGENTS.md` (inline + nested) |
+| Factory (Factory.ai) | `.factory/{rules,skills,droids}/` |
 
-### Tier 2 (2)
+### Tier 2 (8)
 
 | Target | Primary outputs |
 |---|---|
 | Continue.dev | `.continue/{rules,prompts}/` |
 | Antigravity (Google) | `.agents/{rules,workflows}/` |
+| Qwen Code (Alibaba) | `QWEN.md` + `.qwen/commands/` |
+| Pi | `.pi/skills/` + `.pi/prompts/` |
+| Kilo Code | `.kilo/rules/` (Cline second-fork) |
+| Augment Code | `.augment/rules/` |
+| Jules (Google) | `AGENTS.md` |
+| Grok CLI (xAI) | `AGENTS.md` + `AGENTS.override.md` |
 
 Each integration is documented under [docs/targets/](docs/targets/).
 
@@ -128,11 +139,18 @@ stdagent intro --json              # for agent / automation integrations
 | `stdagent clean` | Remove generated files (preserves `.stdai/`) |
 | `stdagent budget` | LLM context budget check (chars + token estimate) |
 | `stdagent which <path>` | List rules / references applicable to a file (on-demand context routing for AI) |
+| `stdagent explain` | Print std-ai 5 type semantics (rules/skills/commands/references/subagents) for AI |
 | `stdagent intro` | Print a migration prompt for an LLM to convert your existing config |
 | `stdagent upgrade` | Self-upgrade from GitHub Releases (sha256 + atomic replace) |
 | `stdagent version` | Build info |
 
 Every command supports `--help`. Full reference: [docs/commands.md](docs/commands.md).
+
+## Protocol-based architecture
+
+v0.0.4 introduced a three-layer transformer architecture: each target's `Plan()` delegates to one of 6 protocols (AgentsMD / ClaudeMD / Cursor / Clinerules / WindsurfStyle / Copilot), parametrized by a `protocol.Adapter` struct literal. Adding a new tool now costs ~25-35 lines instead of 145 (60-70% code dedup).
+
+Graceful degradation: when a target doesn't natively support a std-ai type (e.g. skills in codex / references everywhere), stdagent falls back to subdirectory-isolated paths (`<RulesDir>/skills/<name>/SKILL.md`) with frontmatter `std-ai-type: <type>` + HTML comment explainer, no std-ai-private prefixes.
 
 ## Source format
 
@@ -246,7 +264,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Documentation
 
-- **[docs/spec.md](docs/spec.md)** — full spec: std-ai standard + 11-tool divergence + conversion strategy
+- **[docs/spec.md](docs/spec.md)** — full spec: std-ai standard + 22-tool divergence + conversion strategy
 - [docs/prd.md](docs/prd.md) — product requirements
 - [docs/architecture.md](docs/architecture.md) — module layout + data flow
 - [docs/commands.md](docs/commands.md) — CLI command reference
@@ -254,7 +272,7 @@ mise run run        # go run ./cmd/stdagent
 - [docs/format-spec.md](docs/format-spec.md) — frontmatter schema details
 - [docs/file-structure.md](docs/file-structure.md) — directory conventions
 - [docs/roadmap.md](docs/roadmap.md) — roadmap
-- [docs/targets/](docs/targets/) — 11 per-tool research notes
+- [docs/targets/](docs/targets/) — per-tool research notes
 
 ## License
 
