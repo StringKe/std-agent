@@ -50,4 +50,8 @@ var copilotAdapter = protocol.Adapter{
 	MaxBytesPerFile:      8000,
 	SoftBytes:            4000,
 	InjectTypeGlossary:   true,
+	// Phase 4.2: subagent CLI 调用降级形态 B。copilot 原生支持 .github/agents/<name>.agent.md，
+	// 当 SubagentInvokeCmd 非空时 subagent body 加"通过 shell 调用 claude --agent {name}"指引，
+	// 让 copilot 的 AI 把 std subagent 委派给 Claude Code 执行（保留 isolated context 语义）。
+	SubagentInvokeCmd: "claude --agent {name}",
 }
