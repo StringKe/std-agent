@@ -1,0 +1,19 @@
+version = "1.0"
+inject = true
+inject_whatis = false
+auto_pull = false
+backup = true
+backup_keep = 5
+
+[targets]
+claude-code  = { enabled = true,  convert = true }
+codex        = { enabled = true,  convert = true }
+cursor       = { enabled = false, convert = true }
+copilot      = { enabled = false, convert = true }
+windsurf     = { enabled = false, convert = true }
+gemini       = { enabled = false, convert = true }
+aider        = { enabled = false, convert = true }
+cline        = { enabled = false, convert = true }
+opencode     = { enabled = false, convert = true }
+continue-dev = { enabled = false, convert = true }
+antigravity  = { enabled = false, convert = true }

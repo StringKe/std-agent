@@ -20,6 +20,11 @@ go.work.sum
 # 本地缓存
 .go/
 
+# stdagent 运行时产物（仓库自举：源在 .stdai/standards/，产物 commit）
+.stdai/backups/
+.stdai/cache/
+.stdai/state.json
+
 # IDE / 系统
 .idea/
 .vscode/
