@@ -5,15 +5,17 @@ auto_pull = false
 backup = true
 backup_keep = 5
 
+# 仓库全开 11 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
+# 在你自己项目里通常只开 2~3 个用得到的 target，无关的留 false 即可。
 [targets]
 claude-code  = { enabled = true,  convert = true }
 codex        = { enabled = true,  convert = true }
-cursor       = { enabled = false, convert = true }
-copilot      = { enabled = false, convert = true }
-windsurf     = { enabled = false, convert = true }
-gemini       = { enabled = false, convert = true }
-aider        = { enabled = false, convert = true }
-cline        = { enabled = false, convert = true }
-opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
-antigravity  = { enabled = false, convert = true }
+cursor       = { enabled = true,  convert = true }
+copilot      = { enabled = true,  convert = true }
+windsurf     = { enabled = true,  convert = true }
+gemini       = { enabled = true,  convert = true }
+aider        = { enabled = true,  convert = true }
+cline        = { enabled = true,  convert = true }
+opencode     = { enabled = true,  convert = true }
+continue-dev = { enabled = true,  convert = true }
+antigravity  = { enabled = true,  convert = true }
