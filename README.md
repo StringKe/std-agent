@@ -1,12 +1,12 @@
 # std-agent
 
-> One source of truth, eleven AI CLI tools.
+![std-agent: one source of truth for 11 AI CLI tools](docs/assets/hero.png)
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
 
-**English** | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md)
+**English** | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
 ---
 
@@ -68,6 +68,52 @@ stdagent sync
 # Inspect / fix drift
 stdagent status
 stdagent fix
+```
+
+## Migrate an existing project to std-ai
+
+Project already littered with `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Paste the prompt below into Claude Code / Codex / Cursor / Gemini CLI and it will reorganize everything into `.stdai/standards/` for you.
+
+````text
+Help me migrate this project from scattered AI configuration to std-agent. Please do:
+
+1. Use Glob / Read to scan every existing AI rule file:
+   - Root: CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
+   - Subdirs: .claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
+              .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
+              .github/copilot-instructions.md .github/instructions/
+              .rulesync/rules/ .codex/AGENTS.md
+   - In-repo nested CLAUDE.md (find . -name CLAUDE.md -not -path './.stdai/*')
+
+2. Report an inventory: X rules / Y skills / Z commands / N nested CLAUDE.md,
+   and flag which files contain "project overview" content.
+
+3. Propose a split plan, wait for my approval, then write files:
+   - Project overview (definition / stack / iron rules / maintenance flow)
+     -> .stdai/standards/root.md
+   - Each focused rule -> .stdai/standards/rules/<kebab-name>.md
+   - Skill package -> .stdai/standards/skills/<name>/SKILL.md (with scripts/ references/ subdirs)
+   - Slash commands -> .stdai/standards/commands/<name>.md
+   - Nested CLAUDE.md -> .stdai/standards/nested/<relative-path>/root.md
+   - Every file gets a frontmatter: type / name / description / priority / applyTo
+
+4. No "refactoring" of original content. Keep every executable command, API endpoint,
+   error string, file path, line number. Allowed "optimizations": drop filler words,
+   merge duplicates, split oversized files, rename outdated tool names.
+
+5. When done, tell me to run `stdagent sync` and remove legacy artifacts
+   (.rulesync/, .cursorrules single-file, etc.). DO NOT delete the files stdagent
+   itself produces (CLAUDE.md / AGENTS.md / .claude/rules/).
+
+Full spec (frontmatter field table, root.md template, nested layout, rulesync mapping)
+is in the `stdagent intro` command output.
+````
+
+Pipe straight into an LLM CLI as well:
+
+```bash
+stdagent intro | pbcopy            # macOS: paste into AI chat
+stdagent intro --json              # for agent / automation integrations
 ```
 
 ## Commands

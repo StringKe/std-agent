@@ -1,12 +1,12 @@
 # std-agent
 
-> 一份真相源，11 個 AI CLI 工具。
+![std-agent：一份真相源，11 個 AI CLI 工具](docs/assets/hero.png)
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
 
-[English](README.md) | [简体中文](README.zh-CN.md) | **繁體中文** | [日本語](README.ja.md)
+[English](README.md) | [简体中文](README.zh-CN.md) | **繁體中文** | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
 ---
 
@@ -68,6 +68,49 @@ stdagent sync
 # 檢查 / 修復 drift
 stdagent status
 stdagent fix
+```
+
+## 從既有專案遷移到 std-ai
+
+專案裡已經散落 `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` 等？把下面這段提示詞直接丟給 Claude Code / Codex / Cursor / Gemini CLI，它會替你重組成 `.stdai/standards/` 結構。
+
+````text
+幫我把當前專案從分散的 AI 設定遷移到 std-agent 統一管理。請按以下步驟執行：
+
+1. 用 Glob / Read 掃專案裡所有現存 AI 規則檔：
+   - 根目錄：CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
+   - 子目錄：.claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
+              .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
+              .github/copilot-instructions.md .github/instructions/
+              .rulesync/rules/ .codex/AGENTS.md
+   - 同 repo 內巢狀 CLAUDE.md（find . -name CLAUDE.md -not -path './.stdai/*'）
+
+2. 給我一份盤點：發現 X 個 rules / Y 個 skills / Z 個 commands / N 個巢狀 CLAUDE.md，
+   並指出哪些檔案含「專案總覽」內容。
+
+3. 提出拆分方案後等我確認，再開始寫檔：
+   - 專案總覽（定義、技術棧、鐵律、維護流程）-> .stdai/standards/root.md
+   - 每條聚焦規則 -> .stdai/standards/rules/<kebab-name>.md
+   - skill 能力包 -> .stdai/standards/skills/<name>/SKILL.md（含子目錄 scripts/ references/）
+   - slash 命令範本 -> .stdai/standards/commands/<name>.md
+   - 巢狀 CLAUDE.md -> .stdai/standards/nested/<相對路徑>/root.md
+   - 每個檔案加 frontmatter：type / name / description / priority / applyTo
+
+4. 嚴禁「重構」原文：保留所有可執行命令、API 端點、錯誤字串、檔案路徑行號；
+   允許「優化」：刪過渡語、合併重複段落、拆大檔、改寫過時工具名。
+
+5. 寫完告訴我跑 `stdagent sync`，再刪除舊產物（.rulesync/ / .cursorrules 等單檔版）。
+   不要刪 stdagent 生成的 CLAUDE.md / AGENTS.md / .claude/rules/。
+
+完整規範（含 frontmatter 欄位表、root.md 範本、巢狀約定、rulesync 遷移對照）見
+`stdagent intro` 命令輸出。
+````
+
+也可以直接 pipe 給 LLM CLI：
+
+```bash
+stdagent intro | pbcopy            # macOS：複製到剪貼簿，再貼到 AI 對話
+stdagent intro --json              # 給 agent / 自動化整合
 ```
 
 ## 命令清單

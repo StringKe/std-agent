@@ -1,12 +1,12 @@
 # std-agent
 
-> 一份真相源，11 个 AI CLI 工具。
+![std-agent：一份真相源，11 个 AI CLI 工具](docs/assets/hero.png)
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
 
-[English](README.md) | **简体中文** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md)
+[English](README.md) | **简体中文** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
 ---
 
@@ -68,6 +68,49 @@ stdagent sync
 # 检查 / 修复 drift
 stdagent status
 stdagent fix
+```
+
+## 从已有项目迁移到 std-ai
+
+项目里已经散落 `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` 等？把下面这段提示词直接发给 Claude Code / Codex / Cursor / Gemini CLI，它会替你重组成 `.stdai/standards/` 结构。
+
+````text
+帮我把当前项目从分散的 AI 配置迁移到 std-agent 统一管理。请按以下步骤执行：
+
+1. 用 Glob / Read 扫项目里所有现存 AI 规则文件：
+   - 根目录：CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
+   - 子目录：.claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
+              .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
+              .github/copilot-instructions.md .github/instructions/
+              .rulesync/rules/ .codex/AGENTS.md
+   - 同仓库内嵌套 CLAUDE.md（find . -name CLAUDE.md -not -path './.stdai/*'）
+
+2. 给我一份盘点：发现 X 个 rules / Y 个 skills / Z 个 commands / N 个嵌套 CLAUDE.md，
+   并指出哪些文件含"项目总览"内容。
+
+3. 提出拆分方案后等我确认，然后写文件：
+   - 项目总览（定义、技术栈、铁律、维护流程）-> .stdai/standards/root.md
+   - 每条聚焦规则 -> .stdai/standards/rules/<kebab-name>.md
+   - skill 能力包 -> .stdai/standards/skills/<name>/SKILL.md（含子目录 scripts/ references/）
+   - slash 命令模板 -> .stdai/standards/commands/<name>.md
+   - 嵌套 CLAUDE.md -> .stdai/standards/nested/<相对路径>/root.md
+   - 每个文件加 frontmatter：type / name / description / priority / applyTo
+
+4. 严禁"重构"原文：保留所有可执行命令、API 端点、错误字符串、文件路径行号；
+   允许"优化"：删过渡词、合并重复段落、拆大文件、改写过时工具名。
+
+5. 写完告诉我跑 `stdagent sync`，再删除旧产物（.rulesync/ / .cursorrules 等单文件版）。
+   不要删 stdagent 生成的 CLAUDE.md / AGENTS.md / .claude/rules/。
+
+完整规范（含 frontmatter 字段表、root.md 模板、嵌套约定、rulesync 迁移映射）见
+`stdagent intro` 命令输出。
+````
+
+也可以直接 pipe 给 LLM CLI：
+
+```bash
+stdagent intro | pbcopy            # macOS：复制到剪贴板，再粘到 AI 对话
+stdagent intro --json              # 给 agent / 自动化集成
 ```
 
 ## 命令清单

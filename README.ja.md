@@ -1,12 +1,12 @@
 # std-agent
 
-> 一つの真実の源、11 個の AI CLI ツールへ。
+![std-agent: 一つの真実の源、11 個の AI CLI ツール](docs/assets/hero.png)
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | **日本語**
+[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | **日本語** | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
 ---
 
@@ -68,6 +68,52 @@ stdagent sync
 # drift の確認 / 修正
 stdagent status
 stdagent fix
+```
+
+## 既存プロジェクトを std-ai に移行する
+
+`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` などが散在していますか？以下のプロンプトをそのまま Claude Code / Codex / Cursor / Gemini CLI に渡せば、`.stdai/standards/` 構造へ再編成してくれます。
+
+````text
+このプロジェクトの分散した AI 設定を std-agent に集約してください。以下の手順で実行：
+
+1. Glob / Read を使い、既存の AI ルールファイルをすべて走査：
+   - ルート：CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
+   - サブディレクトリ：.claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
+              .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
+              .github/copilot-instructions.md .github/instructions/
+              .rulesync/rules/ .codex/AGENTS.md
+   - 同 repo 内のネストされた CLAUDE.md（find . -name CLAUDE.md -not -path './.stdai/*'）
+
+2. インベントリを報告：rules X 件 / skills Y 件 / commands Z 件 / ネスト CLAUDE.md N 件、
+   そして「プロジェクト概要」を含むファイルを指摘。
+
+3. 分割案を提示し承認を待ってから、ファイル書き込み：
+   - プロジェクト概要（定義 / 技術スタック / 鉄則 / メンテフロー）
+     -> .stdai/standards/root.md
+   - 焦点を絞った各ルール -> .stdai/standards/rules/<kebab-name>.md
+   - skill パッケージ -> .stdai/standards/skills/<name>/SKILL.md（scripts/ references/ サブディレクトリ含む）
+   - slash コマンドテンプレート -> .stdai/standards/commands/<name>.md
+   - ネスト CLAUDE.md -> .stdai/standards/nested/<相対パス>/root.md
+   - すべてのファイルに frontmatter：type / name / description / priority / applyTo
+
+4. 原文の「リファクタリング」禁止：実行可能コマンド、API エンドポイント、エラー文字列、
+   ファイルパス、行番号はすべて保持。許可される「最適化」：余分な接続語の削除、
+   重複の統合、巨大ファイルの分割、古いツール名の置換。
+
+5. 完了したら `stdagent sync` の実行を促し、旧成果物（.rulesync/ / .cursorrules
+   単一ファイル版など）を削除。stdagent が生成した CLAUDE.md / AGENTS.md /
+   .claude/rules/ は削除しないこと。
+
+完全な仕様（frontmatter フィールド表、root.md テンプレート、ネスト規約、
+rulesync 移行マッピング）は `stdagent intro` の出力を参照。
+````
+
+LLM CLI に直接パイプも可能：
+
+```bash
+stdagent intro | pbcopy            # macOS：クリップボードにコピーして AI 対話に貼り付け
+stdagent intro --json              # agent / 自動化統合向け
 ```
 
 ## コマンド一覧
