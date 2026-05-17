@@ -6,6 +6,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -26,12 +27,12 @@ func (c *Cline) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan,
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	for _, d := range rules {
 		plan.Files = append(plan.Files, c.buildRule(d, cfg))
@@ -54,23 +55,23 @@ func (c *Cline) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp 
 	case parser.PriorityLow:
 		prefix = 900
 	}
-	var fm FmBuilder
-	fm.AddList("paths", EffectiveApplyTo(d, c.Name()))
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
+	var fm transformerutil.FmBuilder
+	fm.AddList("paths", transformerutil.EffectiveApplyTo(d, c.Name()))
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
 		path.Join(".clinerules", fmt.Sprintf("%03d-%s.md", prefix, d.Name)),
 		fm.String(), d.Body, opts,
 	)
 }
 
 func (c *Cline) buildWorkflow(d *parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
 	body := d.Body
 	if d.Description != "" {
 		body = d.Description + "\n\n" + d.Body
 	}
-	return BuildMarkdownFile(
-		FilePath(".clinerules/workflows", d.Name, ".md"),
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".clinerules/workflows", d.Name, ".md"),
 		"", body, opts,
 	)
 }

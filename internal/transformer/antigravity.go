@@ -5,6 +5,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -32,12 +33,12 @@ func (a *Antigravity) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	for _, d := range rules {
 		plan.Files = append(plan.Files, a.buildRule(d, cfg))
@@ -58,8 +59,8 @@ func (a *Antigravity) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 //   - description 非空 -> trigger: model_decision + description
 //   - 其他 -> trigger: manual
 func (a *Antigravity) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
-	applyTo := EffectiveApplyTo(d, a.Name())
+	var fm transformerutil.FmBuilder
+	applyTo := transformerutil.EffectiveApplyTo(d, a.Name())
 	switch {
 	case d.AlwaysApply:
 		fm.Add("trigger", "always_on")
@@ -72,9 +73,9 @@ func (a *Antigravity) buildRule(d *parser.Document, cfg *config.Config) writer.F
 	default:
 		fm.Add("trigger", "manual")
 	}
-	opts := MakeOpts(cfg, a.Name(), d.Path, false)
-	op := BuildMarkdownFile(
-		FilePath(".agents/rules", d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, a.Name(), d.Path, false)
+	op := transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".agents/rules", d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 	if len(op.Content) > antigravityMaxChars {
@@ -86,16 +87,16 @@ func (a *Antigravity) buildRule(d *parser.Document, cfg *config.Config) writer.F
 // buildSkillAsRule 把 std skill 降级为 Antigravity model_decision rule
 // （.agents/skills/ schema UNKNOWN，按调研建议走 rule 形态）
 func (a *Antigravity) buildSkillAsRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("trigger", "model_decision")
 	desc := d.Description
 	if desc == "" {
 		desc = "Skill: " + d.Name
 	}
 	fm.Add("description", desc)
-	opts := MakeOpts(cfg, a.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".agents/rules", "skill-"+d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, a.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".agents/rules", "skill-"+d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 }
@@ -103,13 +104,13 @@ func (a *Antigravity) buildSkillAsRule(d *parser.Document, cfg *config.Config) w
 // buildWorkflow -> .agents/workflows/<n>.md，文件名即 slash 名
 // frontmatter UNKNOWN，v1.1 输出无 frontmatter 的纯 markdown 步骤序列
 func (a *Antigravity) buildWorkflow(d *parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, a.Name(), d.Path, false)
+	opts := transformerutil.MakeOpts(cfg, a.Name(), d.Path, false)
 	body := d.Body
 	if d.Description != "" {
 		body = d.Description + "\n\n" + d.Body
 	}
-	return BuildMarkdownFile(
-		FilePath(".agents/workflows", d.Name, ".md"),
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".agents/workflows", d.Name, ".md"),
 		"", body, opts,
 	)
 }

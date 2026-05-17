@@ -5,6 +5,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -28,10 +29,10 @@ func (o *OpenCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(skills)
-	SortDocs(commands)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	for _, d := range skills {
 		plan.Files = append(plan.Files, o.buildAgent(d, cfg))
@@ -43,15 +44,15 @@ func (o *OpenCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 }
 
 func (o *OpenCode) buildAgent(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("mode", "subagent")
-	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
 	fm.Add("model", d.Model)
 	// permission v1.0 简化：所有动作走 ask（保守安全），由用户按需放宽
 	fm.AddRaw("permission", "{ edit: ask, bash: ask, read: allow, glob: allow, grep: allow, list: allow, task: ask, lsp: allow }")
-	opts := MakeOpts(cfg, o.Name(), d.Path, false)
-	op := BuildMarkdownFile(
-		FilePath(".opencode/agents", d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, o.Name(), d.Path, false)
+	op := transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".opencode/agents", d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 	if len(d.SkillFiles) > 0 {
@@ -61,12 +62,12 @@ func (o *OpenCode) buildAgent(d *parser.Document, cfg *config.Config) writer.Fil
 }
 
 func (o *OpenCode) buildCommand(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("description", d.Description)
 	fm.Add("model", d.Model)
-	opts := MakeOpts(cfg, o.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".opencode/commands", d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, o.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".opencode/commands", d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 }

@@ -5,6 +5,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -28,12 +29,12 @@ func (w *Windsurf) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	for _, d := range rules {
 		plan.Files = append(plan.Files, w.buildRule(d, cfg))
@@ -48,8 +49,8 @@ func (w *Windsurf) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 }
 
 func (w *Windsurf) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
-	applyTo := EffectiveApplyTo(d, w.Name())
+	var fm transformerutil.FmBuilder
+	applyTo := transformerutil.EffectiveApplyTo(d, w.Name())
 	switch {
 	case d.AlwaysApply:
 		fm.Add("trigger", "always_on")
@@ -62,9 +63,9 @@ func (w *Windsurf) buildRule(d *parser.Document, cfg *config.Config) writer.File
 	default:
 		fm.Add("trigger", "manual")
 	}
-	opts := MakeOpts(cfg, w.Name(), d.Path, false)
-	op := BuildMarkdownFile(
-		FilePath(".windsurf/rules", d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, w.Name(), d.Path, false)
+	op := transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".windsurf/rules", d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 	if len(op.Content) > windsurfRuleMaxChars {
@@ -74,24 +75,24 @@ func (w *Windsurf) buildRule(d *parser.Document, cfg *config.Config) writer.File
 }
 
 func (w *Windsurf) buildSkill(d *parser.Document, cfg *config.Config) []writer.FileOp {
-	skillDir := SkillDir(".windsurf/skills", d.Name)
-	var fm FmBuilder
+	skillDir := transformerutil.SkillDir(".windsurf/skills", d.Name)
+	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	// Windsurf 文档仅承认 name + description 必填；其他字段未确认背书，不输出避免风险
-	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
-	opts := MakeOpts(cfg, w.Name(), d.Path, false)
-	skillMd := BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
-	return BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
+	opts := transformerutil.MakeOpts(cfg, w.Name(), d.Path, false)
+	skillMd := transformerutil.BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
+	return transformerutil.BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
 }
 
 func (w *Windsurf) buildWorkflow(d *parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, w.Name(), d.Path, false)
+	opts := transformerutil.MakeOpts(cfg, w.Name(), d.Path, false)
 	body := d.Body
 	if d.Description != "" {
 		body = d.Description + "\n\n" + d.Body
 	}
-	return BuildMarkdownFile(
-		FilePath(".windsurf/workflows", d.Name, ".md"),
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".windsurf/workflows", d.Name, ".md"),
 		"", body, opts,
 	)
 }

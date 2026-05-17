@@ -18,6 +18,7 @@ import (
 	"std-ai/internal/source"
 	"std-ai/internal/state"
 	"std-ai/internal/transformer"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -49,7 +50,7 @@ type Result struct {
 
 // Sync 执行完整同步流
 func Sync(opts Options) (*Result, error) {
-	transformer.SetVersion(opts.Version)
+	transformerutil.SetVersion(opts.Version)
 
 	cfg, err := config.Load(opts.ConfigPath)
 	if err != nil {

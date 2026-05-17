@@ -7,6 +7,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -32,17 +33,17 @@ func (c *Copilot) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pla
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	// rules 拆分：root 或 无 applyTo -> 拼到 copilot-instructions.md；其他 -> 单文件
 	var general, pathSpecific []*parser.Document
 	for _, d := range rules {
-		if d.Root || len(EffectiveApplyTo(d, c.Name())) == 0 {
+		if d.Root || len(transformerutil.EffectiveApplyTo(d, c.Name())) == 0 {
 			general = append(general, d)
 		} else {
 			pathSpecific = append(pathSpecific, d)
@@ -76,46 +77,46 @@ func (c *Copilot) buildMCPJSON(mcp *config.MCPConfig) writer.FileOp {
 }
 
 func (c *Copilot) buildInstructions(general []*parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, c.Name(), "", true)
-	roots, nonRoot := PartitionRoot(general)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), "", true)
+	roots, nonRoot := transformerutil.PartitionRoot(general)
 	var body strings.Builder
 	if len(roots) > 0 {
-		body.WriteString(RenderRootBody(roots))
+		body.WriteString(transformerutil.RenderRootBody(roots))
 		if len(nonRoot) > 0 {
 			body.WriteString("\n")
-			body.WriteString(JoinAGENTSStyle("", nonRoot))
+			body.WriteString(transformerutil.JoinAGENTSStyle("", nonRoot))
 		}
 	} else {
-		body.WriteString(JoinAGENTSStyle("Copilot Repository Instructions", nonRoot))
+		body.WriteString(transformerutil.JoinAGENTSStyle("Copilot Repository Instructions", nonRoot))
 	}
-	op := BuildMarkdownFile(".github/copilot-instructions.md", "", body.String(), opts)
+	op := transformerutil.BuildMarkdownFile(".github/copilot-instructions.md", "", body.String(), opts)
 	op.IsRoot = true
 	return op
 }
 
 func (c *Copilot) buildPathInstruction(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	// applyTo 接受逗号分隔的多 glob 字符串
-	fm.Add("applyTo", strings.Join(EffectiveApplyTo(d, c.Name()), ","))
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	fm.Add("applyTo", strings.Join(transformerutil.EffectiveApplyTo(d, c.Name()), ","))
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
 	body := d.Body
 	if d.Description != "" {
 		body = d.Description + "\n\n" + d.Body
 	}
-	return BuildMarkdownFile(
-		FilePath(".github/instructions", d.Name, ".instructions.md"),
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".github/instructions", d.Name, ".instructions.md"),
 		fm.String(), body, opts,
 	)
 }
 
 func (c *Copilot) buildAgent(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
-	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
+	var fm transformerutil.FmBuilder
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
 	fm.AddList("tools", d.AllowedTools)
 	fm.Add("model", d.Model)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	op := BuildMarkdownFile(
-		FilePath(".github/agents", d.Name, ".agent.md"),
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	op := transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".github/agents", d.Name, ".agent.md"),
 		fm.String(), d.Body, opts,
 	)
 	if len(d.SkillFiles) > 0 {
@@ -125,14 +126,14 @@ func (c *Copilot) buildAgent(d *parser.Document, cfg *config.Config) writer.File
 }
 
 func (c *Copilot) buildPrompt(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("description", d.Description)
 	fm.Add("argument-hint", d.ArgumentHint)
 	fm.AddList("tools", d.AllowedTools)
 	fm.Add("model", d.Model)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".github/prompts", d.Name, ".prompt.md"),
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".github/prompts", d.Name, ".prompt.md"),
 		fm.String(), d.Body, opts,
 	)
 }

@@ -3,6 +3,7 @@ package transformer
 import (
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -23,12 +24,12 @@ func (c *ContinueDev) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	for _, d := range rules {
 		plan.Files = append(plan.Files, c.buildRule(d, cfg))
@@ -44,16 +45,16 @@ func (c *ContinueDev) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 
 // buildRule -> .continue/rules/<n>.md，frontmatter name/description/globs/alwaysApply
 func (c *ContinueDev) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	fm.Add("description", d.Description)
-	fm.AddList("globs", EffectiveApplyTo(d, c.Name()))
+	fm.AddList("globs", transformerutil.EffectiveApplyTo(d, c.Name()))
 	if d.AlwaysApply {
 		fm.AddBool("alwaysApply", true)
 	}
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".continue/rules", d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".continue/rules", d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 }
@@ -61,7 +62,7 @@ func (c *ContinueDev) buildRule(d *parser.Document, cfg *config.Config) writer.F
 // buildSkillAsRule 把 std skill 降级为 Continue model-decision rule
 // 输出到 .continue/rules/skill-<n>.md 避免与同 name 的 rule 冲突
 func (c *ContinueDev) buildSkillAsRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("name", "Skill: "+d.Name)
 	desc := d.Description
 	if desc == "" {
@@ -69,9 +70,9 @@ func (c *ContinueDev) buildSkillAsRule(d *parser.Document, cfg *config.Config) w
 	}
 	fm.Add("description", desc)
 	fm.AddBool("alwaysApply", false)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".continue/rules", "skill-"+d.Name, ".md"),
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".continue/rules", "skill-"+d.Name, ".md"),
 		fm.String(), d.Body, opts,
 	)
 }
@@ -79,14 +80,14 @@ func (c *ContinueDev) buildSkillAsRule(d *parser.Document, cfg *config.Config) w
 // buildPrompt -> .continue/prompts/<n>.prompt.md，frontmatter
 // name/description/version/invokable=true（slash 触发）
 func (c *ContinueDev) buildPrompt(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	fm.Add("description", d.Description)
 	fm.Add("version", d.Version)
 	fm.AddBool("invokable", true)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".continue/prompts", d.Name, ".prompt.md"),
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".continue/prompts", d.Name, ".prompt.md"),
 		fm.String(), d.Body, opts,
 	)
 }

@@ -7,6 +7,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -29,15 +30,15 @@ func (c *Codex) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan,
 		return plan, nil
 	}
 
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	// 嵌套 root 输出到 <NestedPath>/AGENTS.md（无 manifest）
-	topRules, nestedRoots := PartitionNested(rules)
+	topRules, nestedRoots := transformerutil.PartitionNested(rules)
 	for _, d := range nestedRoots {
 		plan.Files = append(plan.Files, c.buildNestedAGENTSMd(d, cfg))
 	}
@@ -114,24 +115,24 @@ func injectBeforeFooter(content []byte, block string) []byte {
 //
 // 返回 op 与 nonRoot rules（caller 写到 .codex/memories/）。root rule 不 fan-out。
 func (c *Codex) buildAGENTSMd(rules []*parser.Document, cfg *config.Config) (writer.FileOp, []*parser.Document) {
-	opts := MakeOpts(cfg, c.Name(), "", true)
-	roots, nonRoot := PartitionRoot(rules)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), "", true)
+	roots, nonRoot := transformerutil.PartitionRoot(rules)
 	var body strings.Builder
 	if len(roots) > 0 {
-		body.WriteString(RenderRootBody(roots))
+		body.WriteString(transformerutil.RenderRootBody(roots))
 	} else {
 		body.WriteString("# Project AGENTS Manifest\n\n")
 	}
 	if len(nonRoot) > 0 {
-		body.WriteString(BuildRuleManifestSection(
+		body.WriteString(transformerutil.BuildRuleManifestSection(
 			"Reference Rules",
 			c.Name(),
 			nonRoot,
-			func(d *parser.Document) string { return FilePath(".codex/memories", d.Name, ".md") },
+			func(d *parser.Document) string { return transformerutil.FilePath(".codex/memories", d.Name, ".md") },
 			false,
 		))
 	}
-	op := BuildMarkdownFile("AGENTS.md", "", body.String(), opts)
+	op := transformerutil.BuildMarkdownFile("AGENTS.md", "", body.String(), opts)
 	op.IsRoot = true
 	return op, nonRoot
 }
@@ -139,8 +140,8 @@ func (c *Codex) buildAGENTSMd(rules []*parser.Document, cfg *config.Config) (wri
 // buildNestedAGENTSMd 把嵌套 root doc 输出到 <NestedPath>/AGENTS.md，纯 body + marker，无 manifest。
 // codex 在该子目录工作时按 codex 自动加载机制叠加加载。
 func (c *Codex) buildNestedAGENTSMd(d *parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	op := BuildMarkdownFile(
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	op := transformerutil.BuildMarkdownFile(
 		path.Join(d.NestedPath, "AGENTS.md"),
 		"", d.Body, opts,
 	)
@@ -149,37 +150,37 @@ func (c *Codex) buildNestedAGENTSMd(d *parser.Document, cfg *config.Config) writ
 }
 
 func (c *Codex) buildSpillRuleFile(d *parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
 	body := strings.TrimSpace(d.Body)
 	if d.Description != "" {
 		body = d.Description + "\n\n" + body
 	}
-	return BuildMarkdownFile(
-		FilePath(".codex/memories", d.Name, ".md"),
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".codex/memories", d.Name, ".md"),
 		"", body, opts,
 	)
 }
 
 func (c *Codex) buildSkillFile(d *parser.Document, cfg *config.Config) []writer.FileOp {
-	skillDir := SkillDir(".agents/skills", d.Name)
-	var fm FmBuilder
+	skillDir := transformerutil.SkillDir(".agents/skills", d.Name)
+	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	// codex 不支持 when_to_use 字段，拼到 description 末尾让模型仍能感知触发线索
-	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
 	// agentskills 标准字段
 	fm.Add("license", d.License)
 	fm.Add("compatibility", d.Compatibility)
 	fm.AddMap("metadata", d.Metadata)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	skillMd := BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
-	return BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	skillMd := transformerutil.BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
+	return transformerutil.BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
 }
 
 // buildCommandAsSkill 把 std command 降级写成 OpenAI agent skill
 // 输出路径加 cmd- 前缀避免与同 name 的 skill 冲突
 // description 含 slash 调用 hint 让模型理解这是 command-flavor skill
 func (c *Codex) buildCommandAsSkill(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	fm.Add("name", "cmd-"+d.Name)
 	desc := d.Description
 	if desc == "" {
@@ -188,8 +189,8 @@ func (c *Codex) buildCommandAsSkill(d *parser.Document, cfg *config.Config) writ
 	desc += " (Invoke when user types /" + d.Name + " or asks to run " + d.Name + ")"
 	fm.Add("description", desc)
 	fm.Add("model", d.Model)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
 		path.Join(".agents/skills", "cmd-"+d.Name, "SKILL.md"),
 		fm.String(), d.Body, opts,
 	)

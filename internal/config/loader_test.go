@@ -132,6 +132,33 @@ func TestDefault(t *testing.T) {
 	if cfg.Targets["cursor"].Enabled {
 		t.Error("cursor should default disabled")
 	}
+	if !cfg.InjectTypeGlossary {
+		t.Error("InjectTypeGlossary should default true")
+	}
+}
+
+func TestLoadInjectTypeGlossaryOverride(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "config.toml")
+	content := `version = "1.0"
+inject_type_glossary = false
+
+[targets]
+
+[sources.default]
+url = "https://x.com/y.git"
+paths = ["standards/"]
+`
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.InjectTypeGlossary {
+		t.Error("InjectTypeGlossary should be false after toml override")
+	}
 }
 
 func TestSaveLoadRoundTrip(t *testing.T) {

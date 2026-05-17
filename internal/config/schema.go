@@ -6,15 +6,16 @@ package config
 // （Targets/Sources/Overrides）之前，否则 toml.Marshal 输出后这些标量会被
 // 解析进上一个 [section]，导致 Round-trip 失败。
 type Config struct {
-	Version      string `toml:"version"`
-	Name         string `toml:"name"`
-	Inject       bool   `toml:"inject"`
-	InjectWhatIs bool   `toml:"inject_whatis"`
-	DryRun       bool   `toml:"dry_run"`
-	Backup       bool   `toml:"backup"`
-	BackupKeep   int    `toml:"backup_keep"`
-	AutoPull     bool   `toml:"auto_pull"`
-	Verbose      bool   `toml:"verbose"`
+	Version            string `toml:"version"`
+	Name               string `toml:"name"`
+	Inject             bool   `toml:"inject"`
+	InjectWhatIs       bool   `toml:"inject_whatis"`
+	InjectTypeGlossary bool   `toml:"inject_type_glossary"`
+	DryRun             bool   `toml:"dry_run"`
+	Backup             bool   `toml:"backup"`
+	BackupKeep         int    `toml:"backup_keep"`
+	AutoPull           bool   `toml:"auto_pull"`
+	Verbose            bool   `toml:"verbose"`
 
 	Targets   map[string]TargetConfig `toml:"targets"`
 	Sources   map[string]SourceConfig `toml:"sources"`
@@ -68,12 +69,13 @@ func IsValidTarget(name string) bool {
 // Default 返回 init 时使用的默认配置
 func Default() *Config {
 	return &Config{
-		Version:      "1.0",
-		Inject:       true,
-		InjectWhatIs: true,
-		Backup:       true,
-		BackupKeep:   5,
-		AutoPull:     true,
+		Version:            "1.0",
+		Inject:             true,
+		InjectWhatIs:       true,
+		InjectTypeGlossary: true,
+		Backup:             true,
+		BackupKeep:         5,
+		AutoPull:           true,
 		Targets: map[string]TargetConfig{
 			"claude-code":  {Enabled: true, Convert: true},
 			"codex":        {Enabled: true, Convert: true},

@@ -6,6 +6,7 @@ import (
 
 	"std-ai/internal/config"
 	"std-ai/internal/parser"
+	"std-ai/internal/transformer/transformerutil"
 	"std-ai/internal/writer"
 )
 
@@ -31,12 +32,12 @@ func (c *Cursor) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan
 	if len(docs) == 0 {
 		return plan, nil
 	}
-	rules := FilterByType(docs, parser.TypeRules)
-	skills := FilterByType(docs, parser.TypeSkills)
-	commands := FilterByType(docs, parser.TypeCommands)
-	SortDocs(rules)
-	SortDocs(skills)
-	SortDocs(commands)
+	rules := transformerutil.FilterByType(docs, parser.TypeRules)
+	skills := transformerutil.FilterByType(docs, parser.TypeSkills)
+	commands := transformerutil.FilterByType(docs, parser.TypeCommands)
+	transformerutil.SortDocs(rules)
+	transformerutil.SortDocs(skills)
+	transformerutil.SortDocs(commands)
 
 	for _, d := range rules {
 		plan.Files = append(plan.Files, c.buildRule(d, cfg))
@@ -60,48 +61,48 @@ func (c *Cursor) buildMCPJSON(mcp *config.MCPConfig) writer.FileOp {
 }
 
 func (c *Cursor) buildRule(d *parser.Document, cfg *config.Config) writer.FileOp {
-	var fm FmBuilder
+	var fm transformerutil.FmBuilder
 	if d.AlwaysApply {
 		fm.AddBool("alwaysApply", true)
 	}
-	applyTo := EffectiveApplyTo(d, c.Name())
+	applyTo := transformerutil.EffectiveApplyTo(d, c.Name())
 	if len(applyTo) > 0 {
 		// Cursor globs 接受逗号分隔字符串
 		fm.Add("globs", strings.Join(applyTo, ","))
 	}
 	fm.Add("description", d.Description)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	return BuildMarkdownFile(
-		FilePath(".cursor/rules", d.Name, ".mdc"),
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".cursor/rules", d.Name, ".mdc"),
 		fm.String(), d.Body, opts,
 	)
 }
 
 func (c *Cursor) buildSkill(d *parser.Document, cfg *config.Config) []writer.FileOp {
-	skillDir := SkillDir(".cursor/skills", d.Name)
-	var fm FmBuilder
+	skillDir := transformerutil.SkillDir(".cursor/skills", d.Name)
+	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
-	fm.Add("description", MergeDescription(d.Description, d.WhenToUse))
-	fm.AddList("paths", EffectiveApplyTo(d, c.Name()))
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
+	fm.AddList("paths", transformerutil.EffectiveApplyTo(d, c.Name()))
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
 	}
 	fm.Add("license", d.License)
 	fm.Add("compatibility", d.Compatibility)
 	fm.AddMap("metadata", d.Metadata)
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
-	skillMd := BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
-	return BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
+	skillMd := transformerutil.BuildMarkdownFile(skillDir+"/SKILL.md", fm.String(), d.Body, opts)
+	return transformerutil.BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
 }
 
 func (c *Cursor) buildCommand(d *parser.Document, cfg *config.Config) writer.FileOp {
-	opts := MakeOpts(cfg, c.Name(), d.Path, false)
+	opts := transformerutil.MakeOpts(cfg, c.Name(), d.Path, false)
 	body := d.Body
 	if d.Description != "" {
 		body = d.Description + "\n\n" + d.Body
 	}
-	return BuildMarkdownFile(
-		FilePath(".cursor/commands", d.Name, ".md"),
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(".cursor/commands", d.Name, ".md"),
 		"", body, opts,
 	)
 }
