@@ -195,7 +195,10 @@ func TestCursor_Glossary_Disabled_NoFile(t *testing.T) {
 	}
 }
 
-func TestCursor_ReferencesFallback_GoesToSkillsDir(t *testing.T) {
+// TestCursor_ReferencesFallback_GoesToReferencesSubdir 验证 v3 修订：
+// references 不走 .cursor/skills/<name>/SKILL.md（避免被 cursor 当 skill 自动加载），
+// 改走 .cursor/rules/references/<name>.md 子目录，保持"按需查阅"语义。
+func TestCursor_ReferencesFallback_GoesToReferencesSubdir(t *testing.T) {
 	doc := &parser.Document{
 		Type:        parser.TypeReferences,
 		Name:        "transformer-design",
@@ -204,7 +207,7 @@ func TestCursor_ReferencesFallback_GoesToSkillsDir(t *testing.T) {
 		Path:        ".stdai/standards/references/transformer-design.md",
 	}
 	plan, _ := Cursor{}.Plan([]*parser.Document{doc}, cursorTestAdapter(), cursorCfg())
-	want := ".cursor/skills/transformer-design/SKILL.md"
+	want := ".cursor/rules/references/transformer-design.md"
 	op := cursorFindFile(plan.Files, want)
 	if op == nil {
 		t.Fatalf("references fallback should land at %q, files:%s", want, cursorPlanPaths(plan.Files))
@@ -296,7 +299,7 @@ func TestCursor_FullFixture_AllTypesPresent(t *testing.T) {
 		".cursor/rules/r1.mdc",
 		".cursor/skills/s1/SKILL.md",
 		".cursor/commands/c1.md",
-		".cursor/skills/ref1/SKILL.md",
+		".cursor/rules/references/ref1.md", // v3：references 走子目录不借 SkillsDir
 		".cursor/rules/subagents/sa1.md",
 	}
 	for _, want := range wantPaths {

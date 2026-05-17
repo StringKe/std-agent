@@ -79,9 +79,10 @@ func (ClaudeMD) Plan(docs []*parser.Document, adapter Adapter, cfg *config.Confi
 	for _, d := range subagents {
 		plan.Files = append(plan.Files, buildClaudeSubagentFile(d, adapter, cfg))
 	}
-	// references 走 Agent Skills 标准 fallback：.claude/skills/<name>/SKILL.md
+	// references 走独立子目录 .claude/references/<name>.md（v3：不借 skills 路径，
+	// 否则 AI 会按 skill 触发逻辑加载 references 破坏"按需查阅"语义）
 	for _, d := range references {
-		plan.Files = append(plan.Files, BuildDegradedSkillPackage(d, adapter, cfg)...)
+		plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
 	}
 
 	return plan, nil

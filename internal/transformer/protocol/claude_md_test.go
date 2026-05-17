@@ -365,7 +365,10 @@ func TestClaudeMD_SubagentFile(t *testing.T) {
 	}
 }
 
-func TestClaudeMD_ReferencesGoToSkillsFallback(t *testing.T) {
+// TestClaudeMD_ReferencesGoToSubdirNotSkills 验证 references 走 .claude/references/ 子目录
+// v3：不借 .claude/skills/<name>/SKILL.md 路径（那会让 Claude Code 按 skill 触发加载，
+// 破坏 references "按需查阅，不自动加载" 语义）。
+func TestClaudeMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 	adapter := claudeTestAdapter()
 	docs := []*parser.Document{
 		{
@@ -379,9 +382,9 @@ func TestClaudeMD_ReferencesGoToSkillsFallback(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	op, ok := claudeFileByPath(plan, ".claude/skills/transformer-design/SKILL.md")
+	op, ok := claudeFileByPath(plan, ".claude/rules/references/transformer-design.md")
 	if !ok {
-		t.Fatalf("references must fallback to Agent Skills path, got files: %v", claudePlanPaths(plan))
+		t.Fatalf("references must go to subdir (not SkillsDir), got files: %v", claudePlanPaths(plan))
 	}
 	c := string(op.Content)
 	if !strings.Contains(c, "std-ai-type: references") {
@@ -393,10 +396,10 @@ func TestClaudeMD_ReferencesGoToSkillsFallback(t *testing.T) {
 	if !strings.Contains(c, "Reference body content.") {
 		t.Errorf("expected original body, got:\n%s", c)
 	}
-	// fallback 文件不应出现在 rules 子目录
+	// 反向：references 必须不出现在 .claude/skills/ 路径下（旧设计错误，会被 Claude 当 skill 加载）
 	for _, p := range claudePlanPaths(plan) {
-		if strings.HasPrefix(p, ".claude/rules/references/") {
-			t.Errorf("references must not fall into rules subdir, got %q", p)
+		if strings.HasPrefix(p, ".claude/skills/transformer-design") {
+			t.Errorf("references must NOT go to skills path (would be auto-loaded as skill), got %q", p)
 		}
 	}
 }

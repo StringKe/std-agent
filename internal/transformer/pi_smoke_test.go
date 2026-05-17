@@ -53,8 +53,9 @@ func TestPiOutputs(t *testing.T) {
 
 // TestPiReferencesAndSubagentsFallback 验证 fallback 行为：
 //   - subagents 无 SubagentsDir -> 落到 .pi/rules/subagents/<name>.md
-//   - references 无 ReferencesDir，因 SkillsDir 非空 -> 走 Agent Skills
-//     降级形式 .pi/skills/<name>/SKILL.md（pi 严格执行 Agent Skills 标准）
+//   - references 无 ReferencesDir -> v3 走独立 references/ 子目录
+//     .pi/rules/references/<name>.md（不再借 SkillsDir SKILL.md 路径，避免被 pi
+//     按 skill 触发加载破坏"按需查阅"语义）
 func TestPiReferencesAndSubagentsFallback(t *testing.T) {
 	tr := &Pi{}
 	cfg := &config.Config{Inject: false}
@@ -64,8 +65,8 @@ func TestPiReferencesAndSubagentsFallback(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	if !paths[".pi/skills/api-spec/SKILL.md"] {
-		t.Errorf("expected reference fallback to .pi/skills/api-spec/SKILL.md, got: %v", paths)
+	if !paths[".pi/rules/references/api-spec.md"] {
+		t.Errorf("expected reference fallback to .pi/rules/references/api-spec.md, got: %v", paths)
 	}
 	if !paths[".pi/rules/subagents/reviewer.md"] {
 		t.Errorf("expected subagent fallback to .pi/rules/subagents/reviewer.md, got: %v", paths)

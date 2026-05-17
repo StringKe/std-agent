@@ -55,7 +55,7 @@ var ValidTargets = []string{
 	"roo-code", "crush", "amp", "warp", "factory",
 	// Tier 2（新兴 / 小众 / 半实验）
 	"continue-dev", "antigravity",
-	"qwen-code", "pi", "kilo-code", "augment-code", "jules", "grok-cli",
+	"qwen-code", "pi", "kilo-code", "augment-code", "jules", "grok-build",
 }
 
 // IsValidTarget 检查 target 名合法
@@ -102,7 +102,7 @@ func Default() *Config {
 			"kilo-code":    {Enabled: false, Convert: true},
 			"augment-code": {Enabled: false, Convert: true},
 			"jules":        {Enabled: false, Convert: true},
-			"grok-cli":     {Enabled: false, Convert: true},
+			"grok-build":   {Enabled: false, Convert: true},
 		},
 	}
 }

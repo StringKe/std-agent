@@ -92,7 +92,8 @@ type Adapter struct {
 	// Subagents
 	SubagentInvokeCmd string
 
-	// 嵌套 + per-dir override（grok-cli）
+	// 嵌套 + per-dir override（保留字段，目前无 v0.0.5 active 用户；
+	// v0.0.4 误对齐三方 superagent-ai/grok-cli fork，已 rename 到 grok-build 走 xAI 官方约定）
 	PerDirOverrideFileName string
 
 	// 多文件单文件 fallback（cline / roo / augment）

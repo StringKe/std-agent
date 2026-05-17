@@ -4,7 +4,7 @@ description: "走 stdagent 标准化 patch 发版流程（CI 验证 -> tag -> go
 std-ai-type: commands
 ---
 <!-- std-ai degraded commands: release-patch -->
-<!-- Target tool "grok-cli" does not natively support this type. Command is a user-invoked template; AI does not auto-trigger it. -->
+<!-- Target tool "grok-build" does not natively support this type. Command is a user-invoked template; AI does not auto-trigger it. -->
 
 
 # /release-patch

@@ -54,13 +54,11 @@ func TestCrushFallbackPaths(t *testing.T) {
 		t.Fatalf("Plan: %v", err)
 	}
 	paths := pathSet(plan)
-	// commands / subagents 走 FallbackDir/<subdir>/<name>.md
-	// references 因 SkillsDir 非空，按协议族走 Agent Skills 标准包形式 fallback
-	// 到 SkillsDir/<name>/SKILL.md（仅作为 std-ai 私有 fallback 容器，
-	// crush 不会原生识别其语义，靠 frontmatter std-ai-type 标识）
+	// v3 修订：references 走独立 references/ 子目录（不再借 SkillsDir SKILL.md 路径，
+	// 那会让 crush 按 skill 触发逻辑加载 references 破坏"按需查阅"语义）
 	for _, want := range []string{
 		".crush/rules/commands/deploy.md",
-		".crush/skills/api-spec/SKILL.md",
+		".crush/rules/references/api-spec.md",
 		".crush/rules/subagents/reviewer.md",
 	} {
 		if !paths[want] {

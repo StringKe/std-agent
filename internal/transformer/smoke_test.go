@@ -38,7 +38,7 @@ func TestAllTransformersSmoke(t *testing.T) {
 		"pi":           true,
 		"warp":         true,
 		"augment-code": true,
-		"grok-cli":     true,
+		"grok-build":   true,
 		"jules":        true,
 	}
 

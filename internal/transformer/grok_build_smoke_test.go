@@ -8,8 +8,8 @@ import (
 	"std-ai/internal/parser"
 )
 
-func TestGrokCLIOutputs(t *testing.T) {
-	tr := &GrokCLI{}
+func TestGrokBuildOutputs(t *testing.T) {
+	tr := &GrokBuild{}
 	cfg := &config.Config{Inject: true, InjectWhatIs: false}
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "naming", Description: "命名规范", Body: "naming body"},
@@ -31,8 +31,8 @@ func TestGrokCLIOutputs(t *testing.T) {
 	}
 }
 
-func TestGrokCLIFallbackPaths(t *testing.T) {
-	tr := &GrokCLI{}
+func TestGrokBuildFallbackPaths(t *testing.T) {
+	tr := &GrokBuild{}
 	cfg := &config.Config{Inject: false}
 	docs := []*parser.Document{
 		{Type: parser.TypeSkills, Name: "code-review", Description: "Review code.", Body: "Steps..."},
@@ -45,10 +45,9 @@ func TestGrokCLIFallbackPaths(t *testing.T) {
 		t.Fatalf("Plan: %v", err)
 	}
 	paths := pathSet(plan)
-	// 无 SkillsDir / CommandsDir / ReferencesDir / SubagentsDir -> 全部 fallback 到 .grok/rules/<subdir>/
-	// skills 走 BuildDegradedSkillPackage 保持 Agent Skills 标准包子目录形式
+	// xAI 官方 SkillsDir=.grok/skills（Agent Skills 标准）；其他 type 无原生 -> fallback
 	for _, want := range []string{
-		".grok/rules/skills/code-review/SKILL.md",
+		".grok/skills/code-review/SKILL.md", // 原生 SkillsDir
 		".grok/rules/commands/deploy.md",
 		".grok/rules/references/api-spec.md",
 		".grok/rules/subagents/reviewer.md",

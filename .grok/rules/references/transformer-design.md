@@ -4,7 +4,7 @@ description: stdagent transformer 包设计参考（interface / Plan / FileOp / 
 std-ai-type: references
 ---
 <!-- std-ai degraded references: transformer-design -->
-<!-- Target tool "grok-cli" does not natively support this type. Reference is background material; AI consults it only when needed, not auto-loaded. -->
+<!-- Target tool "grok-build" does not natively support this type. Reference is background material; AI consults it only when needed, not auto-loaded. -->
 
 
 # transformer 包设计

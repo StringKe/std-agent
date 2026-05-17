@@ -63,9 +63,10 @@ func (c Cursor) Plan(docs []*parser.Document, adapter Adapter, cfg *config.Confi
 	for _, d := range commands {
 		plan.Files = append(plan.Files, c.buildCommand(d, adapter, cfg))
 	}
-	// references：cursor 支持 Agent Skills，走 SKILL.md 标准形式
+	// references：走独立子目录 .cursor/references/<name>.md（v3：不借 skills 路径，
+	// 否则 cursor 会按 skill 触发逻辑加载 references 破坏"按需查阅"语义）
 	for _, d := range references {
-		plan.Files = append(plan.Files, BuildDegradedSkillPackage(d, adapter, cfg)...)
+		plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
 	}
 	// subagents：cursor 无原生 subagent，走路径降级（.cursor/rules/subagents/<name>.md）
 	for _, d := range subagents {

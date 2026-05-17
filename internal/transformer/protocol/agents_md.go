@@ -14,7 +14,7 @@ import (
 // AgentsMD 是 AGENTS.md 系协议族实现。
 //
 // 覆盖 target：codex / opencode / antigravity / crush / amp / warp / factory /
-// qwen-code / pi / jules / grok-cli。Adapter 通过零值与字段组合控制变体（如
+// qwen-code / pi / jules / grok-build。Adapter 通过零值与字段组合控制变体（如
 // RootFileName="CRUSH.md" / RuleTriggerMode=TriggerTrigger /
 // InjectCommandsToRoot=true / CommandsAsSkillSubdir="commands"）。
 //
@@ -419,15 +419,15 @@ func (p AgentsMD) buildCommandAsSkill(d *parser.Document, a Adapter, cfg *config
 // planReference 输出 reference。
 //
 //   - ReferencesDir 非空：原生 markdown 写到 <ReferencesDir>/<name>.md
-//   - SkillsDir 非空（且支持 Agent Skills 的 target）：走 BuildDegradedSkillPackage
-//     （references 作为 SKILL.md 子目录形式 fan-out）
-//   - 否则 BuildDegradedFileOp（rule-equivalent fallback）
+//   - 否则 BuildDegradedFileOp 走 <FallbackDir>/references/<name>.md 子目录 fallback
+//
+// v3 修订：去除"references 走 SkillsDir/<name>/SKILL.md"分支。把 references 装成
+// SKILL.md 让 Agent Skills 工具加载等于把 references 当 skill 用，破坏 references
+// "按需查阅，不自动加载" 的语义。references 必须走独立 references/ 子目录或
+// ReferencesDir，AI 通过路径或 frontmatter std-ai-type 识别。
 func (p AgentsMD) planReference(d *parser.Document, a Adapter, cfg *config.Config) []writer.FileOp {
 	if a.ReferencesDir != "" {
 		return []writer.FileOp{p.buildReferenceFile(d, a, cfg)}
-	}
-	if a.SkillsDir != "" {
-		return BuildDegradedSkillPackage(d, a, cfg)
 	}
 	return []writer.FileOp{BuildDegradedFileOp(d, a, cfg)}
 }

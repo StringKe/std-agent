@@ -35,6 +35,9 @@ var opencodeAdapter = protocol.Adapter{
 	RulesDir:                 "",
 	SkillsDir:                ".opencode/agents",
 	CommandsDir:              ".opencode/commands",
+	FallbackDir:              ".opencode", // references / subagents fallback 子目录隔离
+	InjectExplainer:          true,
+	InjectStdaiTypeField:     true,
 	SkillsAsSubagent:         true,
 	SkillsSubagentPermission: "{ edit: ask, bash: ask, read: allow, glob: allow, grep: allow, list: allow, task: ask, lsp: allow }",
 }

@@ -31,4 +31,4 @@ pi           = { enabled = true,  convert = true }
 kilo-code    = { enabled = true,  convert = true }
 augment-code = { enabled = true,  convert = true }
 jules        = { enabled = true,  convert = true }
-grok-cli     = { enabled = true,  convert = true }
+grok-build   = { enabled = true,  convert = true }

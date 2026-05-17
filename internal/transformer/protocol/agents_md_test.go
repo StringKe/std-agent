@@ -315,10 +315,11 @@ func TestAgentsMD_ReferencesFallbackNoPrefix(t *testing.T) {
 	}
 }
 
-// TestAgentsMD_ReferencesAgentSkillsFallback：SkillsDir 非空时 references fallback 走 Agent Skills 包
-func TestAgentsMD_ReferencesAgentSkillsFallback(t *testing.T) {
+// TestAgentsMD_ReferencesGoToSubdirNotSkills：references 走独立 references/ 子目录
+// （v3 修订：不再借 SkillsDir 路径，避免 AI 按 skill 触发逻辑加载 references 破坏
+// "按需查阅" 语义。即使 target 支持 Agent Skills，references 也走独立路径。）
+func TestAgentsMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 	a := codexLikeAdapter()
-	// ReferencesDir 空 + SkillsDir 非空 -> BuildDegradedSkillPackage
 	docs := []*parser.Document{
 		{Type: parser.TypeReferences, Name: "design", Description: "design notes", Body: "B"},
 	}
@@ -326,13 +327,18 @@ func TestAgentsMD_ReferencesAgentSkillsFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	op := findAgentsMDOp(plan, ".agents/skills/design/SKILL.md")
+	// 应当落到 FallbackDir/references/<name>.md，不落到 SkillsDir
+	op := findAgentsMDOp(plan, ".codex/memories/references/design.md")
 	if op == nil {
-		t.Fatalf("Agent Skills references fallback missing, paths=%v", agentsMDPlanPaths(plan))
+		t.Fatalf("references should be in subdir not SkillsDir, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(op.Content)
 	if !strings.Contains(content, "std-ai-type: references") {
 		t.Errorf("expected std-ai-type=references, got:\n%s", content)
+	}
+	// 反向验证：不应该出现在 .agents/skills/ 路径下
+	if findAgentsMDOp(plan, ".agents/skills/design/SKILL.md") != nil {
+		t.Error("references must NOT go to SkillsDir (would break 'consult on demand' semantics)")
 	}
 }
 
