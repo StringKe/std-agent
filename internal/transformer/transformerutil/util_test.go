@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"std-ai/internal/parser"
+	"std-ai/internal/writer"
 )
 
 func makeDoc(t parser.DocType, name, prio string, targets, exclude []string) *parser.Document {
@@ -70,6 +71,39 @@ func TestFmBuilderFields(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in:\n%s", want, out)
 		}
+	}
+}
+
+func TestBuildMarkdownFileFrontmatterFirstLine(t *testing.T) {
+	opts := writer.FooterOptions{Inject: true, Version: "test", SourcePath: "skills/x/SKILL.md"}
+	fm := "---\nname: x\ndescription: y\n---\n"
+	op := BuildMarkdownFile(".claude/skills/x/SKILL.md", fm, "body text", opts)
+	out := string(op.Content)
+
+	// frontmatter 必须占首行，否则不是合法 YAML frontmatter
+	if !strings.HasPrefix(out, "---\nname: x\n") {
+		t.Fatalf("frontmatter must start at line 1, got:\n%s", out)
+	}
+	// header marker 必须出现在 frontmatter 闭合之后、body 之前
+	markerIdx := strings.Index(out, writer.MarkerStart)
+	if markerIdx < 0 {
+		t.Fatal("header marker missing")
+	}
+	fmCloseIdx := strings.Index(out, "\n---\n") // 闭合的 ---
+	bodyIdx := strings.Index(out, "body text")
+	if fmCloseIdx >= markerIdx || markerIdx >= bodyIdx {
+		t.Errorf("marker must sit between frontmatter close and body; fmClose=%d marker=%d body=%d\n%s",
+			fmCloseIdx, markerIdx, bodyIdx, out)
+	}
+}
+
+func TestBuildMarkdownFileNoFrontmatterMarkerFirst(t *testing.T) {
+	opts := writer.FooterOptions{Inject: true, Version: "test", SourcePath: "rules/x.md"}
+	op := BuildMarkdownFile(".claude/rules/x.md", "", "body text", opts)
+	out := string(op.Content)
+	// 无 frontmatter 时 header marker 仍在文件最前
+	if !strings.HasPrefix(out, writer.MarkerStart) {
+		t.Errorf("marker should be first when no frontmatter, got:\n%s", out)
 	}
 }
 

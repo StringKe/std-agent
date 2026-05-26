@@ -67,14 +67,22 @@ func MakeOpts(cfg *config.Config, target, source string, withWhatIs bool) writer
 }
 
 // BuildMarkdownFile 把 frontmatter + body + footer 拼成完整文件
+//
+// 有 frontmatter 时，header marker 放到 frontmatter 闭合（---）之后、body 之前。
+// YAML frontmatter 只有从文件首行起才合法；若把 header HTML 注释写在 --- 前面，
+// --- 不在首行，markdown formatter（oxfmt 等）会把它当 thematic break、把
+// description: 行重排成 heading，破坏格式。所以 frontmatter 必须占首行。
 func BuildMarkdownFile(path, frontmatter, body string, opts writer.FooterOptions) writer.FileOp {
 	var c bytes.Buffer
-	c.WriteString(writer.HeaderComment(opts))
+	header := writer.HeaderComment(opts)
 	if frontmatter != "" {
 		c.WriteString(frontmatter)
 		if !strings.HasSuffix(frontmatter, "\n") {
 			c.WriteString("\n")
 		}
+		c.WriteString(header)
+	} else {
+		c.WriteString(header)
 	}
 	body = strings.TrimSpace(body)
 	if body != "" {
