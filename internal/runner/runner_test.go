@@ -609,6 +609,50 @@ claude-code = { enabled = true, convert = true }
 	}
 }
 
+// TestSyncPrunesLegacyCmdPrefixedSkill：v3 把 command skill 从 cmd-<n>/ 迁到 commands/<n>/，
+// 磁盘上未进 state 的旧路径也应被 prune（Codex 会扫描 .agents/skills/ 下全部 SKILL.md）。
+func TestSyncPrunesLegacyCmdPrefixedSkill(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/commands"))
+	mustWrite(t, filepath.Join(stdai, "standards/commands", "ship.md"), `---
+type: commands
+name: ship
+description: Ship release
+---
+steps
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+codex = { enabled = true, convert = true }
+`)
+	legacyDir := filepath.Join(tmp, ".agents/skills/cmd-ship")
+	mustMkdir(t, legacyDir)
+	mustWrite(t, filepath.Join(legacyDir, "SKILL.md"), "## broken legacy skill\n")
+
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+	if res.Pruned != 1 {
+		t.Errorf("Pruned = %d, want 1 (legacy cmd-ship), paths=%v", res.Pruned, res.PrunedPaths)
+	}
+	if _, err := os.Stat(filepath.Join(legacyDir, "SKILL.md")); err == nil {
+		t.Error("legacy .agents/skills/cmd-ship/SKILL.md should be removed")
+	}
+	if _, err := os.Stat(filepath.Join(tmp, ".agents/skills/commands/ship/SKILL.md")); err != nil {
+		t.Errorf("new command skill path missing: %v", err)
+	}
+}
+
 func mustRemove(t *testing.T, p string) {
 	t.Helper()
 	if err := os.Remove(p); err != nil {

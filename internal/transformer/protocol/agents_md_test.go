@@ -278,6 +278,9 @@ func TestAgentsMD_CommandsAsSkillSubdir(t *testing.T) {
 		t.Fatalf("command-as-skill path missing, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(op.Content)
+	if !strings.HasPrefix(content, "---\n") {
+		t.Errorf("command-as-skill must start with YAML frontmatter --- (Codex rejects marker-before ---), got:\n%s", content)
+	}
 	if !strings.Contains(content, "name: release") {
 		t.Errorf("expected name=release frontmatter (no cmd- prefix), got:\n%s", content)
 	}

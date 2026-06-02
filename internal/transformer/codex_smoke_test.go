@@ -78,6 +78,39 @@ func TestCodexCommandsAsSkill(t *testing.T) {
 			t.Errorf("missing %q in:\n%s", want, c)
 		}
 	}
+	assertSkillYAMLFrontmatterFirst(t, c)
+}
+
+// TestCodexSkillYAMLFrontmatterFirst：Codex 要求 SKILL.md 以 --- 开头的 YAML frontmatter；
+// marker 必须在 frontmatter 闭合之后，否则 formatter 会把 --- 当 HR 破坏格式。
+func TestCodexSkillYAMLFrontmatterFirst(t *testing.T) {
+	tr := &Codex{}
+	cfg := &config.Config{Inject: true, InjectWhatIs: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeSkills, Name: "lint", Description: "Lint the repo", Body: "Steps"},
+		{Type: parser.TypeCommands, Name: "ship", Description: "Ship it", Body: "Ship steps"},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	for _, path := range []string{
+		".agents/skills/lint/SKILL.md",
+		".agents/skills/commands/ship/SKILL.md",
+	} {
+		c, ok := contentOf(plan, path)
+		if !ok {
+			t.Fatalf("missing %s, paths: %v", path, pathSet(plan))
+		}
+		assertSkillYAMLFrontmatterFirst(t, c)
+	}
+}
+
+func assertSkillYAMLFrontmatterFirst(t *testing.T, content string) {
+	t.Helper()
+	if !strings.HasPrefix(content, "---\n") {
+		t.Fatalf("SKILL.md must start with YAML frontmatter ---, got:\n%s", content)
+	}
+	if !strings.Contains(content[4:], "\n---\n") {
+		t.Fatalf("SKILL.md missing closing --- for frontmatter, got:\n%s", content)
+	}
 }
 
 func TestCodexCommandsSkillDoesNotCollideWithSkills(t *testing.T) {

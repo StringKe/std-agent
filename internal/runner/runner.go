@@ -322,6 +322,17 @@ func Sync(opts Options) (*Result, error) {
 				orphans = append(orphans, p)
 			}
 		}
+		// v3 迁移：command-as-skill 从 .agents/skills/cmd-<n>/ 迁到 commands/<n>/，
+		// 旧路径若从未进 state（或 state 重置）则 state 孤儿检测扫不到，Codex 仍会加载坏文件。
+		for _, p := range legacyCmdPrefixedSkillOrphans(opts.ProjectRoot, plan) {
+			if _, still := current[p]; still {
+				continue
+			}
+			if sp := submoduleContaining(p, submodulePaths); sp != "" {
+				continue
+			}
+			orphans = append(orphans, p)
+		}
 		sort.Strings(orphans)
 
 		if !opts.NoPrune && len(orphans) > 0 {
@@ -460,6 +471,34 @@ func listSubmodulePaths(root string) []string {
 		}
 	}
 	return paths
+}
+
+// legacyCmdPrefixedSkillOrphans 发现 v3 前 command-as-skill 遗留的 cmd-<name>/SKILL.md。
+//
+// 当 plan 含 .agents/skills/commands/<name>/SKILL.md 时，若磁盘仍存在
+// .agents/skills/cmd-<name>/SKILL.md 则列入 prune（不在 state 也能清理）。
+func legacyCmdPrefixedSkillOrphans(projectRoot string, plan *writer.Plan) []string {
+	const (
+		newPrefix   = ".agents/skills/commands/"
+		legacySkill = ".agents/skills/cmd-"
+	)
+	var out []string
+	for _, f := range plan.Files {
+		if !strings.HasPrefix(f.Path, newPrefix) || !strings.HasSuffix(f.Path, "/SKILL.md") {
+			continue
+		}
+		rest := strings.TrimPrefix(f.Path, newPrefix)
+		name, _, ok := strings.Cut(rest, "/")
+		if !ok || name == "" {
+			continue
+		}
+		legacy := legacySkill + name + "/SKILL.md"
+		if _, err := os.Stat(filepath.Join(projectRoot, legacy)); err != nil {
+			continue
+		}
+		out = append(out, legacy)
+	}
+	return out
 }
 
 // submoduleContaining 检查 filePath 是否落在某 submodule 内。返回匹配的 submodule 路径，
