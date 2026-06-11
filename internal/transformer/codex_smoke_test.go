@@ -16,49 +16,65 @@ func TestCodexAGENTSMd(t *testing.T) {
 		{Type: parser.TypeRules, Name: "rule-b", Description: "Rule B 描述", Body: "body of b"},
 	}
 	plan, _ := tr.Plan(docs, cfg)
-	// 现行行为：AGENTS.md（自描述清单，不内联 ## section）+ .codex/memories/<name>.md per nonRoot
+	// 现行行为：nonRoot rules 全文 inline 到 AGENTS.md（amp / warp 同风格），
+	// 不再产 .codex/memories/（与 Codex 官方语义冲突，已废弃）
 	paths := pathSet(plan)
 	if !paths["AGENTS.md"] {
 		t.Error("missing AGENTS.md")
 	}
-	if !paths[".codex/memories/rule-a.md"] || !paths[".codex/memories/rule-b.md"] {
-		t.Errorf("expected nonRoot rules spilled to .codex/memories/, got %v", paths)
-	}
 	main, _ := contentOf(plan, "AGENTS.md")
 	for _, want := range []string{
-		"Project AGENTS Manifest",
-		"Reference Rules",
-		".codex/memories/rule-a.md",
+		"rule-a",
 		"Rule A 描述",
-		".codex/memories/rule-b.md",
+		"body of a",
+		"rule-b",
+		"body of b",
 	} {
 		if !strings.Contains(main, want) {
 			t.Errorf("missing %q in AGENTS.md:\n%s", want, main)
 		}
 	}
-	// 不应再 ## section 内联 nonRoot rule body
-	if strings.Contains(main, "body of a") {
-		t.Error("nonRoot rule body should not be inlined in AGENTS.md")
+	// 无 manifest 段（RulesDir 为空时全 inline，无文件引用清单）
+	if strings.Contains(main, "Reference Rules") {
+		t.Error("AGENTS.md should not contain Reference Rules manifest after inline migration")
 	}
 }
 
-func TestCodexAGENTSMdAllSpilled(t *testing.T) {
+// TestCodexNoMemoriesOutput：防回归。codex plan 对任何 type 都不得再产
+// .codex/ 下的路径（项目级 .codex/ 是官方 Team Config 配置目录，
+// memories 是 ~/.codex/memories/ 用户级自动系统）。
+func TestCodexNoMemoriesOutput(t *testing.T) {
+	tr := &Codex{}
+	cfg := &config.Config{Inject: true, InjectWhatIs: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "r", Body: "rule body"},
+		{Type: parser.TypeSkills, Name: "s", Description: "skill", Body: "skill body"},
+		{Type: parser.TypeCommands, Name: "c", Description: "cmd", Body: "cmd body"},
+		{Type: parser.TypeReferences, Name: "ref", Description: "ref", Body: "ref body"},
+		{Type: parser.TypeSubagents, Name: "sub", Description: "sub", Body: "sub body"},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	for p := range pathSet(plan) {
+		if strings.HasPrefix(p, ".codex/") {
+			t.Errorf("codex plan must not write into .codex/ (official Team Config namespace), got %s", p)
+		}
+	}
+}
+
+// TestCodexReferencesAndSubagentsFallback：references / subagents 降级落 .agents/<subdir>/
+func TestCodexReferencesAndSubagentsFallback(t *testing.T) {
 	tr := &Codex{}
 	cfg := &config.Config{Inject: false}
 	docs := []*parser.Document{
-		{Type: parser.TypeRules, Name: "aaa-tiny", Body: "tiny"},
-		{Type: parser.TypeRules, Name: "zzz-huge", Body: strings.Repeat("x", 1000)},
+		{Type: parser.TypeReferences, Name: "design", Description: "设计参考", Body: "ref body"},
+		{Type: parser.TypeSubagents, Name: "reviewer", Description: "审查代理", Body: "sub body"},
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	for _, want := range []string{"AGENTS.md", ".codex/memories/aaa-tiny.md", ".codex/memories/zzz-huge.md"} {
+	for _, want := range []string{".agents/references/design.md", ".agents/subagents/reviewer.md"} {
 		if !paths[want] {
 			t.Errorf("missing %s in plan: %v", want, paths)
 		}
-	}
-	main, _ := contentOf(plan, "AGENTS.md")
-	if !strings.Contains(main, "Reference Rules") {
-		t.Error("expected Reference Rules manifest in AGENTS.md")
 	}
 }
 
@@ -131,7 +147,7 @@ func TestCodexCommandsSkillDoesNotCollideWithSkills(t *testing.T) {
 	}
 }
 
-func TestCodexAGENTSMdManifestWhenNoRoot(t *testing.T) {
+func TestCodexAGENTSMdInlineWhenNoRoot(t *testing.T) {
 	tr := &Codex{}
 	cfg := &config.Config{Inject: false}
 	docs := []*parser.Document{
@@ -139,7 +155,10 @@ func TestCodexAGENTSMdManifestWhenNoRoot(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	main, _ := contentOf(plan, "AGENTS.md")
-	if !strings.Contains(main, "Reference Rules") {
-		t.Errorf("无 root rule 时应自动追加 Reference Rules:\n%s", main)
+	// 无 root rule 时仍有占位标题，nonRoot rule 全文 inline 其后
+	for _, want := range []string{"Project AGENTS Manifest", "naming body"} {
+		if !strings.Contains(main, want) {
+			t.Errorf("missing %q in AGENTS.md:\n%s", want, main)
+		}
 	}
 }

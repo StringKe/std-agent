@@ -34,7 +34,7 @@ var Limits = []Limit{
 	{"*", "command", 4000, 0, "command 主体 > 4000 字符；GitHub Copilot Code Review 仅读前 4000 字符"},
 
 	// target 硬上限（部分由 transformer 自行处理 spill / 截断）
-	{"codex", "agents-md-total", 0, 32768, "AGENTS.md 总字节超过 32768，所有 nonRoot rule 会 spill 到 .codex/memories/"},
+	{"codex", "agents-md-total", 0, 32768, "AGENTS.md 总字节超过 32768（codex project_doc_max_bytes 硬上限），超出部分被 Codex 截断丢弃；精简 rules 或对低优先级 rule 关闭 codex target"},
 	{"cursor", "rule", 80000, 100000, "Cursor rule 字符上限 100000，>80000 接近上限；超 100000 触发截断"},
 	{"windsurf", "rule", 0, 12000, "Windsurf rule 单文件硬上限 12000 字符"},
 	{"antigravity", "rule", 0, 12000, "Antigravity rule 单文件硬上限 12000 字符"},
@@ -45,7 +45,7 @@ var Limits = []Limit{
 	// 起始 context 占用，与按需加载的 .claude/rules/<name>.md 不同。root rule body
 	// 写得过大会导致 session 一开始就吃掉大量 token，建议把详细规则拆到非 root rule。
 	{"claude-code", "root-file", 8000, 32000, "CLAUDE.md 每次 session 启动整体加载到 system prompt；> 8k 字符（~2k tokens）建议把详细规则拆到非 root rule，用 @import 按需加载；> 32k 严重侵占可用 context"},
-	{"codex", "root-file", 8000, 32768, "AGENTS.md 由 codex 启动加载；codex project_doc_max_bytes 硬上限 32768，> 8k（~2k tokens）建议把规则拆到非 root rule（自动 spill 到 .codex/memories/ 按需加载）"},
+	{"codex", "root-file", 8000, 32768, "AGENTS.md 由 codex 启动整体加载；project_doc_max_bytes 硬上限 32768，codex rules 全文 inline 到 AGENTS.md，> 8k（~2k tokens）建议精简规则或对低优先级 rule 关闭 codex target"},
 	{"gemini", "root-file", 8000, 32000, "GEMINI.md 由 Gemini CLI 启动加载到 system prompt；> 8k 字符建议精简根文件，把详细规则拆到非 root rule"},
 	{"copilot", "root-file", 4000, 8000, "GitHub Copilot 实测仅读 .github/copilot-instructions.md 前约 8KB，超过部分被截断丢弃；> 4k 接近截断阈值"},
 }

@@ -33,16 +33,18 @@ func agentsMDPlanPaths(plan *writer.Plan) []string {
 	return out
 }
 
-// codexLikeAdapter 是 codex 风格 adapter 的 fixture
+// codexLikeAdapter 是 "RulesDir 非空 + manifest 段" AgentsMD 变体的 fixture
+// （factory 等 target 仍是此形态；现行 codex 已改 RulesDir="" 全 inline，
+// 目录名用中性 .tool/rules 避免与已废弃的 .codex/memories 混淆）
 func codexLikeAdapter() Adapter {
 	return Adapter{
 		Name:                  "codex",
 		RootFileName:          "AGENTS.md",
 		ManifestSection:       "Reference Rules",
 		NestedSupported:       true,
-		RulesDir:              ".codex/memories",
+		RulesDir:              ".tool/rules",
 		SkillsDir:             ".agents/skills",
-		FallbackDir:           ".codex/memories",
+		FallbackDir:           ".tool/rules",
 		InjectExplainer:       true,
 		InjectStdaiTypeField:  true,
 		InjectTypeGlossary:    false,
@@ -102,11 +104,11 @@ func TestAgentsMD_RootBodyWithManifest(t *testing.T) {
 	if !strings.Contains(content, "## Reference Rules") {
 		t.Errorf("manifest section title missing:\n%s", content)
 	}
-	if !strings.Contains(content, ".codex/memories/style.md") {
+	if !strings.Contains(content, ".tool/rules/style.md") {
 		t.Errorf("manifest entry missing:\n%s", content)
 	}
 	// nonRoot rule fan-out 到 RulesDir
-	if findAgentsMDOp(plan, ".codex/memories/style.md") == nil {
+	if findAgentsMDOp(plan, ".tool/rules/style.md") == nil {
 		t.Errorf("nonRoot rule fan-out missing, paths=%v", agentsMDPlanPaths(plan))
 	}
 }
@@ -256,7 +258,7 @@ func TestAgentsMD_CommandsInjectedToRoot(t *testing.T) {
 		t.Errorf("commands should be injected BEFORE footer marker, cIdx=%d mIdx=%d", cIdx, mIdx)
 	}
 	// 不应该有独立 command 文件
-	if findAgentsMDOp(plan, ".codex/memories/commands/release.md") != nil {
+	if findAgentsMDOp(plan, ".tool/rules/commands/release.md") != nil {
 		t.Errorf("InjectCommandsToRoot=true should not produce independent command file")
 	}
 }
@@ -303,7 +305,7 @@ func TestAgentsMD_ReferencesFallbackNoPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	op := findAgentsMDOp(plan, ".codex/memories/references/design.md")
+	op := findAgentsMDOp(plan, ".tool/rules/references/design.md")
 	if op == nil {
 		t.Fatalf("references fallback path missing, paths=%v", agentsMDPlanPaths(plan))
 	}
@@ -331,7 +333,7 @@ func TestAgentsMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 	// 应当落到 FallbackDir/references/<name>.md，不落到 SkillsDir
-	op := findAgentsMDOp(plan, ".codex/memories/references/design.md")
+	op := findAgentsMDOp(plan, ".tool/rules/references/design.md")
 	if op == nil {
 		t.Fatalf("references should be in subdir not SkillsDir, paths=%v", agentsMDPlanPaths(plan))
 	}
@@ -355,7 +357,7 @@ func TestAgentsMD_SubagentsFallbackNoPrefix(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
-	op := findAgentsMDOp(plan, ".codex/memories/subagents/reviewer.md")
+	op := findAgentsMDOp(plan, ".tool/rules/subagents/reviewer.md")
 	if op == nil {
 		t.Fatalf("subagents fallback path missing, paths=%v", agentsMDPlanPaths(plan))
 	}

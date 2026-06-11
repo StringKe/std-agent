@@ -71,11 +71,11 @@ transformer 在 Plan 内要先按 Root / NestedPath 分流，再按 Type 分发�
 
 | Type | claude-code | codex | cursor | copilot | windsurf |
 |---|---|---|---|---|---|
-| rules (Root) | CLAUDE.md（含 manifest） | AGENTS.md（含 manifest） | （写入 .cursor/rules/<n>.mdc + 在根文件） | .github/copilot-instructions.md | .windsurf/rules/<n>.md |
-| rules（非 Root） | .claude/rules/<n>.md | .codex/memories/<n>.md | .cursor/rules/<n>.mdc | .github/instructions/<n>.instructions.md（applyTo 转 frontmatter） | .windsurf/rules/<n>.md |
+| rules (Root) | CLAUDE.md（含 manifest） | AGENTS.md | （写入 .cursor/rules/<n>.mdc + 在根文件） | .github/copilot-instructions.md | .windsurf/rules/<n>.md |
+| rules（非 Root） | .claude/rules/<n>.md | 全文 inline 到 AGENTS.md（.codex/memories 已废弃，撞官方语义） | .cursor/rules/<n>.mdc | .github/instructions/<n>.instructions.md（applyTo 转 frontmatter） | .windsurf/rules/<n>.md |
 | skills | .claude/skills/<n>/SKILL.md + 子目录 | .agents/skills/<n>/SKILL.md | .cursor/skills/<n>/SKILL.md | WARN（不支持） | .windsurf/skills/<n>/SKILL.md |
-| commands | .claude/commands/<n>.md | （nope） | .cursor/commands/<n>.md | .github/prompts/<n>.prompt.md | .windsurf/workflows/<n>.md |
-| subagents | .claude/agents/<n>.md | （nope） | （nope） | .github/agents/<n>.agent.md | （nope） |
+| commands | .claude/commands/<n>.md | .agents/skills/commands/<n>/SKILL.md（降级 skill） | .cursor/commands/<n>.md | .github/prompts/<n>.prompt.md | .windsurf/workflows/<n>.md |
+| subagents | .claude/agents/<n>.md | .agents/subagents/<n>.md（降级） | （nope） | .github/agents/<n>.agent.md | （nope） |
 
 完整矩阵：`docs/conversion-rules.md`。frontmatter 字段方言：`docs/format-spec.md`。
 

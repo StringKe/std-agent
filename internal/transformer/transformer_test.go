@@ -61,7 +61,9 @@ func TestAntigravityRuleOverLimitWarn(t *testing.T) {
 	}
 }
 
-func TestCodexAGENTSMdMultipleSpills(t *testing.T) {
+// TestCodexAGENTSMdInlinesLargeRules：超大 rule 也全文 inline 到 AGENTS.md
+// （.codex/memories spill 已废弃；总体积超 32768 由 budget root-file 检查提醒）
+func TestCodexAGENTSMdInlinesLargeRules(t *testing.T) {
 	tr := &Codex{}
 	cfg := &config.Config{Inject: false}
 	bigBody := strings.Repeat("c ", 18000)
@@ -72,17 +74,14 @@ func TestCodexAGENTSMdMultipleSpills(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	if !paths["AGENTS.md"] {
-		t.Error("AGENTS.md missing")
+	if len(paths) != 1 || !paths["AGENTS.md"] {
+		t.Errorf("expected AGENTS.md as the only output, paths: %v", paths)
 	}
-	spillCount := 0
-	for p := range paths {
-		if strings.HasPrefix(p, ".codex/memories/") {
-			spillCount++
+	main, _ := contentOf(plan, "AGENTS.md")
+	for _, want := range []string{"tiny", strings.TrimSpace(bigBody)} {
+		if !strings.Contains(main, want) {
+			t.Error("rule body missing from inlined AGENTS.md")
 		}
-	}
-	if spillCount < 2 {
-		t.Errorf("expected at least 2 spills, got %d, paths: %v", spillCount, paths)
 	}
 }
 
