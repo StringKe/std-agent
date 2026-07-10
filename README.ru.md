@@ -1,8 +1,10 @@
 # std-agent
 
-![std-agent: единый источник истины для 11 AI CLI инструментов](docs/assets/hero.png)
+![std-agent: единый источник истины для 22 AI CLI инструментов](docs/assets/hero.png)
 
+[![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/StringKe/std-agent)](https://goreportcard.com/report/github.com/StringKe/std-agent)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
@@ -10,62 +12,74 @@
 
 ---
 
-`stdagent` — это лёгкий CLI на чистом Go. Он хранит одну директорию `.stdai/` как единый источник истины для AI-конфигурации проекта, а затем раскладывает её по **11 AI CLI инструментам**, беря на себя все нативные форматы, диалекты frontmatter и особенности каждого инструмента.
+`stdagent` -- это лёгкий CLI-инструмент на чистом Go. Он хранит одну директорию `.stdai/` как единый источник истины для AI-конфигурации проекта, а затем раскладывает её по **22 AI CLI инструментам**, беря на себя все нативные форматы файлов, диалекты frontmatter и особенности каждого инструмента.
 
-Перестаньте вручную поддерживать `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`. Пишите один раз — синхронизируется везде.
+Перестаньте вручную поддерживать `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md` и так далее. Пишите один раз -- синхронизируется везде.
 
 ## Почему std-agent?
 
-- **Единый источник** — пишите `rules` / `skills` / `commands` / `references` один раз в YAML frontmatter + Markdown.
-- **Одиннадцать целей** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Cline, OpenCode, Continue.dev, Antigravity.
-- **Без вендор-лока** — writer трогает только белый список путей; перед каждой синхронизацией делается бэкап; `clean` откатывает всё.
-- **Обнаружение дрифта** — `status` показывает файлы, изменённые вне stdagent; `fix` восстанавливает их.
-- **MCP** — один `.stdai/standards/mcp.json` раскладывается в `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`.
-- **Поддержка monorepo** — поиск конфига идёт вверх от `cwd`; работает из любой поддиректории.
-- **Самообновление** — `stdagent upgrade` тянет подписанные релизы с GitHub с проверкой sha256 и атомарной заменой.
+- **Единый источник** -- пишите `rules` / `skills` / `commands` / `references` / `subagents` один раз в YAML frontmatter + Markdown.
+- **Двадцать две цели** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build.
+- **Точное соответствие спецификациям** -- каждый выходной путь, диалект frontmatter и лимит размера проверяются по официальной документации инструментов (последний полный аудит: 2026-07); нативные директории Agent Skills используются везде, где они существуют.
+- **Без вендор-лока** -- writer трогает только небольшой белый список путей; перед каждой синхронизацией делается бэкап; `clean` откатывает всё.
+- **Обнаружение дрифта** -- `status` показывает файлы, изменённые вне stdagent; `fix` восстанавливает их из источника.
+- **MCP** -- один `.stdai/standards/mcp.json` раскладывается в `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`.
+- **Поддержка monorepo** -- поиск конфига идёт вверх от `cwd`; работает из любой поддиректории.
+- **Самообновление** -- `stdagent upgrade` тянет подписанные релизы с GitHub с проверкой sha256 и атомарной заменой.
 
 ## Поддерживаемые инструменты
 
-### Tier 1 (9)
+### Tier 1 (14)
 
 | Цель | Основные выходы |
 |---|---|
-| Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands}/` + `.mcp.json` |
-| Codex (OpenAI) | `AGENTS.md` + `.agents/skills/` + `.codex/rules/` (spillover по байтам) |
-| Cursor | `.cursor/{rules/*.mdc,skills,commands}/` + `.cursor/mcp.json` |
-| GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents}/` + `.vscode/mcp.json` |
-| Windsurf (Codeium) | `.windsurf/{rules,skills,workflows}/` |
-| Gemini CLI (Google) | `GEMINI.md` + `.gemini/commands/*.toml` |
+| Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands,agents}/` + `.mcp.json` |
+| Codex (OpenAI) | `AGENTS.md` + `.agents/skills/` + `.codex/agents/*.toml` (нативные subagents) |
+| Cursor | `.cursor/{rules/*.mdc,skills,commands,agents}/` + `.cursor/mcp.json` |
+| GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents,skills}/` + `.vscode/mcp.json` |
+| Windsurf / Devin (Cognition) | `.windsurf/{rules,skills,workflows}/` + зеркало `.devin/rules/` |
+| Gemini CLI (Google) | `GEMINI.md` + `.gemini/skills/` + `.gemini/commands/*.toml` |
 | Aider | переиспользует `AGENTS.md` (noop) |
-| Cline | `.clinerules/` + `.clinerules/workflows/` |
-| OpenCode | `.opencode/{agents,commands}/` |
+| Cline | `.clinerules/` (числовые префиксы 100/500/900) |
+| OpenCode | `.opencode/{skills,commands}/` |
+| Roo Code | `.roo/{rules,skills,commands}/` |
+| Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + регистрация skills в `crush.json` |
+| Amp (Sourcegraph) | `AGENTS.md` (инлайн) + `.agents/skills/` |
+| Warp | `AGENTS.md` (инлайн + вложенный) + `.agents/skills/` |
+| Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (2)
+### Tier 2 (8)
 
 | Цель | Основные выходы |
 |---|---|
-| Continue.dev | `.continue/{rules,prompts}/` |
-| Antigravity (Google) | `.agents/{rules,workflows}/` |
+| Continue.dev | `.continue/{rules,skills,prompts}/` + вложенный `rules.md` |
+| Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
+| Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
+| Pi | `.pi/skills/` + `.pi/prompts/` |
+| Kilo Code (kilo.ai) | `.kilo/{rules,skills,command}/` + регистрация instructions в `kilo.jsonc` |
+| Augment Code | `.augment/{rules,skills}/` |
+| Jules (Google) | `AGENTS.md` |
+| Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 
 Каждая интеграция описана в [docs/targets/](docs/targets/).
 
 ## Быстрый старт
 
 ```bash
-# Установка (macOS / Linux)
+# Install (macOS / Linux)
 curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
-# Установка (Windows PowerShell)
+# Install (Windows PowerShell)
 irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
-# Инициализация в проекте
+# Initialize in your project
 cd your-project
 stdagent init
 
-# Отредактируйте .stdai/standards/rules/example.md и синхронизируйте на все активные цели
+# Edit .stdai/standards/rules/example.md, then sync to all enabled targets
 stdagent sync
 
-# Проверка / исправление дрифта
+# Inspect / fix drift
 stdagent status
 stdagent fix
 ```
@@ -75,45 +89,45 @@ stdagent fix
 В проекте уже разбросаны `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Вставьте промпт ниже в Claude Code / Codex / Cursor / Gemini CLI, и он переорганизует всё в структуру `.stdai/standards/`.
 
 ````text
-Помоги мигрировать этот проект с разрозненной AI-конфигурации на std-agent. Сделай следующее:
+Help me migrate this project from scattered AI configuration to std-agent. Please do:
 
-1. С помощью Glob / Read просканируй все существующие файлы AI-правил:
-   - Корень: CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
-   - Подкаталоги: .claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
+1. Use Glob / Read to scan every existing AI rule file:
+   - Root: CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
+   - Subdirs: .claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
               .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
               .github/copilot-instructions.md .github/instructions/
               .rulesync/rules/ .codex/AGENTS.md
-   - Вложенные CLAUDE.md внутри репо (find . -name CLAUDE.md -not -path './.stdai/*')
+   - In-repo nested CLAUDE.md (find . -name CLAUDE.md -not -path './.stdai/*')
 
-2. Сообщи инвентарь: X rules / Y skills / Z commands / N вложенных CLAUDE.md,
-   и отметь файлы с "обзором проекта".
+2. Report an inventory: X rules / Y skills / Z commands / N nested CLAUDE.md,
+   and flag which files contain "project overview" content.
 
-3. Предложи план разбиения, дождись моего одобрения, затем пиши файлы:
-   - Обзор проекта (определение / стек / железные правила / процесс поддержки)
+3. Propose a split plan, wait for my approval, then write files:
+   - Project overview (definition / stack / iron rules / maintenance flow)
      -> .stdai/standards/root.md
-   - Каждое сфокусированное правило -> .stdai/standards/rules/<kebab-name>.md
-   - Skill-пакет -> .stdai/standards/skills/<name>/SKILL.md (с подкаталогами scripts/ references/)
-   - Слэш-команды -> .stdai/standards/commands/<name>.md
-   - Вложенный CLAUDE.md -> .stdai/standards/nested/<относительный-путь>/root.md
-   - В каждый файл добавляй frontmatter: type / name / description / priority / applyTo
+   - Each focused rule -> .stdai/standards/rules/<kebab-name>.md
+   - Skill package -> .stdai/standards/skills/<name>/SKILL.md (with scripts/ references/ subdirs)
+   - Slash commands -> .stdai/standards/commands/<name>.md
+   - Nested CLAUDE.md -> .stdai/standards/nested/<relative-path>/root.md
+   - Every file gets a frontmatter: type / name / description / priority / applyTo
 
-4. Никакого "рефакторинга" оригинала. Сохраняй все исполняемые команды, API-эндпоинты,
-   строки ошибок, пути файлов, номера строк. Разрешённые "оптимизации": убрать слова-связки,
-   объединить дубликаты, разбить слишком большие файлы, переименовать устаревшие инструменты.
+4. No "refactoring" of original content. Keep every executable command, API endpoint,
+   error string, file path, line number. Allowed "optimizations": drop filler words,
+   merge duplicates, split oversized files, rename outdated tool names.
 
-5. По завершении сообщи мне выполнить `stdagent sync` и удалить устаревшие артефакты
-   (.rulesync/, .cursorrules одиночные и т.п.). НЕ удаляй файлы, которые stdagent сам
-   производит (CLAUDE.md / AGENTS.md / .claude/rules/).
+5. When done, tell me to run `stdagent sync` and remove legacy artifacts
+   (.rulesync/, .cursorrules single-file, etc.). DO NOT delete the files stdagent
+   itself produces (CLAUDE.md / AGENTS.md / .claude/rules/).
 
-Полная спецификация (таблица полей frontmatter, шаблон root.md, схема вложенности,
-маппинг миграции rulesync) — в выводе команды `stdagent intro`.
+Full spec (frontmatter field table, root.md template, nested layout, rulesync mapping)
+is in the `stdagent intro` command output.
 ````
 
 Также можно направить вывод сразу в LLM CLI:
 
 ```bash
-stdagent intro | pbcopy            # macOS: скопировать в буфер и вставить в AI-чат
-stdagent intro --json              # для агентов / автоматизации
+stdagent intro | pbcopy            # macOS: paste into AI chat
+stdagent intro --json              # for agent / automation integrations
 ```
 
 ## Команды
@@ -122,29 +136,36 @@ stdagent intro --json              # для агентов / автоматиз�
 |---|---|
 | `stdagent init` | Создать `.stdai/` + `config.toml` + `.stdaiignore` + примеры standards |
 | `stdagent pull` | Обновить git-источники, кэшируемые в `.stdai/cache/` |
-| `stdagent sync` | Основное: pull → parse → convert → fan out |
-| `stdagent fix` | Пересинхронизация для исправления дрифта (alias `sync`) |
+| `stdagent sync` | Основное: pull -> parse -> convert -> раскладка |
+| `stdagent fix` | Пересинхронизация для исправления дрифта (алиас `sync`) |
 | `stdagent status` | Дрифт и время последней синхронизации по каждой цели |
 | `stdagent clean` | Удалить сгенерированные файлы (сохранив `.stdai/`) |
 | `stdagent budget` | Проверка бюджета LLM-контекста (символы + оценка токенов) |
 | `stdagent which <path>` | Список rules / references, применимых к файлу (контекст по требованию для AI) |
+| `stdagent explain` | Выводит для AI смысл 5 типов std-agent (rules/skills/commands/references/subagents) |
 | `stdagent intro` | Печатает промпт для LLM-миграции существующей конфигурации |
 | `stdagent upgrade` | Самообновление с GitHub Releases (sha256 + атомарная замена) |
 | `stdagent version` | Информация о сборке |
 
 Каждая команда поддерживает `--help`. Полная справка: [docs/commands.md](docs/commands.md).
 
+## Архитектура на основе протоколов
+
+В v0.0.4 представлена трёхслойная архитектура transformer: `Plan()` каждой цели делегирует одному из 6 протоколов (AgentsMD / ClaudeMD / Cursor / Clinerules / WindsurfStyle / Copilot), параметризованному литералом структуры `protocol.Adapter`. Добавление нового инструмента теперь стоит ~25-35 строк вместо 145 (дедупликация кода на 60-70%).
+
+Плавная деградация (graceful degradation): если цель не поддерживает тип std-agent нативно (например, references повсеместно, subagents в amp / windsurf), stdagent переключается на изолированные пути в подкаталогах (`<FallbackDir>/references/<name>.md`) с frontmatter `std-agent-type: <type>` и пояснением в HTML-комментарии, без приватных префиксов std-agent.
+
 ## Формат исходных файлов
 
-Полная схема — в [docs/spec.md](docs/spec.md) Part 1. Минимальный вид:
+Полная схема -- в [docs/spec.md](docs/spec.md) Part 1. Минимальный вид:
 
 ```markdown
 ---
 type: rules                       # rules | skills | commands | references
 name: coding-style
-description: Общий стиль кода
+description: General coding style
 priority: high                    # high | normal | low
-targets: [claude-code, codex]     # явное включение (или exclude_targets для исключения)
+targets: [claude-code, codex]     # opt-in (or use exclude_targets to opt-out)
 applyTo: ["**/*.go"]
 alwaysApply: false
 ---
@@ -172,9 +193,9 @@ MCP-серверы (`.stdai/standards/mcp.json`):
 
 ```toml
 version = "1.0"
-inject = true            # вставлять footer "Generated by stdagent" в выходные файлы
-inject_whatis = true     # добавлять однострочный комментарий о происхождении внутри skills
-auto_pull = true         # автоматически pull git-источники при каждом sync
+inject = true            # inject "Generated by stdagent" footer in outputs
+inject_whatis = true     # add a one-line origin note inside skills
+auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
 
@@ -204,22 +225,22 @@ paths   = ["standards/"]
 
 ```
 your-project/
-├── .stdai/                    Внутренняя область (единый источник истины)
-│   ├── config.toml            Единственный файл конфигурации
-│   ├── standards/             Корень редактирования
+├── .stdai/                    Internal management area (single source of truth)
+│   ├── config.toml            One config file
+│   ├── standards/             Authoring root
 │   │   ├── rules/
 │   │   ├── skills/
 │   │   ├── commands/
 │   │   ├── references/
-│   │   └── mcp.json           MCP-серверы (опционально)
-│   ├── cache/                 Кэш git-источников
-│   ├── backups/               Автоснимки перед каждым sync
-│   └── state.json             Рантайм-состояние
-├── .stdaiignore               gitignore-glob для исключения исходных файлов
-├── CLAUDE.md                  Раскладка: Claude Code
-├── AGENTS.md                  Раскладка: Codex / Cursor fallback / Copilot agent / OpenCode / Antigravity
-├── GEMINI.md                  Раскладка: Gemini CLI
-├── .mcp.json                  MCP для Claude
+│   │   └── mcp.json           MCP servers (optional)
+│   ├── cache/                 Git source cache
+│   ├── backups/               Auto-snapshot before each sync
+│   └── state.json             Runtime state
+├── .stdaiignore               gitignore-style globs to exclude source files
+├── CLAUDE.md                  Fan-out: Claude Code
+├── AGENTS.md                  Fan-out: Codex / Cursor fallback / Copilot agent / OpenCode / Antigravity
+├── GEMINI.md                  Fan-out: Gemini CLI
+├── .mcp.json                  MCP for Claude
 └── .claude/ .codex/ .cursor/ .github/ .windsurf/ .gemini/ .clinerules/ .opencode/ .continue/ .agents/
 ```
 
@@ -227,35 +248,35 @@ your-project/
 
 ## Поддержка monorepo
 
-Если `--config` не указан, `stdagent` идёт вверх от `cwd` к ближайшему `.stdai/config.toml`. Запускайте из любой поддиректории — корень монорепо будет найден автоматически.
+Если `--config` не указан, `stdagent` идёт вверх от `cwd` к ближайшему `.stdai/config.toml`. Запускайте из любой поддиректории -- корень монорепо будет найден автоматически.
 
 ## Разработка
 
 ```bash
-# Тулчейн (mise + go + golangci-lint + gofumpt + git-cliff)
+# Toolchain (mise + go + golangci-lint + gofumpt + git-cliff)
 mise install
 
-# Частые задачи
+# Common tasks
 mise run fmt        # gofumpt + goimports
 mise run lint       # golangci-lint
 mise run test       # go test -race -cover
-mise run check      # fmt + lint + test в одну команду
-mise run build      # собирает bin/stdagent
+mise run check      # fmt + lint + test in one go
+mise run build      # produces bin/stdagent
 mise run run        # go run ./cmd/stdagent
 ```
 
 ## Документация
 
-- **[docs/spec.md](docs/spec.md)** — полная спецификация: стандарт std-agent + различия 11 инструментов + стратегия конвертации
-- [docs/prd.md](docs/prd.md) — требования к продукту
-- [docs/architecture.md](docs/architecture.md) — модульная структура и потоки данных
-- [docs/commands.md](docs/commands.md) — справочник CLI
-- [docs/conversion-rules.md](docs/conversion-rules.md) — матрица конвертаций + маппинг frontmatter
-- [docs/format-spec.md](docs/format-spec.md) — детальная схема frontmatter
-- [docs/file-structure.md](docs/file-structure.md) — соглашения о структуре директорий
-- [docs/roadmap.md](docs/roadmap.md) — дорожная карта
-- [docs/targets/](docs/targets/) — заметки исследования по каждому из 11 инструментов
+- **[docs/spec.md](docs/spec.md)** -- полная спецификация: стандарт std-agent + различия 22 инструментов + стратегия конвертации
+- [docs/prd.md](docs/prd.md) -- требования к продукту
+- [docs/architecture.md](docs/architecture.md) -- модульная структура и потоки данных
+- [docs/commands.md](docs/commands.md) -- справочник CLI
+- [docs/conversion-rules.md](docs/conversion-rules.md) -- матрица конвертаций + маппинг frontmatter
+- [docs/format-spec.md](docs/format-spec.md) -- детальная схема frontmatter
+- [docs/file-structure.md](docs/file-structure.md) -- соглашения о структуре директорий
+- [docs/roadmap.md](docs/roadmap.md) -- дорожная карта
+- [docs/targets/](docs/targets/) -- заметки исследования по каждому инструменту
 
 ## License
 
-MIT — см. [LICENSE](LICENSE).
+MIT -- см. [LICENSE](LICENSE).

@@ -1,6 +1,6 @@
 # Target: Codex (OpenAI)
 
-调研日期: 2026-05-07（2026-06-11 复核 memories / Team Config，废弃 .codex/memories 输出）
+调研日期: 2026-05-07（2026-06-11 复核 memories / Team Config，废弃 .codex/memories 输出），2026-07-10 复核更新
 官方文档: https://developers.openai.com/codex/
 
 ## 1. 摘要
@@ -15,6 +15,10 @@ Skills 走 OpenAI 通用规范 `$HOME/.agents/skills/` 与 `<repo>/.agents/skill
 Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fallback_filenames`
 显式声明 fallback。
 
+2026-07 复核新增：Codex 官方已支持项目级 subagents `.codex/agents/<name>.toml`
+（TOML 格式，https://developers.openai.com/codex/subagents，feature flag
+`multi_agent` 默认启用）。transformer 现已实现该落点（见 # 6 / # 7）。
+
 ## 2. 配置文件路径
 
 | 类别 | 路径 | 说明 |
@@ -23,10 +27,11 @@ Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fall
 | 系统 config | `/etc/codex/config.toml` | 可选 |
 | 项目 config | `.codex/config.toml` | 沿 cwd 向上至 project root，closest wins，仅 trusted project 生效 |
 | 用户 AGENTS | `~/.codex/AGENTS.md` + `AGENTS.override.md` | 单文件 + 可覆盖 |
-| 项目 AGENTS | 项目根 + 任意子目录 `AGENTS.md` / `AGENTS.override.md` | 每目录最多取一对 |
-| Prompts (deprecated) | `~/.codex/prompts/*.md` | 已 deprecated，改用 skills |
+| 项目 AGENTS | 项目根 + 任意子目录 `AGENTS.md` / `AGENTS.override.md` | 每目录最多取一对；链上拼接 root -> cwd（完整支持嵌套） |
+| Prompts（已移除） | `~/.codex/prompts/*.md` | **自 0.117.0 彻底移除（非 deprecated）**，改用 skills |
+| Subagents（项目） | `.codex/agents/<name>.toml` | 官方原生支持，字段 `name` / `description` / `developer_instructions`（必填）+ 可选 `model` / `sandbox_mode` 等 |
 | Skills (用户) | `$HOME/.agents/skills/<name>/SKILL.md` | 通用 agent skills 协议 |
-| Skills (项目) | `<repo>/.agents/skills/<name>/SKILL.md` | 与仓库一同提交 |
+| Skills (项目) | `<repo>/.agents/skills/<name>/SKILL.md` | 与仓库一同提交；可选字段新增 `allow_implicit_invocation`（2026-07 新增） |
 | Hooks | `~/.codex/hooks.json` 或 `[hooks]` inline；项目 `.codex/hooks.json` | 受 `[features].codex_hooks=true` 控制 |
 
 ## 3. 文件格式
@@ -35,11 +40,12 @@ Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fall
 |---|---|---|
 | `config.toml` | TOML | 无 |
 | `AGENTS.md` / `AGENTS.override.md` | Markdown | 无（全文即指令） |
-| `SKILL.md` | Markdown | 必填，字段见 OpenAI agents skills 规范（核心: `name`、`description`） |
-| 自定义 prompt（弃用） | Markdown | `description`、`argument-hint` 可选 |
+| `SKILL.md` | Markdown | 必填，字段见 OpenAI agents skills 规范（核心: `name`、`description`；可选 `allow_implicit_invocation`） |
+| `.codex/agents/<name>.toml` | TOML | `name` / `description` / `developer_instructions` 必填，`model` 等可选 |
+| 自定义 prompt（已移除） | Markdown | 不再适用 |
 | `hooks.json` | JSON | 无 |
 
-`AGENTS.md` 单文件大小受 `project_doc_max_bytes` 限制（默认 32768 字节）。
+`AGENTS.md` 单文件大小受 `project_doc_max_bytes` 限制（默认 32768 字节，见 # 10）。
 
 ## 4. config.toml 关键字段
 
@@ -51,6 +57,7 @@ project_doc_fallback_filenames = ["AGENTS.md", "CLAUDE.md"]
 [features]
 codex_hooks = true
 memories = true
+multi_agent = true
 
 [mcp_servers.<name>]
 command = "..."
@@ -78,36 +85,45 @@ enabled = true
   每层先 AGENTS.override.md 再 AGENTS.md，最后 fallback filenames
 ```
 
-closest wins：越靠近 cwd 的优先级越高，向 root 拼接。
+closest wins：越靠近 cwd 的优先级越高，向 root 拼接（链上完整支持嵌套 AGENTS.md）。
 
-## 6. std-agent 四类映射
+## 6. std-agent 五类映射（实际实现，`internal/transformer/codex.go`）
 
 | std-agent 类型 | Codex 落点 |
 |---|---|
-| rules | 项目 `AGENTS.md`（全部 rules 全文 inline 到一个文件）；子目录 rules 写入 `<sub>/AGENTS.md` |
-| skills | `<repo>/.agents/skills/<name>/SKILL.md` + 同目录辅助文件 |
-| commands | 内置 slash 不可扩展；自定义 prompt 已 deprecated。降级为 skill 写到 `.agents/skills/commands/<n>/SKILL.md`（v3 子目录隔离），description 含 slash 调用 hint 让模型主动调用 |
-| references | `.agents/references/<n>.md`（降级，AI 按 frontmatter std-agent-type 识别） |
-| subagents | `.agents/subagents/<n>.md`（降级） |
+| rules | 项目 `AGENTS.md`（RulesDir 留空，所有 nonRoot rules 全文 inline 到一个文件）；子目录 rules 写入 `<sub>/AGENTS.md`（nested root，无 manifest） |
+| skills | `<repo>/.agents/skills/<name>/SKILL.md` + 同目录辅助文件；frontmatter 白名单 `name` / `description` / `license` / `compatibility` / `metadata` |
+| commands | 降级为 skill 写到 `.agents/skills/commands/<n>/SKILL.md`（v3 子目录隔离，无私有前缀），description 含 slash 调用 hint；**同时** inject 到 `AGENTS.md` 的 `## Slash Commands` 段（`InjectCommandsToRoot=true`），两个落点并存 |
+| references | `.agents/references/<n>.md`（降级，AI 按 frontmatter `std-agent-type` 识别） |
+| subagents | **双写**：`.agents/subagents/<n>.md`（降级 markdown，人读文档）+ `.codex/agents/<n>.toml`（官方原生格式，`name` / `description` / `developer_instructions` / 可选 `model`） |
 
-**禁止落点 `.codex/`**：项目级 `.codex/` 是官方 Team Config 配置目录
+**禁止落点 `.codex/` 的例外**：项目级 `.codex/` 是官方 Team Config 配置目录
 （`config.toml` / `rules/*.rules` execpolicy 命令权限 / `skills/`），且被沙箱与
-`.git` 同级 carveout 保护。曾用的 `.codex/memories/` 撞官方 memories 概念
+`.git` 同级 carveout 保护，历史上 stdagent 不写任何 markdown 类文件进去。
+**唯一例外是 `.codex/agents/*.toml`**：官方文档明确这是 subagent 原生格式，
+2026-07 起 transformer 主动写入（决策点 C：TOML 是否受 trusted-project 边界限制
+官方未明说，见 # 9 剩余 UNKNOWN，写盘本身无害，是否被消费是 Codex 侧行为）。
+曾用的 `.codex/memories/` 撞官方 memories 概念
 （`~/.codex/memories/` 用户级自动记忆，详见第 9 节），已废弃，runner 的
 `legacyCodexMemoriesOrphans` 在 sync 时自动清理带 stdagent marker 的旧产物。
 
 ## 7. 转换器实现要点
 
 1. 主输出：项目根 `AGENTS.md`，由 `inject` footer 标识为 stdagent 生成
-2. rules 拼接策略：所有 `targets` 含 `codex` 的 rules 文件按 `priority` -> `name`
-   排序全文拼接到 `AGENTS.md` 正文，每段以 `## <name>` 二级标题分隔
+2. rules 拼接策略：RulesDir 为空，所有 nonRoot rules 按 `name` 排序全文拼接到
+   `AGENTS.md` 正文（`transformerutil.JoinAGENTSStyle`）
 3. AGENTS.md 总字节接近 / 超过 `project_doc_max_bytes`（32768 字节）时不自动
-   分拆（Codex 无项目级按需加载目录），由 budget root-file 检查输出 WARN
-   提醒精简或对低优先级 rule 关闭 codex target
+   分拆，由 `budget.CheckTotalRules` 输出 HARD WARN 提醒精简或对低优先级 rule
+   关闭 codex target；语义是**项目链累计和**（root -> cwd 整条链，含 nested AGENTS.md
+   累计），超限按链序**文件粒度停止追加（链尾先丢）**，该数值是 `config.toml`
+   可调默认值而非硬上限
 4. skills：写入 `.agents/skills/<name>/SKILL.md` + 辅助文件；frontmatter 至少
    含 `name`、`description`
-5. trust 提示：sync 时检测 `.codex/` 已存在却未 trusted，输出 WARN
-6. v1.0 不写 hooks.json / config.toml；保留 v1.1 扩展位
+5. subagents：`buildCodexAgentTOML`（`internal/transformer/codex.go:47`）渲染
+   `.codex/agents/<name>.toml`，`developer_instructions` 用 TOML 三引号多行
+   literal string；同时保留 `.agents/subagents/<n>.md` 降级产物过渡
+6. trust 提示：sync 时检测 `.codex/` 已存在却未 trusted，输出 WARN
+7. v1.0 不写 hooks.json；`.codex/config.toml` 不由 stdagent 生成/合并
 
 ## 8. 信息来源
 
@@ -118,9 +134,10 @@ closest wins：越靠近 cwd 的优先级越高，向 root 拼接。
 - https://developers.openai.com/codex/config-basic
 - https://developers.openai.com/codex/config-reference
 - https://developers.openai.com/codex/mcp
+- https://developers.openai.com/codex/subagents
 - https://github.com/openai/codex
 
-## 9. 已确认与剩余 UNKNOWN
+## 9. 已确认与剩余 UNKNOWN（2026-07-10 复核）
 
 已确认：
 - `[[skills.config]]` schema：TOML 数组表，字段 `path`（string，指向 SKILL.md）
@@ -131,6 +148,10 @@ closest wins：越靠近 cwd 的优先级越高，向 root 拼接。
 - skills 文档正确路径 https://developers.openai.com/codex/skills（之前 `/concepts/skills` 为 404）
 - v1.0 不主动写 `[[skills.config]]`，stdagent 仅落 SKILL.md 到 `.agents/skills/`，
   由 Codex 默认机制发现
+- `~/.codex/prompts` **自 0.117.0 彻底移除**（不是 deprecated，是已删除），commands
+  降级为 skills 的方向正确，本次仅更新措辞
+- `.codex/agents/<name>.toml` 官方原生 subagent 格式已实现落地写入（见 # 6 / # 7）
+- SKILL.md 可选字段新增 `allow_implicit_invocation`（transformer 尚未渲染该字段，属未来扩展位）
 
 2026-06-11 复核确认（memories 落盘格式不再 UNKNOWN）：
 - Memories 是**用户级**自动记忆系统：单根 `~/.codex/memories/`
@@ -147,5 +168,8 @@ closest wins：越靠近 cwd 的优先级越高，向 root 拼接。
   parent -> repo root -> `~/.codex/` -> `/etc/codex/` 分层，高优先级覆盖低。
   来源：developers.openai.com/codex/memories、/codex/rules、/codex/changelog
 
-剩余 UNKNOWN：
+剩余 UNKNOWN（2026-07 复核仍未证实）：
+- `.codex/agents/*.toml` 的 trusted-project 边界（是否受沙箱 carveout 限制未知）
+- Codex 全局 `~/.codex/AGENTS.md` 是否计入 `project_doc_max_bytes` 链累计口径
+- SKILL.md 与 `description` 的字节大小上限（官方未给数值，budget.go 未设该 target 的 Hard）
 - 自定义 prompt 完全废弃后官方推荐 skills 的最小字段集

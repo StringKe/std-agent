@@ -1,6 +1,7 @@
 # Target: Continue.dev
 
-调研日期: 2026-05-08
+调研日期: 2026-05-08（2026-07-10 更新：skills 原生 GA、根文件三选一 fallback、
+嵌套固定文件名 rules.md 回填，均已在 transformer 落地）
 官方文档: https://docs.continue.dev
 GitHub: https://github.com/continuedev/continue
 
@@ -21,6 +22,15 @@ Rules 支持 `globs` / `regex` / `alwaysApply` 三种激活模式，和 Cursor
 rules 系统语义接近。Slash commands 通过 prompts blocks 注册，文件名
 即命令名。MCP 直接走 `mcpServers` 字段，仅在 agent 模式可用。
 (https://docs.continue.dev/customize/overview, 访问日期 2026-05-08)
+
+Agent Skills **已原生支持**：标准包路径 `.continue/skills/<name>/SKILL.md`
+（2026-07-10 新增，https://github.com/continuedev/continue/pull/9353）。
+transformer 已改为直写原生路径（`SkillsAsRule: false`），不再降级为
+model-decision rule。
+
+项目根文件消费顺序为**三选一 fallback**：`AGENTS.md` > `AGENT.md` > `CLAUDE.md`，
+第一个存在的生效，不叠加。嵌套子目录**只认固定文件名 `rules.md`**（非 AGENTS.md），
+transformer 已实现 `NestedFileName="rules.md"`。
 
 ## 2. 配置文件路径
 
@@ -120,36 +130,46 @@ description: Standards for TypeScript development
 https://docs.continue.dev/customize/deep-dives/mcp,
 访问日期 2026-05-08)
 
-## 5. std-agent 四类映射
+## 5. std-agent 四类映射（2026-07-10 更新，与 `internal/transformer/continue.go` 一致）
 
 | std-agent 类型 | Continue 落点 | 加载方式 |
 |---|---|---|
 | rules | `.continue/rules/*.md` 或 `config.yaml` 顶层 `rules:` 数组 | 自动扫描目录，按字典序追加；frontmatter 控制 globs / alwaysApply |
-| skills | 无原生 skill 概念。降级为带 `description` 的 model-decision rule（`alwaysApply: false`，仅描述触发） | 由模型读 description 决定；不是真正运行时切换 |
-| commands | `.continue/prompts/*.prompt.md`，frontmatter 设 `invokable: true`，文件名即 `/<name>` slash 命令 | 输入 `/` 触发选择面板 |
+| skills | `.continue/skills/<name>/SKILL.md`（原生 Agent Skills 标准包，2026-07-10 GA） | 官方标准包扫描加载，不再降级 |
+| commands | `.continue/prompts/<name>.prompt.md`，frontmatter 含 `name` / `description` / `version` / `invokable: true` | 输入 `/` 触发选择面板 |
 | references | `docs:` 字段（远程 doc 索引）或内联到 rule 正文。`@<file>` 在 chat 中按需引入 | docs 字段构建嵌入索引；rule 内嵌为静态文本 |
 
-注：Continue 没有 Cursor / Antigravity 那种独立 skill 文件夹概念。若
-std-agent 输入有 skill，建议作为 `.continue/rules/<skill-name>.md` 写入，
-通过 `description` + `alwaysApply: false` 实现 model-decision 触发。
-(https://docs.continue.dev/customize/deep-dives/rules,
-访问日期 2026-05-08;
-https://docs.continue.dev/customize/deep-dives/prompts,
-访问日期 2026-05-08)
+（旧结论"Continue 无原生 skill 概念，降级为 model-decision rule"已过时，2026-07-10
+纠正：官方已原生支持 Agent Skills，见 https://github.com/continuedev/continue/pull/9353）
 
-## 6. 转换器实现要点
+## 5.1 根文件消费顺序（2026-07-10 新增）
 
-1. v1.0 默认产出 `<repo>/.continue/rules/<name>.md`：每条 std-agent rule
+项目根文件按 `AGENTS.md` > `AGENT.md` > `CLAUDE.md` 三选一 fallback，第一个存在的文件
+生效，不叠加多份。continue-dev transformer 本身不写根文件（`continueAdapter` 无
+`RootFileName`），根文件由 codex / claude-code transformer 负责，Continue 自动消费。
+
+## 5.2 嵌套目录（2026-07-10 新增）
+
+Continue **不读嵌套 AGENTS.md**，只认任意目录下**固定文件名 `rules.md`** 的 colocated
+rule（`continuedev/continue#6048`）。transformer 已实现：`continueAdapter.NestedSupported=true`，
+`NestedFileName="rules.md"`，NestedPath 类型的 doc 会写到 `x/y/rules.md` 而非
+`x/y/AGENTS.md`。
+
+## 6. 转换器实现要点（2026-07-10 更新）
+
+1. 默认产出 `<repo>/.continue/rules/<name>.md`：每条 std-agent rule
    一个文件，frontmatter 写 `name` / `description` / `globs` /
    `alwaysApply`。globs 缺省时只写 `description`，由 model 决定
 2. std-agent commands -> `<repo>/.continue/prompts/<name>.prompt.md`，
    frontmatter 必带 `invokable: true`，正文为命令模板
-3. 不主动写 `<repo>/config.yaml`：用户多用 Hub assistant 或全局
-   `~/.continue/config.yaml`，避免冲突。仅在 `init --continue`
-   显式开关时写工作区 `config.yaml` 并附 marker
-4. references -> 在 rule 正文用 `@docs/...` 引用或写到 `docs:` 字段
+3. std-agent skills -> `<repo>/.continue/skills/<name>/SKILL.md`（原生 Agent Skills
+   标准包，`SkillsAsRule: false`）
+4. NestedPath 类型 doc -> `<repo>/x/y/rules.md`（固定文件名，非 AGENTS.md）
+5. 不主动写 `<repo>/config.yaml`：用户多用 Hub assistant 或全局
+   `~/.continue/config.yaml`，避免冲突
+6. references -> 在 rule 正文用 `@docs/...` 引用或写到 `docs:` 字段
    （需用户许可，因为 docs 索引会触发远程抓取）
-5. MCP 不在四类映射范围；保留旁路：若用户自带 `mcpServers:`，
+7. MCP 不在四类映射范围；保留旁路：若用户自带 `mcpServers:`，
    不修改
 
 ## 7. 信息来源
@@ -165,6 +185,9 @@ https://docs.continue.dev/customize/deep-dives/prompts,
   （访问日期 2026-05-08）
 - https://docs.continue.dev/reference （访问日期 2026-05-08）
 - https://github.com/continuedev/continue （访问日期 2026-05-08）
+- https://github.com/continuedev/continue/pull/9353（2026-07-10 新增，skills 原生 GA 确认）
+- https://github.com/continuedev/continue/issues/6048（2026-07-10 新增，嵌套 `rules.md`
+  固定文件名确认）
 
 ## 8. 已确认
 
@@ -177,13 +200,18 @@ https://docs.continue.dev/customize/deep-dives/prompts,
   models / mcpServers / docs / data 均适用
 - `.continuerc.json` 通过 `mergeBehavior: merge | overwrite` 控制
   工作区覆写策略
+- 2026-07-10：Agent Skills 原生 GA，`.continue/skills/<name>/SKILL.md`
+- 2026-07-10：根文件三选一 fallback `AGENTS.md` > `AGENT.md` > `CLAUDE.md`
+- 2026-07-10：嵌套目录只认固定文件名 `rules.md`，不读嵌套 AGENTS.md
 
 ## 9. UNKNOWN
 
 - `assistants/` 目录是否仍是 v1 推荐结构（文档在重组中，部分页面已
-  转向以 Hub assistant 为主）。v1.0 转换器不写 `assistants/`，仅写
-  `rules/` 与 `prompts/`，避免踩坑
+  转向以 Hub assistant 为主）。转换器不写 `assistants/`，仅写
+  `rules/` / `prompts/` / `skills/`，避免踩坑
 - `config.ts` 与 `config.yaml` 共存时的合并优先级未在公开文档明确
   描述
 - Hub `uses:` 是否支持版本固定语法（如 `owner/package@1.0`）需进一步
   核实，标 UNKNOWN，转换器输出统一不带版本
+- `.continue/rules/*.md` 与根文件（AGENTS.md 等）是否会重复注入相同内容，
+  尚未评估（spec.md P1 跟进项）

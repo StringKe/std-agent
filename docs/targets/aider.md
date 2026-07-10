@@ -1,6 +1,6 @@
 # Target: Aider
 
-调研日期: 2026-05-07
+调研日期: 2026-05-07（2026-07-10 复核：无变化）
 官方文档: https://aider.chat/docs/
 
 ## 1. 摘要
@@ -98,5 +98,9 @@ test-cmd: "pytest -q"
 - aider 完全不支持任何形式的 skill / agent / persona / 自定义 chat mode 扩展
 - 唯一扩展点：`--load <file>` 启动脚本（顺序执行内置 slash）
 - 当前未见官方 AGENTS.md 自动加载提案；仍需 `read:` 显式声明
+- 2026-07-10 复核：官方文档（config/aider_conf.html、usage/conventions.html）仍无
+  AGENTS.md 自动读取表述，结论无变化。网上流传的"aider 会自动读取 AGENTS.md"说法
+  源自第三方教程，非官方行为，不可信；transformer 维持 noop 是正确实现
+  （https://aider.chat/docs/usage/conventions.html）
 
 无重大剩余 UNKNOWN。

@@ -2,7 +2,9 @@
 
 ![std-agent: one source of truth for 22 AI CLI tools](docs/assets/hero.png)
 
+[![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/StringKe/std-agent)](https://goreportcard.com/report/github.com/StringKe/std-agent)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
@@ -17,7 +19,8 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 ## Why std-agent?
 
 - **Single source** — write `rules` / `skills` / `commands` / `references` / `subagents` once in YAML frontmatter + Markdown.
-- **Twenty-two targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok CLI.
+- **Twenty-two targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build.
+- **Spec-accurate** — every output path, frontmatter dialect, and size limit is verified against the tools' official docs (last full audit: 2026-07); native Agent Skills directories everywhere they exist.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
 - **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.
 - **MCP** — single `.stdai/standards/mcp.json` fans out to `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`
@@ -31,32 +34,32 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Target | Primary outputs |
 |---|---|
 | Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands,agents}/` + `.mcp.json` |
-| Codex (OpenAI) | `AGENTS.md` + `.codex/memories/` + `.agents/skills/` |
-| Cursor | `.cursor/{rules/*.mdc,skills,commands}/` + `.cursor/mcp.json` |
-| GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents}/` + `.vscode/mcp.json` |
-| Windsurf (Codeium) | `.windsurf/{rules,skills,workflows}/` |
-| Gemini CLI (Google) | `GEMINI.md` + `.gemini/commands/*.toml` |
+| Codex (OpenAI) | `AGENTS.md` + `.agents/skills/` + `.codex/agents/*.toml` (native subagents) |
+| Cursor | `.cursor/{rules/*.mdc,skills,commands,agents}/` + `.cursor/mcp.json` |
+| GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents,skills}/` + `.vscode/mcp.json` |
+| Windsurf / Devin (Cognition) | `.windsurf/{rules,skills,workflows}/` + `.devin/rules/` mirror |
+| Gemini CLI (Google) | `GEMINI.md` + `.gemini/skills/` + `.gemini/commands/*.toml` |
 | Aider | reuses `AGENTS.md` (noop) |
 | Cline | `.clinerules/` (100/500/900 numeric prefixes) |
-| OpenCode | `.opencode/{agents,commands}/` |
-| Roo Code | `.roo/rules/` (Cline fork, 18k stars) |
-| Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` |
-| Amp (Sourcegraph) | `AGENTS.md` (inline) |
-| Warp | `AGENTS.md` (inline + nested) |
-| Factory (Factory.ai) | `.factory/{rules,skills,droids}/` |
+| OpenCode | `.opencode/{skills,commands}/` |
+| Roo Code | `.roo/{rules,skills,commands}/` |
+| Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills registration |
+| Amp (Sourcegraph) | `AGENTS.md` (inline) + `.agents/skills/` |
+| Warp | `AGENTS.md` (inline + nested) + `.agents/skills/` |
+| Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
 ### Tier 2 (8)
 
 | Target | Primary outputs |
 |---|---|
-| Continue.dev | `.continue/{rules,prompts}/` |
-| Antigravity (Google) | `.agents/{rules,workflows}/` |
-| Qwen Code (Alibaba) | `QWEN.md` + `.qwen/commands/` |
+| Continue.dev | `.continue/{rules,skills,prompts}/` + nested `rules.md` |
+| Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
+| Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | `.pi/skills/` + `.pi/prompts/` |
-| Kilo Code | `.kilo/rules/` (Cline second-fork) |
-| Augment Code | `.augment/rules/` |
+| Kilo Code (kilo.ai) | `.kilo/{rules,skills,command}/` + `kilo.jsonc` instructions registration |
+| Augment Code | `.augment/{rules,skills}/` |
 | Jules (Google) | `AGENTS.md` |
-| Grok CLI (xAI) | `AGENTS.md` + `AGENTS.override.md` |
+| Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 
 Each integration is documented under [docs/targets/](docs/targets/).
 
@@ -150,7 +153,7 @@ Every command supports `--help`. Full reference: [docs/commands.md](docs/command
 
 v0.0.4 introduced a three-layer transformer architecture: each target's `Plan()` delegates to one of 6 protocols (AgentsMD / ClaudeMD / Cursor / Clinerules / WindsurfStyle / Copilot), parametrized by a `protocol.Adapter` struct literal. Adding a new tool now costs ~25-35 lines instead of 145 (60-70% code dedup).
 
-Graceful degradation: when a target doesn't natively support a std-agent type (e.g. skills in codex / references everywhere), stdagent falls back to subdirectory-isolated paths (`<RulesDir>/skills/<name>/SKILL.md`) with frontmatter `std-agent-type: <type>` + HTML comment explainer, no std-agent-private prefixes.
+Graceful degradation: when a target doesn't natively support a std-agent type (e.g. references everywhere, subagents in amp / windsurf), stdagent falls back to subdirectory-isolated paths (`<FallbackDir>/references/<name>.md`) with frontmatter `std-agent-type: <type>` + HTML comment explainer, no std-agent-private prefixes.
 
 ## Source format
 

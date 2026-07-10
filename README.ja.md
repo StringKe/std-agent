@@ -1,8 +1,10 @@
 # std-agent
 
-![std-agent: 一つの真実の源、11 個の AI CLI ツール](docs/assets/hero.png)
+![std-agent: 22 個の AI CLI ツールのための唯一の信頼できる情報源](docs/assets/hero.png)
 
+[![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/StringKe/std-agent)](https://goreportcard.com/report/github.com/StringKe/std-agent)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
@@ -10,141 +12,160 @@
 
 ---
 
-`stdagent` は軽量で純 Go 製の CLI ツールです。プロジェクトの AI 設定を `.stdai/` に集約し、それを **11 個の AI CLI ツール**へ展開します。各ツールのネイティブなファイル形式、frontmatter 方言、固有の制約はすべて代わりに処理されます。
+`stdagent` は軽量な純 Go 製 CLI ツールです。プロジェクトの AI 設定を単一の `.stdai/` ディレクトリに唯一の信頼できる情報源として集約し、**22 個の AI CLI ツール**へ展開します。各ツールのネイティブなファイル形式、frontmatter 方言、固有の制約はすべて代わりに処理します。
 
-`CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/`、`.windsurf/rules/`、`.clinerules/`、`.github/copilot-instructions.md` などを手で維持するのはやめましょう。一度書けば、どこでも有効です。
+`CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/`、`.windsurf/rules/`、`.clinerules/`、`.github/copilot-instructions.md` などを手作業で維持するのはもうやめましょう。一度書けば、どこでも反映されます。
 
-## なぜ std-agent？
+## なぜ std-agent なのか
 
-- **唯一の真実の源** — `rules` / `skills` / `commands` / `references` を YAML frontmatter + Markdown で一度だけ記述。
-- **11 個のターゲット** — Claude Code、Codex、Cursor、GitHub Copilot、Windsurf、Gemini CLI、Aider、Cline、OpenCode、Continue.dev、Antigravity。
-- **ロックインなし** — writer は許可リスト内の少数のパスにのみ触れます。sync ごとに自動バックアップ、`clean` ですべて元に戻せます。
-- **drift 検出** — `status` で外部から変更されたファイルを表示、`fix` で再適用。
-- **MCP** — 単一ファイル `.stdai/standards/mcp.json` を `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` に展開。
-- **monorepo 対応** — `cwd` から上方向に設定を探索。任意のサブディレクトリから実行可能。
-- **自己アップグレード** — `stdagent upgrade` が GitHub Releases から sha256 検証付きでアーカイブを取得し、原子的に置換。
+- **単一の情報源**：`rules` / `skills` / `commands` / `references` / `subagents` を YAML frontmatter + Markdown で一度だけ記述します。
+- **22 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build。
+- **仕様に忠実**：すべての出力パス、frontmatter 方言、サイズ上限は各ツールの公式ドキュメントと照合済みです（直近の全面調査：2026-07）。ネイティブの Agent Skills ディレクトリが存在する場合は、そちらを使用します。
+- **ロックインなし**：writer はごく小さなパスのホワイトリストにしか触れません。sync ごとに自動バックアップ、`clean` で全て元に戻せます。
+- **drift 検出**：`status` が外部から変更されたファイルを表示し、`fix` でソースを再適用します。
+- **MCP**：単一の `.stdai/standards/mcp.json` を `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json` に展開します。
+- **monorepo 対応**：設定の探索は `cwd` から上方向に行われるため、どのサブディレクトリからでも実行できます。
+- **自己アップグレード**：`stdagent upgrade` が GitHub Releases から署名済みリリースを取得し、sha256 検証と原子的な置き換えを行います。
 
 ## 対応ツール
 
-### Tier 1（9 個）
+### Tier 1（14 個）
 
-| ターゲット | 主な出力先 |
+| ターゲット | 主な出力 |
 |---|---|
-| Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands}/` + `.mcp.json` |
-| Codex (OpenAI) | `AGENTS.md` + `.agents/skills/` + `.codex/rules/`（バイト超過 spillover） |
-| Cursor | `.cursor/{rules/*.mdc,skills,commands}/` + `.cursor/mcp.json` |
-| GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents}/` + `.vscode/mcp.json` |
-| Windsurf (Codeium) | `.windsurf/{rules,skills,workflows}/` |
-| Gemini CLI (Google) | `GEMINI.md` + `.gemini/commands/*.toml` |
+| Claude Code (Anthropic) | `CLAUDE.md` + `.claude/{rules,skills,commands,agents}/` + `.mcp.json` |
+| Codex (OpenAI) | `AGENTS.md` + `.agents/skills/` + `.codex/agents/*.toml`（ネイティブ subagents） |
+| Cursor | `.cursor/{rules/*.mdc,skills,commands,agents}/` + `.cursor/mcp.json` |
+| GitHub Copilot | `.github/{copilot-instructions,instructions,prompts,agents,skills}/` + `.vscode/mcp.json` |
+| Windsurf / Devin (Cognition) | `.windsurf/{rules,skills,workflows}/` + `.devin/rules/` ミラー |
+| Gemini CLI (Google) | `GEMINI.md` + `.gemini/skills/` + `.gemini/commands/*.toml` |
 | Aider | `AGENTS.md` を再利用（noop） |
-| Cline | `.clinerules/` + `.clinerules/workflows/` |
-| OpenCode | `.opencode/{agents,commands}/` |
+| Cline | `.clinerules/`（100/500/900 の数値プレフィックス） |
+| OpenCode | `.opencode/{skills,commands}/` |
+| Roo Code | `.roo/{rules,skills,commands}/` |
+| Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills 登録 |
+| Amp (Sourcegraph) | `AGENTS.md`（inline） + `.agents/skills/` |
+| Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
+| Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2（2 個）
+### Tier 2（8 個）
 
-| ターゲット | 主な出力先 |
+| ターゲット | 主な出力 |
 |---|---|
-| Continue.dev | `.continue/{rules,prompts}/` |
-| Antigravity (Google) | `.agents/{rules,workflows}/` |
+| Continue.dev | `.continue/{rules,skills,prompts}/` + ネストされた `rules.md` |
+| Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
+| Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
+| Pi | `.pi/skills/` + `.pi/prompts/` |
+| Kilo Code (kilo.ai) | `.kilo/{rules,skills,command}/` + `kilo.jsonc` instructions 登録 |
+| Augment Code | `.augment/{rules,skills}/` |
+| Jules (Google) | `AGENTS.md` |
+| Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 
 各統合の詳細は [docs/targets/](docs/targets/) にあります。
 
 ## クイックスタート
 
 ```bash
-# インストール（macOS / Linux）
+# Install (macOS / Linux)
 curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
-# インストール（Windows PowerShell）
+# Install (Windows PowerShell)
 irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
-# プロジェクト内で初期化
+# Initialize in your project
 cd your-project
 stdagent init
 
-# .stdai/standards/rules/example.md を編集してから、有効なすべての target に同期
+# Edit .stdai/standards/rules/example.md, then sync to all enabled targets
 stdagent sync
 
-# drift の確認 / 修正
+# Inspect / fix drift
 stdagent status
 stdagent fix
 ```
 
 ## 既存プロジェクトを std-agent に移行する
 
-`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` などが散在していますか？以下のプロンプトをそのまま Claude Code / Codex / Cursor / Gemini CLI に渡せば、`.stdai/standards/` 構造へ再編成してくれます。
+`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` などが散在していませんか。以下のプロンプトを Claude Code / Codex / Cursor / Gemini CLI に貼り付ければ、すべてを `.stdai/standards/` に再構成してくれます。
 
 ````text
-このプロジェクトの分散した AI 設定を std-agent に集約してください。以下の手順で実行：
+Help me migrate this project from scattered AI configuration to std-agent. Please do:
 
-1. Glob / Read を使い、既存の AI ルールファイルをすべて走査：
-   - ルート：CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
-   - サブディレクトリ：.claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
+1. Use Glob / Read to scan every existing AI rule file:
+   - Root: CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
+   - Subdirs: .claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
               .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
               .github/copilot-instructions.md .github/instructions/
               .rulesync/rules/ .codex/AGENTS.md
-   - 同 repo 内のネストされた CLAUDE.md（find . -name CLAUDE.md -not -path './.stdai/*'）
+   - In-repo nested CLAUDE.md (find . -name CLAUDE.md -not -path './.stdai/*')
 
-2. インベントリを報告：rules X 件 / skills Y 件 / commands Z 件 / ネスト CLAUDE.md N 件、
-   そして「プロジェクト概要」を含むファイルを指摘。
+2. Report an inventory: X rules / Y skills / Z commands / N nested CLAUDE.md,
+   and flag which files contain "project overview" content.
 
-3. 分割案を提示し承認を待ってから、ファイル書き込み：
-   - プロジェクト概要（定義 / 技術スタック / 鉄則 / メンテフロー）
+3. Propose a split plan, wait for my approval, then write files:
+   - Project overview (definition / stack / iron rules / maintenance flow)
      -> .stdai/standards/root.md
-   - 焦点を絞った各ルール -> .stdai/standards/rules/<kebab-name>.md
-   - skill パッケージ -> .stdai/standards/skills/<name>/SKILL.md（scripts/ references/ サブディレクトリ含む）
-   - slash コマンドテンプレート -> .stdai/standards/commands/<name>.md
-   - ネスト CLAUDE.md -> .stdai/standards/nested/<相対パス>/root.md
-   - すべてのファイルに frontmatter：type / name / description / priority / applyTo
+   - Each focused rule -> .stdai/standards/rules/<kebab-name>.md
+   - Skill package -> .stdai/standards/skills/<name>/SKILL.md (with scripts/ references/ subdirs)
+   - Slash commands -> .stdai/standards/commands/<name>.md
+   - Nested CLAUDE.md -> .stdai/standards/nested/<relative-path>/root.md
+   - Every file gets a frontmatter: type / name / description / priority / applyTo
 
-4. 原文の「リファクタリング」禁止：実行可能コマンド、API エンドポイント、エラー文字列、
-   ファイルパス、行番号はすべて保持。許可される「最適化」：余分な接続語の削除、
-   重複の統合、巨大ファイルの分割、古いツール名の置換。
+4. No "refactoring" of original content. Keep every executable command, API endpoint,
+   error string, file path, line number. Allowed "optimizations": drop filler words,
+   merge duplicates, split oversized files, rename outdated tool names.
 
-5. 完了したら `stdagent sync` の実行を促し、旧成果物（.rulesync/ / .cursorrules
-   単一ファイル版など）を削除。stdagent が生成した CLAUDE.md / AGENTS.md /
-   .claude/rules/ は削除しないこと。
+5. When done, tell me to run `stdagent sync` and remove legacy artifacts
+   (.rulesync/, .cursorrules single-file, etc.). DO NOT delete the files stdagent
+   itself produces (CLAUDE.md / AGENTS.md / .claude/rules/).
 
-完全な仕様（frontmatter フィールド表、root.md テンプレート、ネスト規約、
-rulesync 移行マッピング）は `stdagent intro` の出力を参照。
+Full spec (frontmatter field table, root.md template, nested layout, rulesync mapping)
+is in the `stdagent intro` command output.
 ````
 
-LLM CLI に直接パイプも可能：
+LLM CLI に直接パイプすることもできます。
 
 ```bash
-stdagent intro | pbcopy            # macOS：クリップボードにコピーして AI 対話に貼り付け
-stdagent intro --json              # agent / 自動化統合向け
+stdagent intro | pbcopy            # macOS: paste into AI chat
+stdagent intro --json              # for agent / automation integrations
 ```
 
-## コマンド一覧
+## コマンド
 
 | コマンド | 用途 |
 |---|---|
 | `stdagent init` | `.stdai/` + `config.toml` + `.stdaiignore` + サンプル standards を生成 |
-| `stdagent pull` | `.stdai/cache/` の有効な git ソースを更新 |
-| `stdagent sync` | 中核：pull → parse → convert → 展開 |
-| `stdagent fix` | drift 修復のための再 sync（`sync` のエイリアス） |
-| `stdagent status` | 各 target の drift と最終同期時刻 |
-| `stdagent clean` | 生成ファイルを削除（`.stdai/` は保持） |
+| `stdagent pull` | `.stdai/cache/` にキャッシュされた git ソースを更新 |
+| `stdagent sync` | 中核処理：pull -> parse -> convert -> 展開 |
+| `stdagent fix` | drift を修復するための再 sync（`sync` の別名） |
+| `stdagent status` | 各 target の drift 状況と最終 sync 時刻 |
+| `stdagent clean` | 生成されたファイルを削除（`.stdai/` は保持） |
 | `stdagent budget` | LLM コンテキスト予算チェック（文字数 + token 推定） |
-| `stdagent which <path>` | そのファイルに適用される rules / references を列挙（AI のオンデマンド・コンテキスト読込） |
-| `stdagent intro` | 既存設定を std 形式に変換させるための AI 助手向けプロンプトを出力 |
-| `stdagent upgrade` | GitHub Releases から自己アップグレード（sha256 + 原子置換） |
+| `stdagent which <path>` | 指定ファイルに適用される rules / references を列挙（AI のオンデマンドなコンテキスト読込用） |
+| `stdagent explain` | std-agent の 5 つの型（rules/skills/commands/references/subagents）の意味を AI 向けに出力 |
+| `stdagent intro` | 既存設定を変換させるための移行プロンプトを出力 |
+| `stdagent upgrade` | GitHub Releases から自己アップグレード（sha256 + 原子的な置き換え） |
 | `stdagent version` | ビルド情報 |
 
-各コマンドは `--help` をサポートします。完全なリファレンス：[docs/commands.md](docs/commands.md)。
+すべてのコマンドは `--help` に対応しています。完全なリファレンス：[docs/commands.md](docs/commands.md)。
+
+## Protocol ベースのアーキテクチャ
+
+v0.0.4 で三層構造の transformer アーキテクチャが導入されました。各 target の `Plan()` は 6 個の protocol（AgentsMD / ClaudeMD / Cursor / Clinerules / WindsurfStyle / Copilot）のいずれかに処理を委譲し、`protocol.Adapter` の struct literal でパラメータ化されます。新しいツールの追加コストは、145 行ではなく約 25-35 行になりました（コード重複が 60-70% 削減）。
+
+段階的縮退：target が std-agent のある型をネイティブにサポートしない場合（例：references はすべてのツールで、subagents は amp / windsurf で）、stdagent はサブディレクトリで隔離されたパス（`<FallbackDir>/references/<name>.md`）にフォールバックします。frontmatter に `std-agent-type: <type>` を付け、HTML コメントで説明を添えますが、std-agent 専用のプレフィックスは使用しません。
 
 ## ソースファイル形式
 
-完全な schema は [docs/spec.md](docs/spec.md) Part 1 を参照。最小形：
+完全な schema は [docs/spec.md](docs/spec.md) の Part 1 を参照してください。最小構成は次の通りです。
 
 ```markdown
 ---
 type: rules                       # rules | skills | commands | references
 name: coding-style
-description: 一般的なコーディングスタイル
+description: General coding style
 priority: high                    # high | normal | low
-targets: [claude-code, codex]     # 明示的に有効化（または exclude_targets で除外）
+targets: [claude-code, codex]     # opt-in (or use exclude_targets to opt-out)
 applyTo: ["**/*.go"]
 alwaysApply: false
 ---
@@ -154,7 +175,7 @@ alwaysApply: false
 Always use meaningful variable names...
 ```
 
-MCP サーバ（`.stdai/standards/mcp.json`）：
+MCP サーバー（`.stdai/standards/mcp.json`）：
 
 ```json
 {
@@ -166,15 +187,15 @@ MCP サーバ（`.stdai/standards/mcp.json`）：
 }
 ```
 
-## 設定例
+## 設定
 
-`.stdai/config.toml`:
+`.stdai/config.toml`：
 
 ```toml
 version = "1.0"
-inject = true            # 出力ファイルに "Generated by stdagent" footer を注入
-inject_whatis = true     # skills 内に出所を 1 行コメント
-auto_pull = true         # sync ごとに git ソースを自動 pull
+inject = true            # inject "Generated by stdagent" footer in outputs
+inject_whatis = true     # add a one-line origin note inside skills
+auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
 
@@ -204,58 +225,58 @@ paths   = ["standards/"]
 
 ```
 your-project/
-├── .stdai/                    内部管理領域（唯一の真実の源）
-│   ├── config.toml            設定ファイル
-│   ├── standards/             執筆ルート
+├── .stdai/                    内部管理領域（唯一の信頼できる情報源）
+│   ├── config.toml            唯一の設定ファイル
+│   ├── standards/             執筆用ルート
 │   │   ├── rules/
 │   │   ├── skills/
 │   │   ├── commands/
 │   │   ├── references/
-│   │   └── mcp.json           MCP サーバ（任意）
+│   │   └── mcp.json           MCP サーバー（任意）
 │   ├── cache/                 git ソースキャッシュ
-│   ├── backups/               sync ごとに自動スナップショット
+│   ├── backups/               sync ごとの自動スナップショット
 │   └── state.json             ランタイム状態
-├── .stdaiignore               gitignore 形式の glob でソースファイルを除外
-├── CLAUDE.md                  展開：Claude Code
-├── AGENTS.md                  展開：Codex / Cursor fallback / Copilot agent / OpenCode / Antigravity
-├── GEMINI.md                  展開：Gemini CLI
-├── .mcp.json                  Claude 用 MCP
+├── .stdaiignore               ソースファイルを除外する gitignore 形式の glob
+├── CLAUDE.md                  展開先：Claude Code
+├── AGENTS.md                  展開先：Codex / Cursor fallback / Copilot agent / OpenCode / Antigravity
+├── GEMINI.md                  展開先：Gemini CLI
+├── .mcp.json                  Claude 用の MCP 設定
 └── .claude/ .codex/ .cursor/ .github/ .windsurf/ .gemini/ .clinerules/ .opencode/ .continue/ .agents/
 ```
 
 詳細：[docs/file-structure.md](docs/file-structure.md)。
 
-## monorepo サポート
+## Monorepo サポート
 
-`--config` を指定しない場合、`stdagent` は `cwd` から最寄りの `.stdai/config.toml` を上方向に探索します。任意のサブディレクトリから実行しても monorepo のルートを自動的に特定します。
+`--config` を指定しない場合、`stdagent` は `cwd` から上方向に最も近い `.stdai/config.toml` を探索します。どのサブディレクトリから実行しても monorepo のルートを自動的に特定します。
 
 ## 開発
 
 ```bash
-# ツールチェーン（mise + go + golangci-lint + gofumpt + git-cliff）
+# Toolchain (mise + go + golangci-lint + gofumpt + git-cliff)
 mise install
 
-# 一般的なタスク
+# Common tasks
 mise run fmt        # gofumpt + goimports
 mise run lint       # golangci-lint
 mise run test       # go test -race -cover
-mise run check      # fmt + lint + test を一括
-mise run build      # bin/stdagent を生成
+mise run check      # fmt + lint + test in one go
+mise run build      # produces bin/stdagent
 mise run run        # go run ./cmd/stdagent
 ```
 
 ## ドキュメント
 
-- **[docs/spec.md](docs/spec.md)** — 完全な仕様：std-agent 標準 + 11 ツール差分 + 変換戦略
-- [docs/prd.md](docs/prd.md) — 製品要件
-- [docs/architecture.md](docs/architecture.md) — モジュール構成とデータフロー
-- [docs/commands.md](docs/commands.md) — CLI コマンドリファレンス
-- [docs/conversion-rules.md](docs/conversion-rules.md) — 変換マトリクス + frontmatter フィールドマッピング
-- [docs/format-spec.md](docs/format-spec.md) — frontmatter 詳細 schema
-- [docs/file-structure.md](docs/file-structure.md) — ディレクトリ構成の原則
-- [docs/roadmap.md](docs/roadmap.md) — ロードマップ
-- [docs/targets/](docs/targets/) — 11 ターゲットツールの調査
+- **[docs/spec.md](docs/spec.md)**：完全な仕様、std-agent 標準 + 22 ツールの差異 + 変換戦略
+- [docs/prd.md](docs/prd.md)：製品要件
+- [docs/architecture.md](docs/architecture.md)：モジュール構成とデータフロー
+- [docs/commands.md](docs/commands.md)：CLI コマンドリファレンス
+- [docs/conversion-rules.md](docs/conversion-rules.md)：変換マトリクス + frontmatter フィールド対応
+- [docs/format-spec.md](docs/format-spec.md)：frontmatter schema の詳細
+- [docs/file-structure.md](docs/file-structure.md)：ディレクトリ構成の慣例
+- [docs/roadmap.md](docs/roadmap.md)：ロードマップ
+- [docs/targets/](docs/targets/)：各ツールの調査資料
 
 ## License
 
-MIT — [LICENSE](LICENSE) を参照。
+MIT。詳細は [LICENSE](LICENSE) を参照してください。
