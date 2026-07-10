@@ -146,14 +146,14 @@ func TestCheckRootFileHardWarnCodex(t *testing.T) {
 	}
 }
 
-func TestCheckRootFileCopilotTightLimit(t *testing.T) {
-	soft := CheckRootFile("copilot", ".github/copilot-instructions.md", 5000)
-	if len(soft) != 1 || !strings.Contains(soft[0], "SOFT") {
-		t.Errorf("expected SOFT for 5000 byte copilot instructions, got %v", soft)
+func TestCheckRootFileCopilotSoftOnly(t *testing.T) {
+	// 2026-06-12 官方移除截断规则后 copilot 根文件只剩通用软建议，无 HARD
+	if out := CheckRootFile("copilot", ".github/copilot-instructions.md", 5000); len(out) != 0 {
+		t.Errorf("5000 bytes is under the 8000 soft threshold, got %v", out)
 	}
-	hard := CheckRootFile("copilot", ".github/copilot-instructions.md", 10000)
-	if len(hard) != 1 || !strings.Contains(hard[0], "HARD") {
-		t.Errorf("expected HARD for 10000 byte copilot instructions, got %v", hard)
+	soft := CheckRootFile("copilot", ".github/copilot-instructions.md", 10000)
+	if len(soft) != 1 || !strings.Contains(soft[0], "SOFT") {
+		t.Errorf("expected SOFT (not HARD) for 10000 byte copilot instructions, got %v", soft)
 	}
 }
 
@@ -168,5 +168,126 @@ func TestCheckRootFileNoWarnSmall(t *testing.T) {
 func TestCheckRootFileUnknownTarget(t *testing.T) {
 	if out := CheckRootFile("aider", "x", 99999); len(out) != 0 {
 		t.Errorf("aider has no root-file limit, got %v", out)
+	}
+}
+
+func TestCheckDocumentSkillNameHard(t *testing.T) {
+	d := &parser.Document{
+		Path: "skills/x/SKILL.md",
+		Type: parser.TypeSkills,
+		Name: strings.Repeat("a", 65),
+		Body: "short",
+	}
+	out := CheckDocument(d)
+	found := false
+	for _, msg := range out {
+		if strings.Contains(msg, "HARD") && strings.Contains(msg, "skill-name") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected HARD skill-name warn for 65-char name, got %v", out)
+	}
+}
+
+func TestCheckDocumentSkillDescriptionHard(t *testing.T) {
+	d := &parser.Document{
+		Path:        "skills/x/SKILL.md",
+		Type:        parser.TypeSkills,
+		Name:        "x",
+		Description: strings.Repeat("d", 1025),
+		Body:        "short",
+	}
+	out := CheckDocument(d)
+	found := false
+	for _, msg := range out {
+		if strings.Contains(msg, "HARD") && strings.Contains(msg, "skill-description") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected HARD skill-description warn for 1025-char description, got %v", out)
+	}
+}
+
+func TestCheckDocumentSkillListingClaude(t *testing.T) {
+	// description + when_to_use 合计超 1536 触发 claude-code listing 截断提醒
+	d := &parser.Document{
+		Path:        "skills/x/SKILL.md",
+		Type:        parser.TypeSkills,
+		Name:        "x",
+		Description: strings.Repeat("d", 1000),
+		WhenToUse:   strings.Repeat("w", 600),
+		Body:        "short",
+	}
+	out := CheckDocument(d)
+	found := false
+	for _, msg := range out {
+		if strings.Contains(msg, "HARD") && strings.Contains(msg, "skill-listing") && strings.Contains(msg, "claude-code") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected claude-code skill-listing warn for 1600-char combined, got %v", out)
+	}
+}
+
+func TestCheckDocumentSubagentCopilotHard(t *testing.T) {
+	d := &parser.Document{
+		Path: "subagents/big.md",
+		Type: parser.TypeSubagents,
+		Body: strings.Repeat("s", 30001),
+	}
+	out := CheckDocument(d)
+	found := false
+	for _, msg := range out {
+		if strings.Contains(msg, "HARD") && strings.Contains(msg, "copilot") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected copilot subagent HARD warn for >30000, got %v", out)
+	}
+}
+
+func TestCheckDocumentClaudeRootNoFakeHard(t *testing.T) {
+	// Claude 官方明确根文件全量加载不截断，root-file 不应有 claude-code HARD
+	for _, l := range Limits {
+		if l.Target == "claude-code" && l.Kind == "root-file" && l.Hard != 0 {
+			t.Errorf("claude-code root-file must not carry a fabricated Hard limit (official: loaded in full), got %d", l.Hard)
+		}
+		if l.Target == "gemini" && l.Kind == "root-file" && l.Hard != 0 {
+			t.Errorf("gemini root-file has no documented Hard limit, got %d", l.Hard)
+		}
+	}
+}
+
+func TestCheckTotalRulesAugment(t *testing.T) {
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Path: "rules/a.md", Body: strings.Repeat("a", 30000)},
+		{Type: parser.TypeRules, Path: "rules/b.md", Body: strings.Repeat("b", 25000)},
+	}
+	out := CheckTotalRules(docs)
+	foundAugment, foundCodex := false, false
+	for _, msg := range out {
+		if strings.Contains(msg, "augment-code") {
+			foundAugment = true
+		}
+		if strings.Contains(msg, "codex") {
+			foundCodex = true
+		}
+	}
+	if !foundAugment {
+		t.Errorf("expected augment-code rules-total HARD for 55000 > 49512, got %v", out)
+	}
+	if !foundCodex {
+		t.Errorf("expected codex agents-md-total HARD for 55000 > 32768, got %v", out)
+	}
+}
+
+func TestCheckRootFileCursorHard(t *testing.T) {
+	out := CheckRootFile("cursor", "AGENTS.md", 100001)
+	if len(out) == 0 || !strings.Contains(out[0], "HARD") {
+		t.Errorf("expected cursor root-file HARD for >100000, got %v", out)
 	}
 }

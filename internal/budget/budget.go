@@ -24,33 +24,49 @@ type Limit struct {
 	Note   string // 用户可读说明
 }
 
-// Limits 是所有已知限额，由 CheckDocument / CheckTotalRules 遍历检查
+// Limits 是所有已知限额，由 CheckDocument / CheckTotalRules / CheckRootFile 遍历检查。
+//
+// 数值原则（2026-07 全 target 官方文档核查，来源见 docs/sdlc/2026-07-10/spec-refresh/spec.md）：
+// Hard 只填官方文档化的上限，官方没写就置 0——宁缺毋假；Soft 是跨工具通用的
+// context 友好建议。三种超限语义在 Note 里写清：截断（部分内容丢）/ 拒载（整文件
+// 或整字段失效）/ 淘汰（按优先级弃置低序内容）。
 //
 //nolint:gochecknoglobals // 全局只读配置，无并发风险
 var Limits = []Limit{
-	// 通用软建议（context budget 友好）
+	// 通用软建议（context budget 友好，无官方依据，纯经验值）
 	{"*", "rule", 8000, 0, "rule 单文件 > 8000 字符会显著消耗 LLM context；考虑拆分或转 skill"},
-	{"*", "skill", 20000, 0, "SKILL.md > 20000 字符（约 5000 tokens 软上限）；把内容拆到 references/ 或 scripts/"},
-	{"*", "command", 4000, 0, "command 主体 > 4000 字符；GitHub Copilot Code Review 仅读前 4000 字符"},
+	{"*", "skill", 20000, 0, "SKILL.md > 20000 字符（约 5000 tokens 软上限）；把内容拆到 references/ 或 scripts/（Agent Skills 规范建议正文 < 500 行）"},
+	{"*", "command", 4000, 0, "command 主体 > 4000 字符会显著消耗 context；历史上 Copilot Code Review 截前 4000 字符的规则已于 2026-06-12 官方移除，此条现为纯建议"},
 
-	// target 硬上限（部分由 transformer 自行处理 spill / 截断）
-	{"codex", "agents-md-total", 0, 32768, "AGENTS.md 总字节超过 32768（codex project_doc_max_bytes 硬上限），超出部分被 Codex 截断丢弃；精简 rules 或对低优先级 rule 关闭 codex target"},
-	{"cursor", "rule", 80000, 100000, "Cursor rule 字符上限 100000，>80000 接近上限；超 100000 触发截断"},
-	{"windsurf", "rule", 0, 12000, "Windsurf rule 单文件硬上限 12000 字符"},
-	{"antigravity", "rule", 0, 12000, "Antigravity rule 单文件硬上限 12000 字符"},
+	// Agent Skills 规范字段硬限（超限硬拒载：skill 不被索引；
+	// Copilot / Cline / Roo / OpenCode / Augment 等共用同一规范）
+	{"*", "skill-name", 0, 64, "Agent Skills 规范：name ≤ 64 字符（小写字母数字连字符，须等于目录名），超限 skill 不被索引"},
+	{"*", "skill-description", 0, 1024, "Agent Skills 规范：description ≤ 1024 字符，超限 skill 不被索引"},
+	{"claude-code", "skill-listing", 0, 1536, "Claude Code skill listing 截断：description + when_to_use 合计 > 1536 字符时列表中被截断（调用时仍读全文），触发词要前置"},
+
+	// target 硬上限（语义见 Note）
+	{"codex", "agents-md-total", 0, 32768, "codex project_doc_max_bytes 默认 32768：root->cwd 整条链（含嵌套 AGENTS.md）累计字节，超限后按链序整文件停止追加（链尾先丢）；该值是 config.toml 可调默认值而非硬上限"},
+	{"cursor", "rule", 80000, 100000, "Cursor 单 rule 文件 100000 字符上限（服务端下发，可能变动），超限截断并提示；>80000 接近上限"},
+	{"windsurf", "rule", 0, 12000, "Windsurf workspace rule 单文件上限 12000 字符（per-file 非总量）；超限行为官方未定义，legacy .windsurfrules 实测为截断"},
 	{"windsurf", "global-rules", 0, 6000, "Windsurf global_rules.md 上限 6000 字符"},
+	{"antigravity", "rule", 0, 12000, "Antigravity rule 单文件上限 12000 字符（官方文档）"},
+	{"antigravity", "command", 0, 12000, "Antigravity workflow 单文件上限 12000 字符（官方文档：Workflow files are limited to 12,000 characters each）"},
+	{"copilot", "subagent", 0, 30000, "Copilot .agent.md 正文上限 30000 字符（GitHub.com custom agents 参考文档）"},
+	{"augment-code", "rules-total", 0, 49512, "Augment Workspace Guidelines + Rules 合计上限 49512 字符；超限按优先级淘汰（manual -> always/auto -> .augment-guidelines 顺序应用直至限额，后序静默弃置）"},
 
 	// 根文件体积（CLAUDE.md / AGENTS.md / GEMINI.md / .github/copilot-instructions.md）
 	// 这些文件**每次 AI session 启动都会被整体加载到 system prompt**，体积直接影响
 	// 起始 context 占用，与按需加载的 .claude/rules/<name>.md 不同。root rule body
 	// 写得过大会导致 session 一开始就吃掉大量 token，建议把详细规则拆到非 root rule。
-	{"claude-code", "root-file", 8000, 32000, "CLAUDE.md 每次 session 启动整体加载到 system prompt；> 8k 字符（~2k tokens）建议把详细规则拆到非 root rule，用 @import 按需加载；> 32k 严重侵占可用 context"},
-	{"codex", "root-file", 8000, 32768, "AGENTS.md 由 codex 启动整体加载；project_doc_max_bytes 硬上限 32768，codex rules 全文 inline 到 AGENTS.md，> 8k（~2k tokens）建议精简规则或对低优先级 rule 关闭 codex target"},
-	{"gemini", "root-file", 8000, 32000, "GEMINI.md 由 Gemini CLI 启动加载到 system prompt；> 8k 字符建议精简根文件，把详细规则拆到非 root rule"},
-	{"copilot", "root-file", 4000, 8000, "GitHub Copilot 实测仅读 .github/copilot-instructions.md 前约 8KB，超过部分被截断丢弃；> 4k 接近截断阈值"},
+	{"claude-code", "root-file", 8000, 0, "CLAUDE.md 每次 session 启动整体加载且官方明确全量不截断（无硬上限，软指导 under 200 lines）；> 8k 字符（~2k tokens）建议把详细规则拆到非 root rule，用 @import 按需加载"},
+	{"codex", "root-file", 8000, 32768, "AGENTS.md 由 codex 启动整体加载；project_doc_max_bytes 默认 32768（链累计口径、可调），codex rules 全文 inline 到 AGENTS.md，> 8k（~2k tokens）建议精简规则或对低优先级 rule 关闭 codex target"},
+	{"cursor", "root-file", 80000, 100000, "Cursor 把 AGENTS.md / CLAUDE.md 按单 rule 同一 100000 字符上限处理，超限截断（限额服务端下发可能变动）"},
+	{"gemini", "root-file", 8000, 0, "GEMINI.md 由 Gemini CLI 启动加载到 system prompt，官方无字节上限文档；> 8k 字符建议精简根文件，把详细规则拆到非 root rule"},
+	{"copilot", "root-file", 8000, 0, "copilot-instructions.md 无硬性字符上限（历史截断规则已于 2026-06-12 移除）；官方软指导不超过约 2 页，> 8k 建议精简"},
 }
 
-// CheckDocument 对单个 Document body 做 budget 检查，返回 WARN 消息列表
+// CheckDocument 对单个 Document 做 budget 检查（body 字节 + skill 字段长度），
+// 返回 WARN 消息列表
 func CheckDocument(d *parser.Document) []string {
 	if d == nil {
 		return nil
@@ -64,23 +80,38 @@ func CheckDocument(d *parser.Document) []string {
 		return nil
 	}
 	var out []string
+	out = append(out, checkKind(kind, d.Path, n)...)
+
+	// skill frontmatter 字段长度（Agent Skills 规范硬拒载 + Claude listing 截断）
+	if d.Type == parser.TypeSkills {
+		out = append(out, checkKind("skill-name", d.Path, len(d.Name))...)
+		out = append(out, checkKind("skill-description", d.Path, len(d.Description))...)
+		out = append(out, checkKind("skill-listing", d.Path, len(d.Description)+len(d.WhenToUse))...)
+	}
+	return out
+}
+
+// checkKind 用 Limits 表校验某 kind 的字节/字符数
+func checkKind(kind, path string, n int) []string {
+	var out []string
 	for _, l := range Limits {
 		if l.Kind != kind {
 			continue
 		}
 		if l.Hard > 0 && n > l.Hard {
-			out = append(out, fmt.Sprintf("HARD %s [%s] %d > %d (%s)", d.Path, l.Target, n, l.Hard, l.Note))
+			out = append(out, fmt.Sprintf("HARD %s [%s] %s %d > %d (%s)", path, l.Target, kind, n, l.Hard, l.Note))
 			continue
 		}
 		if l.Soft > 0 && n > l.Soft {
-			out = append(out, fmt.Sprintf("SOFT %s [%s] %d > %d (%s)", d.Path, l.Target, n, l.Soft, l.Note))
+			out = append(out, fmt.Sprintf("SOFT %s [%s] %s %d > %d (%s)", path, l.Target, kind, n, l.Soft, l.Note))
 		}
 	}
 	return out
 }
 
-// CheckTotalRules 对所有 type=rules Document body 字节求和，
-// 与 codex AGENTS.md 总字节硬上限比对（spill 已自动处理，但提醒用户拆分）
+// CheckTotalRules 对所有 type=rules Document body 字节求和，与总量类上限比对：
+//   - codex agents-md-total：project_doc_max_bytes 链累计（超限链尾整文件不加载）
+//   - augment-code rules-total：Workspace Guidelines + Rules 合计（超限按优先级淘汰）
 func CheckTotalRules(docs []*parser.Document) []string {
 	total := 0
 	for _, d := range docs {
@@ -95,11 +126,11 @@ func CheckTotalRules(docs []*parser.Document) []string {
 	}
 	var out []string
 	for _, l := range Limits {
-		if l.Kind != "agents-md-total" || l.Hard == 0 {
+		if (l.Kind != "agents-md-total" && l.Kind != "rules-total") || l.Hard == 0 {
 			continue
 		}
 		if total > l.Hard {
-			out = append(out, fmt.Sprintf("HARD AGENTS.md [%s] total rules %d > %d (%s)", l.Target, total, l.Hard, l.Note))
+			out = append(out, fmt.Sprintf("HARD [%s] total rules %d > %d (%s)", l.Target, total, l.Hard, l.Note))
 		}
 	}
 	return out
@@ -139,6 +170,8 @@ func docKind(t parser.DocType) string {
 		return "skill"
 	case parser.TypeCommands:
 		return "command"
+	case parser.TypeSubagents:
+		return "subagent"
 	}
 	return ""
 }
