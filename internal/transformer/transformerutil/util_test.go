@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 func makeDoc(t parser.DocType, name, prio string, targets, exclude []string) *parser.Document {

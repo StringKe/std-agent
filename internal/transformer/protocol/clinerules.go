@@ -3,10 +3,10 @@ package protocol
 import (
 	"path"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // Clinerules 是 cline / roo-code / kilo-code 共用协议族。
@@ -29,7 +29,7 @@ import (
 //   - skills:     <RulesDir>/skills/<n>/SKILL.md（Agent Skills 标准形式）
 //   - references: <RulesDir>/references/<n>.md
 //   - subagents:  <RulesDir>/subagents/<n>.md
-//   - glossary:   <RulesDir>/glossary.md（无前缀，子目录隔离 + frontmatter std-ai-type: glossary）
+//   - glossary:   <RulesDir>/glossary.md（无前缀，子目录隔离 + frontmatter std-agent-type: glossary）
 type Clinerules struct{}
 
 // Plan 实现 Protocol.Plan
@@ -132,11 +132,11 @@ func (p Clinerules) buildWorkflow(d *parser.Document, adapter Adapter, cfg *conf
 	return transformerutil.BuildMarkdownFile(fullPath, "", body, opts)
 }
 
-// buildGlossary 把 std-ai 类型速查写到 <RulesDir>/glossary.md
-// frontmatter 加 std-ai-type: glossary 让 AI 识别
+// buildGlossary 把 std-agent 类型速查写到 <RulesDir>/glossary.md
+// frontmatter 加 std-agent-type: glossary 让 AI 识别
 func (p Clinerules) buildGlossary(adapter Adapter, cfg *config.Config) writer.FileOp {
 	var fm transformerutil.FmBuilder
-	fm.Add("std-ai-type", "glossary")
+	fm.Add("std-agent-type", "glossary")
 	body := glossaryMarkdown
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, "", false)
 	return transformerutil.BuildMarkdownFile(

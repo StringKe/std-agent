@@ -38,16 +38,16 @@ Jules 当前**不约定**独立的 rules / skills / commands / references / suba
 
 ## 4. skills / commands / references / subagents 原生支持
 
-| std-ai 类型 | Jules 原生 | std-ai 落点 |
+| std-agent 类型 | Jules 原生 | std-agent 落点 |
 |---|---|---|
 | rules | YES（AGENTS.md 全量） | `AGENTS.md`（含 root + 内联 nonRoot） |
-| skills | NO | `.jules/rules/skills/<name>/SKILL.md`（含 explainer + std-ai-type） |
+| skills | NO | `.jules/rules/skills/<name>/SKILL.md`（含 explainer + std-agent-type） |
 | commands | NO | `.jules/rules/commands/<name>.md`（fallback rule） |
 | references | NO | `.jules/rules/references/<name>.md`（fallback rule） |
 | subagents | NO | `.jules/rules/subagents/<name>.md`（fallback rule） |
 
-所有 fallback 文件 body 头部注入 HTML 注释 explainer，frontmatter 含 `std-ai-type:` 字段
-标识原 std-ai 类型，便于 Jules 后端识别（也便于其他读 `.jules/rules/` 目录的工具复用）。
+所有 fallback 文件 body 头部注入 HTML 注释 explainer，frontmatter 含 `std-agent-type:` 字段
+标识原 std-agent 类型，便于 Jules 后端识别（也便于其他读 `.jules/rules/` 目录的工具复用）。
 
 ## 5. stdagent 落点（julesAdapter）
 
@@ -61,7 +61,7 @@ Jules 当前**不约定**独立的 rules / skills / commands / references / suba
 - FallbackDir：`.jules/rules`
 - InjectExplainer：true
 - InjectStdaiTypeField：true
-- InjectTypeGlossary：true（AGENTS.md 顶部注入 std-ai 类型速查段）
+- InjectTypeGlossary：true（AGENTS.md 顶部注入 std-agent 类型速查段）
 
 ## 6. 与 codex / amp / antigravity 的关系
 
@@ -79,7 +79,7 @@ Jules 与 amp 配置最接近（都是 all-inline AGENTS.md + 私有 fallback �
 ## 7. 信息来源
 
 - https://jules.google（Google 官方主页）
-- /tmp/std-ai-protocol-research.md §1 row 20 + §2.A
+- /tmp/std-agent-protocol-research.md §1 row 20 + §2.A
 - AGENTS.md 事实标准：https://agentsmd.online（Linux Foundation AAIF 2026 托管）
 
 ## 8. UNKNOWN

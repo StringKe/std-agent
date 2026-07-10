@@ -3,7 +3,7 @@ package transformer
 import (
 	"testing"
 
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func makeDoc(t parser.DocType, name, prio string, targets, exclude []string) *parser.Document {

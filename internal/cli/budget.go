@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/budget"
-	"std-ai/internal/parser"
-	"std-ai/internal/source"
+	"github.com/StringKe/std-agent/internal/budget"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/source"
 )
 
 func newBudgetCmd() *cobra.Command {

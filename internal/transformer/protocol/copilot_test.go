@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // newCopilotAdapter 是 Phase 2.6 测试用 adapter（默认形态 A：SubagentInvokeCmd 空）。
@@ -81,7 +81,7 @@ func TestCopilot_RootFile_GlossaryAndManifest(t *testing.T) {
 	if !ok {
 		t.Fatalf("missing root, paths=%v", keys(files))
 	}
-	if !strings.Contains(rootContent, "std-ai 类型速查") {
+	if !strings.Contains(rootContent, "std-agent 类型速查") {
 		t.Error("expected glossary section in root")
 	}
 	if !strings.Contains(rootContent, "be careful") {
@@ -234,8 +234,8 @@ func TestCopilot_Subagent_CLIInvoke(t *testing.T) {
 	if !strings.Contains(body, "## How to spawn") {
 		t.Error("expected spawn section")
 	}
-	if !strings.Contains(body, "std-ai-type: subagents") {
-		t.Error("expected std-ai-type frontmatter under CLI invoke mode")
+	if !strings.Contains(body, "std-agent-type: subagents") {
+		t.Error("expected std-agent-type frontmatter under CLI invoke mode")
 	}
 }
 
@@ -263,13 +263,13 @@ func TestCopilot_SkillsFallback(t *testing.T) {
 			}
 		}
 	}
-	if !strings.Contains(body, "std-ai-type: skills") {
-		t.Error("expected std-ai-type frontmatter")
+	if !strings.Contains(body, "std-agent-type: skills") {
+		t.Error("expected std-agent-type frontmatter")
 	}
 	if !strings.Contains(body, `applyTo: ""`) {
 		t.Errorf("expected empty applyTo frontmatter, got:\n%s", body)
 	}
-	if !strings.Contains(body, "<!-- std-ai degraded skills: code-review -->") {
+	if !strings.Contains(body, "<!-- std-agent degraded skills: code-review -->") {
 		t.Error("expected explainer comment")
 	}
 	if !strings.Contains(body, "Skill is an on-demand capability pack") {
@@ -293,8 +293,8 @@ func TestCopilot_ReferencesFallback(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected references fallback path, paths=%v", keys(files))
 	}
-	if !strings.Contains(body, "std-ai-type: references") {
-		t.Error("expected std-ai-type frontmatter")
+	if !strings.Contains(body, "std-agent-type: references") {
+		t.Error("expected std-agent-type frontmatter")
 	}
 	if !strings.Contains(body, "Reference is background material") {
 		t.Error("expected references semantics text")

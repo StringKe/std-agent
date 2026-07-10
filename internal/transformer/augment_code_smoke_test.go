@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func TestAugmentCodeOutputs(t *testing.T) {
@@ -67,13 +67,13 @@ func TestAugmentCodeFallback(t *testing.T) {
 		t.Errorf("missing workflow, paths: %v", paths)
 	}
 
-	// 验证 fallback 文件含 std-ai-type frontmatter
+	// 验证 fallback 文件含 std-agent-type frontmatter
 	refContent, _ := contentOf(plan, ".augment/rules/references/api-ref.md")
-	if !strings.Contains(refContent, "std-ai-type: references") {
-		t.Errorf("references fallback missing std-ai-type:\n%s", refContent)
+	if !strings.Contains(refContent, "std-agent-type: references") {
+		t.Errorf("references fallback missing std-agent-type:\n%s", refContent)
 	}
 	subContent, _ := contentOf(plan, ".augment/rules/subagents/qa.md")
-	if !strings.Contains(subContent, "std-ai-type: subagents") {
-		t.Errorf("subagents fallback missing std-ai-type:\n%s", subContent)
+	if !strings.Contains(subContent, "std-agent-type: subagents") {
+		t.Errorf("subagents fallback missing std-agent-type:\n%s", subContent)
 	}
 }

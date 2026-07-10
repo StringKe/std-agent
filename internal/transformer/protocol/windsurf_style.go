@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"path"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // WindsurfStyle 是协议族 E：Windsurf / Continue.dev / Antigravity 共用的协议。
@@ -22,8 +22,8 @@ import (
 //     不支持（continue / antigravity）按 SkillsAsRule 降级为 rule trigger=manual，
 //     或走 BuildDegradedSkillPackage（落 <RulesDir>/skills/<name>/SKILL.md）
 //   - references / subagents 走 graceful degradation：
-//     <RulesDir>/references/<name>.md + frontmatter std-ai-type
-//     <RulesDir>/subagents/<name>.md + frontmatter std-ai-type
+//     <RulesDir>/references/<name>.md + frontmatter std-agent-type
+//     <RulesDir>/subagents/<name>.md + frontmatter std-agent-type
 //   - glossary 落 <RulesDir>/glossary.md（无根文件 target）
 type WindsurfStyle struct{}
 
@@ -209,7 +209,7 @@ func (p WindsurfStyle) buildCommand(d *parser.Document, adapter Adapter, cfg *co
 	)
 }
 
-// buildGlossary 在无根文件 target 下，把 std-ai 类型速查段落到
+// buildGlossary 在无根文件 target 下，把 std-agent 类型速查段落到
 // <RulesDir>/glossary.md。adapter.InjectTypeGlossary && cfg.InjectTypeGlossary
 // 均开启时才输出。RulesDir 为空时跳过。
 func (p WindsurfStyle) buildGlossary(adapter Adapter, cfg *config.Config) *writer.FileOp {
@@ -225,7 +225,7 @@ func (p WindsurfStyle) buildGlossary(adapter Adapter, cfg *config.Config) *write
 	}
 	var fm transformerutil.FmBuilder
 	if adapter.InjectStdaiTypeField {
-		fm.Add("std-ai-type", "glossary")
+		fm.Add("std-agent-type", "glossary")
 	}
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, "", false)
 	op := transformerutil.BuildMarkdownFile(

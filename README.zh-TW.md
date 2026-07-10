@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
 [English](README.md) | [简体中文](README.zh-CN.md) | **繁體中文** | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
@@ -53,10 +53,10 @@
 
 ```bash
 # 安裝（macOS / Linux）
-curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
 # 安裝（Windows PowerShell）
-irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
 # 在你的專案裡初始化
 cd your-project
@@ -70,7 +70,7 @@ stdagent status
 stdagent fix
 ```
 
-## 從既有專案遷移到 std-ai
+## 從既有專案遷移到 std-agent
 
 專案裡已經散落 `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` 等？把下面這段提示詞直接丟給 Claude Code / Codex / Cursor / Gemini CLI，它會替你重組成 `.stdai/standards/` 結構。
 
@@ -243,7 +243,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## 文件
 
-- **[docs/spec.md](docs/spec.md)** — 完整 spec：std-ai 標準 + 11 工具差異 + 轉換策略
+- **[docs/spec.md](docs/spec.md)** — 完整 spec：std-agent 標準 + 11 工具差異 + 轉換策略
 - [docs/prd.md](docs/prd.md) — 產品需求
 - [docs/architecture.md](docs/architecture.md) — 模組劃分與資料流
 - [docs/commands.md](docs/commands.md) — CLI 命令規範

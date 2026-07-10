@@ -5,10 +5,10 @@ import (
 	"path"
 	"strings"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // ClaudeMD 是 Anthropic Claude Code 的协议族实现。
@@ -28,7 +28,7 @@ import (
 //   - subagents：.claude/agents/<name>.md（Claude Code 原生支持，无需 fallback）
 //   - references：原生无 references 类型，统一 fallback 到
 //     .claude/skills/<name>/SKILL.md 形式（Agent Skills 标准），frontmatter
-//     注入 std-ai-type: references 私有标识便于 AI 识别
+//     注入 std-agent-type: references 私有标识便于 AI 识别
 //   - MCP：.mcp.json，顶级键 mcpServers（与 Copilot 的 servers 不同）
 type ClaudeMD struct{}
 

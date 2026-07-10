@@ -38,9 +38,9 @@ Augment Code 是企业向 AI 编程平台，闭源 IDE 扩展（VS Code / JetBra
 Augment 没有等同 Windsurf `glob` 的 `applyTo` 触发；带 glob 的 std rule 在 Augment 中
 回退为 `always_apply`（保守生效）。
 
-## 4. std-ai 四类映射（v0.0.4）
+## 4. std-agent 四类映射（v0.0.4）
 
-| std-ai 类型 | Augment 落点 | 说明 |
+| std-agent 类型 | Augment 落点 | 说明 |
 |---|---|---|
 | rules（无 applyTo） | `.augment/rules/<name>.md` `trigger: always_on` | 通过 WindsurfStyle 协议族近似映射 |
 | rules（有 applyTo） | `.augment/rules/<name>.md` `trigger: glob` `globs:` | Augment 不识别 `trigger`，会忽略未知字段 |
@@ -48,8 +48,8 @@ Augment 没有等同 Windsurf `glob` 的 `applyTo` 触发；带 glob 的 std rul
 | rules（无任何条件） | `.augment/rules/<name>.md` `trigger: manual` | 等同 Augment `manual` |
 | skills | `.augment/rules/skills/<name>/SKILL.md` | Agent Skills 标准包 fallback（Augment 无原生 skills） |
 | commands | `.augment/rules/workflows/<name>.md` | 子目录名借用 windsurf 风格，纯文档 |
-| references | `.augment/rules/references/<name>.md` | graceful degradation + `std-ai-type: references` |
-| subagents | `.augment/rules/subagents/<name>.md` | graceful degradation + `std-ai-type: subagents` |
+| references | `.augment/rules/references/<name>.md` | graceful degradation + `std-agent-type: references` |
+| subagents | `.augment/rules/subagents/<name>.md` | graceful degradation + `std-agent-type: subagents` |
 
 ## 5. 转换器实现要点
 
@@ -60,7 +60,7 @@ Augment 没有等同 Windsurf `glob` 的 `applyTo` 触发；带 glob 的 std rul
 4. AGENTS.md 与 CLAUDE.md 由 codex / claude-code transformer 写根目录，augment-code
    自动消费，不重复写
 5. MCP：暂未确认 Augment 的项目级 MCP 配置路径，v0.0.4 不输出
-6. Code Review YAML：脱离 std-ai 四类语义，超出 v0.0.4 范围
+6. Code Review YAML：脱离 std-agent 四类语义，超出 v0.0.4 范围
 
 ## 6. 已知限制
 
@@ -74,7 +74,7 @@ Augment 没有等同 Windsurf `glob` 的 `applyTo` 触发；带 glob 的 std rul
 
 ## 7. 信息来源
 
-- /tmp/std-ai-protocol-research.md（2026-05-17 调研）
+- /tmp/std-agent-protocol-research.md（2026-05-17 调研）
 - https://augmentcode.com/
 - https://docs.augmentcode.com/
 - 协议族归类: spec.md §2.4 / plan.md §Phase 5.9

@@ -85,9 +85,9 @@ OpenCode rules 不支持 frontmatter 条件激活。拆分多文件的官方机�
 激活仍是**全局**的，没有按文件路径条件激活的能力。Monorepo 推荐用
 `packages/*/AGENTS.md` 这类 glob，比手工在 AGENTS.md 内引用更可维护。
 
-## 7. std-ai 四类映射
+## 7. std-agent 四类映射
 
-| std-ai 类型 | OpenCode 落点 |
+| std-agent 类型 | OpenCode 落点 |
 |---|---|
 | rules（无 applyTo） | `<repo>/AGENTS.md`（自动消费，由 codex transformer 已写） |
 | rules（有 applyTo） | 同上；OpenCode 无条件激活，applyTo 信息会被丢弃。可选额外写入 `opencode.json` 的 `instructions` 数组让多个 rule 文件被同时加载 |

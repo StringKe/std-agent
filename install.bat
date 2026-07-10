@@ -1,5 +1,5 @@
 @echo off
-REM std-ai 安装脚本入口 (Windows cmd)
+REM std-agent 安装脚本入口 (Windows cmd)
 REM 转发到 install.ps1，因为 GitHub API JSON 解析与 SHA256 校验在纯 cmd 中不可靠
 setlocal
 
@@ -16,8 +16,8 @@ if exist "%PS1%" (
   echo [install] 使用本地 install.ps1
   powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1%" %*
 ) else (
-  if "%STD_AI_OWNER%"=="" (set "OWNER=StringKe") else (set "OWNER=%STD_AI_OWNER%")
-  if "%STD_AI_REPO%"=="" (set "REPO=std-ai") else (set "REPO=%STD_AI_REPO%")
+  if "%STD_AGENT_OWNER%"=="" (set "OWNER=StringKe") else (set "OWNER=%STD_AGENT_OWNER%")
+  if "%STD_AGENT_REPO%"=="" (set "REPO=std-agent") else (set "REPO=%STD_AGENT_REPO%")
   set "PS_URL=https://raw.githubusercontent.com/%OWNER%/%REPO%/main/install.ps1"
   echo [install] 远程拉取 %PS_URL%
   powershell -NoProfile -ExecutionPolicy Bypass -Command ^

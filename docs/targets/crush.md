@@ -47,13 +47,13 @@ Skills 加载路径 hardcoded 在 crush 二进制内，不可关闭。
 字符上限 UNKNOWN：官方文档未列出 rule / skill 字节上限，实测单文件 50k+
 仍能加载，但建议遵循通用 8k 软限（与 codex 一致）。
 
-## 4. std-ai 四类映射
+## 4. std-agent 四类映射
 
-| std-ai 类型 | crush 落点 | 加载方式 |
+| std-agent 类型 | crush 落点 | 加载方式 |
 |---|---|---|
 | rules | inline 到 `<repo>/CRUSH.md` 主体（crush 无子目录 rules 支持） | 启动时自动读 |
 | skills | `<repo>/.crush/skills/<name>/SKILL.md` + 辅助文件 | 按 description 匹配自动加载 |
-| commands | fallback `<repo>/.crush/rules/commands/<name>.md`，body 头含 std-ai HTML 注释 explainer | crush 不识别 slash 命令，作为上下文文本读入 |
+| commands | fallback `<repo>/.crush/rules/commands/<name>.md`，body 头含 std-agent HTML 注释 explainer | crush 不识别 slash 命令，作为上下文文本读入 |
 | references | fallback `<repo>/.crush/rules/references/<name>.md` | 同上 |
 | subagents | fallback `<repo>/.crush/rules/subagents/<name>.md` | crush 无 subagent 概念 |
 
@@ -70,8 +70,8 @@ transformer 写 `<repo>/CRUSH.md`，二者文件名不冲突，且 crush 在 con
    `name / description / license / compatibility / metadata`
 4. commands / references / subagents 走 `protocol.BuildDegradedFileOp`，
    fallback 到 `.crush/rules/{commands,references,subagents}/<name>.md`，
-   body 头注入 std-ai HTML 注释 explainer，frontmatter 写 `std-ai-type` 标识
-5. `InjectTypeGlossary: true`，CRUSH.md 头部 prepend std-ai 类型速查段
+   body 头注入 std-agent HTML 注释 explainer，frontmatter 写 `std-agent-type` 标识
+5. `InjectTypeGlossary: true`，CRUSH.md 头部 prepend std-agent 类型速查段
 6. `MaxBytesPerFile: 0`，无明确字节限制
 7. 不写 `crush.json`：model / provider 由用户在 crush CLI 内配置，
    stdagent 不接管运行时设置
@@ -82,7 +82,7 @@ transformer 写 `<repo>/CRUSH.md`，二者文件名不冲突，且 crush 在 con
 
 - https://github.com/charmbracelet/crush （访问日期 2026-05-17）
 - https://github.com/charmbracelet/crush/blob/main/README.md（访问日期 2026-05-17）
-- /tmp/std-ai-protocol-research.md 第 28 行（调研日期 2026-05-17）
+- /tmp/std-agent-protocol-research.md 第 28 行（调研日期 2026-05-17）
 
 ## 7. 已确认
 
@@ -99,4 +99,4 @@ transformer 写 `<repo>/CRUSH.md`，二者文件名不冲突，且 crush 在 con
 - rule / skill / 单文件字节硬上限（官方未列出）
 - `context_paths` 是否支持嵌套子目录（与 codex 同样的 nested AGENTS.md 行为）
 - `.crush/rules/` 是否是 crush 原生子目录 rules 入口（公开文档未提及，
-  本 transformer 仅作为 std-ai 私有 fallback 容器使用）
+  本 transformer 仅作为 std-agent 私有 fallback 容器使用）

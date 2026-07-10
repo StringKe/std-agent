@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | **Deutsch** | [Español](README.es.md) | [Português](README.pt-BR.md)
 
@@ -53,10 +53,10 @@ Jede Integration ist in [docs/targets/](docs/targets/) dokumentiert.
 
 ```bash
 # Installation (macOS / Linux)
-curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
 # Installation (Windows PowerShell)
-irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
 # In deinem Projekt initialisieren
 cd your-project
@@ -70,7 +70,7 @@ stdagent status
 stdagent fix
 ```
 
-## Bestehendes Projekt zu std-ai migrieren
+## Bestehendes Projekt zu std-agent migrieren
 
 Dein Projekt ist bereits voll mit `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Füge den folgenden Prompt in Claude Code / Codex / Cursor / Gemini CLI ein und alles wird in die `.stdai/standards/`-Struktur reorganisiert.
 
@@ -247,7 +247,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Dokumentation
 
-- **[docs/spec.md](docs/spec.md)** — vollständige Spezifikation: std-ai-Standard + 11-Tool-Divergenz + Konvertierungsstrategie
+- **[docs/spec.md](docs/spec.md)** — vollständige Spezifikation: std-agent-Standard + 11-Tool-Divergenz + Konvertierungsstrategie
 - [docs/prd.md](docs/prd.md) — Produktanforderungen
 - [docs/architecture.md](docs/architecture.md) — Modulaufteilung und Datenfluss
 - [docs/commands.md](docs/commands.md) — CLI-Befehlsreferenz

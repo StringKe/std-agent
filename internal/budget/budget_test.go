@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func TestCheckDocumentRuleSoftWarn(t *testing.T) {

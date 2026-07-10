@@ -8,7 +8,7 @@ stdagent 是一个轻量级、纯 Go 实现的 AI CLI 配置同步工具。以 `
 
 ### 必读
 
-- **[spec.md](spec.md) — 完整 spec：std-ai 标准 + 11 工具差异 + 转换实现策略**
+- **[spec.md](spec.md) — 完整 spec：std-agent 标准 + 11 工具差异 + 转换实现策略**
 - [../README.md](../README.md) 项目入口与快速开始
 - [prd.md](prd.md) 产品需求
 - [roadmap.md](roadmap.md) 路线图

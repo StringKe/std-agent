@@ -14,14 +14,14 @@ import (
 	"strings"
 	"time"
 
-	"std-ai/internal/budget"
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/source"
-	"std-ai/internal/state"
-	"std-ai/internal/transformer"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/budget"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/source"
+	"github.com/StringKe/std-agent/internal/state"
+	"github.com/StringKe/std-agent/internal/transformer"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // Options 控制 sync 行为

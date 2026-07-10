@@ -90,9 +90,9 @@ Rules 内可用 `@filename` 或 `@/abs/path/file.md` 引用其他文件作为
 上下文。
 (https://antigravity.google/docs/rules-workflows, 访问日期 2026-05-08)
 
-## 5. std-ai 四类映射
+## 5. std-agent 四类映射
 
-| std-ai 类型 | Antigravity 落点 | 加载方式 |
+| std-agent 类型 | Antigravity 落点 | 加载方式 |
 |---|---|---|
 | rules | `<repo>/.agents/rules/<name>.md`，frontmatter `trigger: always_on`（核心约束）或 `glob` + `globs:` | 自动扫描，按 trigger 决定是否注入 |
 | skills | `<repo>/.agents/skills/<name>/`（项目）或 `~/.gemini/antigravity/skills/<name>/`（全局）。结构细节 UNKNOWN，最稳妥的回退是写为 `model_decision` rule | 自动按任务上下文加载 |
@@ -106,11 +106,11 @@ Rules 内可用 `@filename` 或 `@/abs/path/file.md` 引用其他文件作为
 
 ## 6. 转换器实现要点
 
-1. std-ai 默认主输出走项目根 `AGENTS.md`（与 codex / cursor / claude-code
+1. std-agent 默认主输出走项目根 `AGENTS.md`（与 codex / cursor / claude-code
    transformer 共用），Antigravity 自动消费，无需额外动作
 2. 细粒度 rules（globs 限定 / model_decision）-> 写入
    `<repo>/.agents/rules/<name>.md`，frontmatter `trigger` 按
-   std-ai 元数据决定：
+   std-agent 元数据决定：
    - 始终激活 -> `trigger: always_on`
    - 文件 glob -> `trigger: glob` + `globs:`
    - 描述驱动 -> `trigger: model_decision` + `description:`

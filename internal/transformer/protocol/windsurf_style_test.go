@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // windsurfTestCfg 返回不注入 marker 的最小 cfg，glossary 默认开
@@ -198,10 +198,10 @@ func TestWindsurfStyle_SkillContinueDegradedSkillPackage(t *testing.T) {
 		t.Fatalf("expected degraded skill; got %v", windsurfStylePlanPaths(plan))
 	}
 	c := string(op.Content)
-	if !strings.Contains(c, "std-ai-type: skills") {
-		t.Errorf("expected std-ai-type field, got:\n%s", c)
+	if !strings.Contains(c, "std-agent-type: skills") {
+		t.Errorf("expected std-agent-type field, got:\n%s", c)
 	}
-	if !strings.Contains(c, "<!-- std-ai degraded skills: code-review") {
+	if !strings.Contains(c, "<!-- std-agent degraded skills: code-review") {
 		t.Errorf("expected explainer header, got:\n%s", c)
 	}
 }
@@ -302,10 +302,10 @@ func TestWindsurfStyle_ReferencesFallbackSubdir(t *testing.T) {
 		t.Fatalf("expected references fallback %q; got %v", wantPath, windsurfStylePlanPaths(plan))
 	}
 	c := string(op.Content)
-	if !strings.Contains(c, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", c)
+	if !strings.Contains(c, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", c)
 	}
-	if !strings.Contains(c, "<!-- std-ai degraded references: transformer-design") {
+	if !strings.Contains(c, "<!-- std-agent degraded references: transformer-design") {
 		t.Errorf("expected explainer, got:\n%s", c)
 	}
 	for _, forbidden := range []string{"_ref_", "_skill_", "_subagent_"} {
@@ -329,8 +329,8 @@ func TestWindsurfStyle_SubagentsFallbackSubdir(t *testing.T) {
 		t.Fatalf("expected subagents fallback %q; got %v", wantPath, windsurfStylePlanPaths(plan))
 	}
 	c := string(op.Content)
-	if !strings.Contains(c, "std-ai-type: subagents") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", c)
+	if !strings.Contains(c, "std-agent-type: subagents") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", c)
 	}
 }
 
@@ -343,11 +343,11 @@ func TestWindsurfStyle_GlossaryLandsInRulesDir(t *testing.T) {
 		t.Fatalf("expected glossary; got %v", windsurfStylePlanPaths(plan))
 	}
 	c := string(op.Content)
-	if !strings.Contains(c, "std-ai 类型速查") {
+	if !strings.Contains(c, "std-agent 类型速查") {
 		t.Errorf("expected glossary content, got:\n%s", c)
 	}
-	if !strings.Contains(c, "std-ai-type: glossary") {
-		t.Errorf("expected std-ai-type glossary frontmatter, got:\n%s", c)
+	if !strings.Contains(c, "std-agent-type: glossary") {
+		t.Errorf("expected std-agent-type glossary frontmatter, got:\n%s", c)
 	}
 }
 

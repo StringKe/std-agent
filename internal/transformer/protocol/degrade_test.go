@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func TestDefaultFallbackSubdir(t *testing.T) {
@@ -69,8 +69,8 @@ func TestBuildDegradedFileOp_StdaiTypeField(t *testing.T) {
 	}
 	op := BuildDegradedFileOp(doc, adapter, newTestCfg())
 	got := string(op.Content)
-	if !strings.Contains(got, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", got)
+	if !strings.Contains(got, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", got)
 	}
 }
 
@@ -87,7 +87,7 @@ func TestBuildDegradedFileOp_NoStdaiTypeField(t *testing.T) {
 	}
 	op := BuildDegradedFileOp(doc, adapter, newTestCfg())
 	got := string(op.Content)
-	if strings.Contains(got, "std-ai-type:") {
+	if strings.Contains(got, "std-agent-type:") {
 		t.Errorf("InjectStdaiTypeField=false should skip field, got:\n%s", got)
 	}
 }
@@ -105,7 +105,7 @@ func TestBuildDegradedFileOp_ExplainerHeader(t *testing.T) {
 	}
 	op := BuildDegradedFileOp(doc, adapter, newTestCfg())
 	got := string(op.Content)
-	if !strings.Contains(got, "<!-- std-ai degraded references: ref-x -->") {
+	if !strings.Contains(got, "<!-- std-agent degraded references: ref-x -->") {
 		t.Errorf("expected explainer comment, got:\n%s", got)
 	}
 	if !strings.Contains(got, "Reference is background material") {
@@ -131,7 +131,7 @@ func TestBuildDegradedFileOp_ExplainerOverride(t *testing.T) {
 		},
 	}
 	op := BuildDegradedFileOp(doc, adapter, newTestCfg())
-	if strings.Contains(string(op.Content), "<!-- std-ai degraded") {
+	if strings.Contains(string(op.Content), "<!-- std-agent degraded") {
 		t.Error("override=false should suppress explainer")
 	}
 }
@@ -202,10 +202,10 @@ func TestBuildDegradedSkillPackage_Path(t *testing.T) {
 	if !strings.Contains(got, "name: design") {
 		t.Errorf("expected name frontmatter, got:\n%s", got)
 	}
-	if !strings.Contains(got, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", got)
+	if !strings.Contains(got, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", got)
 	}
-	if !strings.Contains(got, "<!-- std-ai degraded references: design") {
+	if !strings.Contains(got, "<!-- std-agent degraded references: design") {
 		t.Errorf("expected explainer comment, got:\n%s", got)
 	}
 }

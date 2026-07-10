@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/runner"
+	"github.com/StringKe/std-agent/internal/runner"
 )
 
 func newSyncCmd() *cobra.Command {

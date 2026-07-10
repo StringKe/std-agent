@@ -49,9 +49,9 @@ project guidance"，激活由 droid 自行决定（基于 description 内容
 匹配），不按文件模式触发。glob-style 选择交由 droid 配置或 skill 的
 `compatibility` 字段表达。
 
-## 4. std-ai 四类映射
+## 4. std-agent 四类映射
 
-| std-ai 类型 | Factory 落点 | 加载方式 |
+| std-agent 类型 | Factory 落点 | 加载方式 |
 |---|---|---|
 | rules | `.factory/rules/<n>.md`（frontmatter 仅 `description`），多条 nonRoot 由 AGENTS.md manifest 段 `## Reference Rules` 索引 | Factory 启动时全量扫描 |
 | skills | `.factory/skills/<n>/SKILL.md` + 同目录辅助文件 | Agent Skills 标准发现 |
@@ -81,7 +81,7 @@ project guidance"，激活由 droid 自行决定（基于 description 内容
 - https://docs.factory.ai/cli/configuration/overview （访问日期 2026-05-17）
 - https://docs.factory.ai/droids/overview （访问日期 2026-05-17）
 - https://docs.factory.ai/agents-md （访问日期 2026-05-17）
-- /tmp/std-ai-protocol-research.md（行 31，调研日期 2026-05-17）
+- /tmp/std-agent-protocol-research.md（行 31，调研日期 2026-05-17）
 
 ## 7. 已确认
 

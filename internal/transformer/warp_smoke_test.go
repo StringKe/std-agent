@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 // TestWarpOutputs 验证根 AGENTS.md：inline nonRoot rules + glossary + manifest 头
@@ -25,7 +25,7 @@ func TestWarpOutputs(t *testing.T) {
 		t.Fatalf("missing AGENTS.md, paths=%v", pathSet(plan))
 	}
 	// glossary 头
-	if !strings.Contains(main, "std-ai type glossary") {
+	if !strings.Contains(main, "std-agent type glossary") {
 		t.Errorf("missing glossary header:\n%s", main)
 	}
 	// nonRoot rules 应 inline 进根文件
@@ -62,7 +62,7 @@ func TestWarpNestedAGENTSMd(t *testing.T) {
 	}
 	nested, _ := contentOf(plan, "src/auth/AGENTS.md")
 	// 嵌套根不带 manifest / glossary
-	if strings.Contains(nested, "std-ai type glossary") {
+	if strings.Contains(nested, "std-agent type glossary") {
 		t.Errorf("nested AGENTS.md should NOT contain glossary:\n%s", nested)
 	}
 	if strings.Contains(nested, "## Reference Rules") {
@@ -93,17 +93,17 @@ func TestWarpFallbacks(t *testing.T) {
 			t.Errorf("missing fallback %s, paths=%v", want, paths)
 		}
 	}
-	// 每个 fallback 文件应含 std-ai-type 字段 + explainer 头
+	// 每个 fallback 文件应含 std-agent-type 字段 + explainer 头
 	for _, p := range []string{
 		".warp/rules/commands/deploy.md",
 		".warp/rules/references/design.md",
 		".warp/rules/subagents/reviewer.md",
 	} {
 		c, _ := contentOf(plan, p)
-		if !strings.Contains(c, "std-ai-type:") {
-			t.Errorf("%s missing std-ai-type frontmatter:\n%s", p, c)
+		if !strings.Contains(c, "std-agent-type:") {
+			t.Errorf("%s missing std-agent-type frontmatter:\n%s", p, c)
 		}
-		if !strings.Contains(c, "<!-- std-ai degraded") {
+		if !strings.Contains(c, "<!-- std-agent degraded") {
 			t.Errorf("%s missing explainer header:\n%s", p, c)
 		}
 	}

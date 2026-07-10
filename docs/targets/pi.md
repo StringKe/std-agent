@@ -42,9 +42,9 @@ Skills 标准（`SKILL.md` + 子文件包）按 Anthropic / AAIF 规范严格落
 pi 不约束 AGENTS.md 字节上限，但单文件超过 ~32KB 时建议拆 nested
 AGENTS.md 控制注入预算。
 
-## 4. std-ai 四类映射
+## 4. std-agent 四类映射
 
-| std-ai 类型 | pi 落点 |
+| std-agent 类型 | pi 落点 |
 |---|---|
 | rules | 根 `AGENTS.md`（所有 nonRoot rules inline 拼接） |
 | skills | `<repo>/.pi/skills/<n>/SKILL.md` + 同目录辅助文件 |
@@ -71,7 +71,7 @@ AGENTS.md 控制注入预算。
 ## 6. 信息来源
 
 - https://github.com/earendil-works/pi（仓库主页，访问日期 2026-05-17）
-- /tmp/std-ai-protocol-research.md（行 29，2026-05-17 调研笔记）
+- /tmp/std-agent-protocol-research.md（行 29，2026-05-17 调研笔记）
 
 ## 7. UNKNOWN
 

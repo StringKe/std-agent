@@ -6,10 +6,10 @@ import (
 	"path"
 	"strings"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // Copilot 是 GitHub Copilot 协议实现。
@@ -23,7 +23,7 @@ import (
 //
 // graceful degradation：
 //   - skills / references 不原生支持，落到 .github/instructions/skills|references/<n>.instructions.md
-//     （保留 .instructions.md 特殊后缀；frontmatter alwaysApply=false / std-ai-type=<type>）
+//     （保留 .instructions.md 特殊后缀；frontmatter alwaysApply=false / std-agent-type=<type>）
 //   - SubagentInvokeCmd 非空时 subagent 走 CLI 调用降级（body 含 shell 调用指引）
 type Copilot struct{}
 
@@ -209,7 +209,7 @@ func buildCopilotSubagent(d *parser.Document, adapter Adapter, cfg *config.Confi
 	fm.AddList("tools", d.AllowedTools)
 	fm.Add("model", d.Model)
 	if adapter.InjectStdaiTypeField && adapter.SubagentInvokeCmd != "" {
-		fm.Add("std-ai-type", string(parser.TypeSubagents))
+		fm.Add("std-agent-type", string(parser.TypeSubagents))
 	}
 
 	body := d.Body
@@ -238,7 +238,7 @@ func buildCopilotSubagent(d *parser.Document, adapter Adapter, cfg *config.Confi
 // frontmatter：
 //   - description（若 doc.Description 非空）
 //   - applyTo: ""（显式空字符串，表明不限路径）
-//   - std-ai-type: <type>（若 adapter.InjectStdaiTypeField=true）
+//   - std-agent-type: <type>（若 adapter.InjectStdaiTypeField=true）
 //
 // body 头部插入 HTML 注释 explainer（若 adapter.InjectExplainer=true，
 // 受 InjectExplainerOverride 覆盖）。
@@ -251,7 +251,7 @@ func buildCopilotFallbackInstruction(d *parser.Document, adapter Adapter, cfg *c
 	}
 	fm.AddRaw("applyTo", `""`)
 	if adapter.InjectStdaiTypeField {
-		fm.Add("std-ai-type", string(d.Type))
+		fm.Add("std-agent-type", string(d.Type))
 	}
 
 	body := d.Body

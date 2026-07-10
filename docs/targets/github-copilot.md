@@ -77,9 +77,9 @@ Coding Agent 兼容 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`（最近邻 wins 语
 剩余三个 `commitMessageGeneration` / `reviewSelection` / `pullRequestDescriptionGeneration`
 字段仍生效。
 
-## 7. std-ai 四类映射
+## 7. std-agent 四类映射
 
-| std-ai 类型 | Copilot 落点 |
+| std-agent 类型 | Copilot 落点 |
 |---|---|
 | rules（无 applyTo） | `.github/copilot-instructions.md`（拼接所有无路径限定的 rules） |
 | rules（有 applyTo） | `.github/instructions/<name>.instructions.md`（每条 rule 一个文件，frontmatter `applyTo` 来自 std `applyTo`） |

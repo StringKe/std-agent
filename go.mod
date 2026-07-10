@@ -1,4 +1,4 @@
-module std-ai
+module github.com/StringKe/std-agent
 
 go 1.26
 

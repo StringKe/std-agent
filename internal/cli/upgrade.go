@@ -24,8 +24,8 @@ import (
 // 用 STDAGENT_REPO_OWNER / STDAGENT_REPO_NAME 环境变量在 fork 场景覆盖。
 const (
 	defaultUpgradeRepoOwner = "StringKe"
-	defaultUpgradeRepoName  = "std-ai"
-	upgradeProjectName      = "std-ai" // 归档前缀（goreleaser ProjectName）
+	defaultUpgradeRepoName  = "std-agent"
+	upgradeProjectName      = "std-agent" // 归档前缀（goreleaser ProjectName）
 	upgradeBinName          = "stdagent"
 )
 

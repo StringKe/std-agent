@@ -60,7 +60,7 @@ func whatIsBlock(opts FooterOptions) string {
 	if opts.TargetName != "" {
 		fmt.Fprintf(&b, "- **Disable target**: set `[targets].%s.enabled = false` in `.stdai/config.toml`\n", opts.TargetName)
 	}
-	b.WriteString("- **Documentation**: https://github.com/StringKe/std-ai\n")
+	b.WriteString("- **Documentation**: https://github.com/StringKe/std-agent\n")
 	return b.String()
 }
 

@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | **Português**
 
@@ -53,10 +53,10 @@ Cada integração está documentada em [docs/targets/](docs/targets/).
 
 ```bash
 # Instalação (macOS / Linux)
-curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
 # Instalação (Windows PowerShell)
-irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
 # Inicialize no seu projeto
 cd your-project
@@ -70,7 +70,7 @@ stdagent status
 stdagent fix
 ```
 
-## Migrar um projeto existente para std-ai
+## Migrar um projeto existente para std-agent
 
 Projeto já cheio de `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Cole o prompt abaixo no Claude Code / Codex / Cursor / Gemini CLI e ele vai reorganizar tudo na estrutura `.stdai/standards/`.
 
@@ -247,7 +247,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Documentação
 
-- **[docs/spec.md](docs/spec.md)** — spec completa: padrão std-ai + divergência das 11 ferramentas + estratégia de conversão
+- **[docs/spec.md](docs/spec.md)** — spec completa: padrão std-agent + divergência das 11 ferramentas + estratégia de conversão
 - [docs/prd.md](docs/prd.md) — requisitos de produto
 - [docs/architecture.md](docs/architecture.md) — módulos e fluxo de dados
 - [docs/commands.md](docs/commands.md) — referência CLI

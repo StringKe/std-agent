@@ -5,10 +5,10 @@ import (
 	"path"
 	"strings"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // AgentsMD 是 AGENTS.md 系协议族实现。
@@ -394,13 +394,13 @@ func (p AgentsMD) buildCommandFile(d *parser.Document, a Adapter, cfg *config.Co
 // description 加 slash 调用 hint 让模型理解这是 command-flavor skill
 //
 // v3 子目录隔离：原 CommandsAsSkillPrefix="cmd-" + 路径 .agents/skills/cmd-<name>/SKILL.md
-// 是 std-ai 私有前缀污染 skill 命名空间，改为 CommandsAsSkillSubdir="commands"
+// 是 std-agent 私有前缀污染 skill 命名空间，改为 CommandsAsSkillSubdir="commands"
 // + 路径 .agents/skills/commands/<name>/SKILL.md（Agent Skills 规范允许任意 <skillDir>）。
 func (p AgentsMD) buildCommandAsSkill(d *parser.Document, a Adapter, cfg *config.Config) writer.FileOp {
 	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	if a.InjectStdaiTypeField {
-		fm.Add("std-ai-type", string(parser.TypeCommands))
+		fm.Add("std-agent-type", string(parser.TypeCommands))
 	}
 	desc := d.Description
 	if desc == "" {
@@ -424,7 +424,7 @@ func (p AgentsMD) buildCommandAsSkill(d *parser.Document, a Adapter, cfg *config
 // v3 修订：去除"references 走 SkillsDir/<name>/SKILL.md"分支。把 references 装成
 // SKILL.md 让 Agent Skills 工具加载等于把 references 当 skill 用，破坏 references
 // "按需查阅，不自动加载" 的语义。references 必须走独立 references/ 子目录或
-// ReferencesDir，AI 通过路径或 frontmatter std-ai-type 识别。
+// ReferencesDir，AI 通过路径或 frontmatter std-agent-type 识别。
 func (p AgentsMD) planReference(d *parser.Document, a Adapter, cfg *config.Config) []writer.FileOp {
 	if a.ReferencesDir != "" {
 		return []writer.FileOp{p.buildReferenceFile(d, a, cfg)}

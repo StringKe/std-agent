@@ -216,7 +216,7 @@ stdagent upgrade [--version vX.Y.Z] [--force]
 流程：
 
 1. 调 GitHub Releases API 拿 latest tag（或 `--version` 指定）
-2. 下载平台对应归档：`std-ai_<ver>_<os>_<arch>.<tar.gz|zip>`
+2. 下载平台对应归档：`std-agent_<ver>_<os>_<arch>.<tar.gz|zip>`
 3. 下载 `checksums.txt` 校验 sha256
 4. 解包提取 `stdagent` binary
 5. `inconshreveable/go-update` 原子替换当前 executable

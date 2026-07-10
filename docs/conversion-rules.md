@@ -1,6 +1,6 @@
 # 跨平台转换规则
 
-本文档汇总 std-ai 的 std 格式（YAML frontmatter + Markdown）到 11 个 target
+本文档汇总 std-agent 的 std 格式（YAML frontmatter + Markdown）到 11 个 target
 （9 个 Tier 1 + 2 个 Tier 2）的转换决策矩阵。每个 target 的具体细节见
 [targets/](targets/) 子目录。
 
@@ -232,7 +232,7 @@ This file is part of `stdagent` synchronized AI standards.
 - **Edit source**: `.stdai/standards/<source-relative-path>`
 - **Regenerate**: `stdagent sync`
 - **Disable target**: set `[targets].<name>.enabled = false` in `.stdai/config.toml`
-- **Documentation**: https://github.com/StringKe/std-ai
+- **Documentation**: https://github.com/StringKe/std-agent
 ```
 
 ## 6. 冲突与备份

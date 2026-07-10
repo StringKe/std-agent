@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/state"
+	"github.com/StringKe/std-agent/internal/state"
 )
 
 func newCleanCmd() *cobra.Command {

@@ -2,9 +2,9 @@
 ---
 name: add-target
 description: 给 stdagent 新增一个 AI CLI 工具 target（transformer + 调研 + 测试 + 文档），逐步指引
-std-ai-type: skills
+std-agent-type: skills
 ---
-<!-- std-ai degraded skills: add-target -->
+<!-- std-agent degraded skills: add-target -->
 <!-- Target tool "grok-cli" does not natively support this type. Skill is an on-demand capability pack; AI loads it when the description matches user intent. -->
 
 
@@ -41,9 +41,9 @@ stdagent 的扩展点是 `internal/transformer/`：每个 AI CLI 工具一个 .g
 package transformer
 
 import (
-    "std-ai/internal/config"
-    "std-ai/internal/parser"
-    "std-ai/internal/writer"
+    "std-agent/internal/config"
+    "std-agent/internal/parser"
+    "std-agent/internal/writer"
 )
 
 type fooTransformer struct{}

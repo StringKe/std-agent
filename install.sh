@@ -1,19 +1,19 @@
 #!/usr/bin/env sh
-# std-ai 安装脚本 (macOS / Linux)
+# std-agent 安装脚本 (macOS / Linux)
 # 用法:
-#   curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 # 可选环境变量:
-#   STD_AI_OWNER       GitHub owner (默认 StringKe)
-#   STD_AI_REPO        仓库名 (默认 std-ai)
-#   STD_AI_VERSION     版本 tag (如 v0.1.0；默认 latest)
-#   STD_AI_INSTALL_DIR 安装目录 (默认 $HOME/.local/bin)
+#   STD_AGENT_OWNER       GitHub owner (默认 StringKe)
+#   STD_AGENT_REPO        仓库名 (默认 std-agent)
+#   STD_AGENT_VERSION     版本 tag (如 v0.1.0；默认 latest)
+#   STD_AGENT_INSTALL_DIR 安装目录 (默认 $HOME/.local/bin)
 
 set -eu
 
-OWNER="${STD_AI_OWNER:-StringKe}"
-REPO="${STD_AI_REPO:-std-ai}"
-VERSION="${STD_AI_VERSION:-latest}"
-INSTALL_DIR="${STD_AI_INSTALL_DIR:-${HOME}/.local/bin}"
+OWNER="${STD_AGENT_OWNER:-StringKe}"
+REPO="${STD_AGENT_REPO:-std-agent}"
+VERSION="${STD_AGENT_VERSION:-latest}"
+INSTALL_DIR="${STD_AGENT_INSTALL_DIR:-${HOME}/.local/bin}"
 BIN_NAME="stdagent"
 
 log()  { printf '\033[1;34m[install]\033[0m %s\n' "$*"; }
@@ -56,7 +56,7 @@ if [ "$VERSION" = "latest" ]; then
   VERSION="$(curl -fsSL "$api_url" \
     | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
     | head -n1)"
-  [ -n "$VERSION" ] || die "无法解析最新版本，请显式指定 STD_AI_VERSION"
+  [ -n "$VERSION" ] || die "无法解析最新版本，请显式指定 STD_AGENT_VERSION"
 fi
 
 ver_no_v="${VERSION#v}"
@@ -65,7 +65,7 @@ download_base="https://github.com/${OWNER}/${REPO}/releases/download/${VERSION}"
 archive_url="${download_base}/${archive}"
 checksum_url="${download_base}/checksums.txt"
 
-tmp="$(mktemp -d 2>/dev/null || mktemp -d -t std-ai-install)"
+tmp="$(mktemp -d 2>/dev/null || mktemp -d -t std-agent-install)"
 trap 'rm -rf "$tmp"' EXIT INT TERM
 
 log "下载 $archive_url"

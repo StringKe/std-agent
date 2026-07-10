@@ -17,7 +17,7 @@ func TestExplainAll(t *testing.T) {
 	}
 	got := out.String()
 	for _, want := range []string{
-		"std-ai 类型速查",
+		"std-agent 类型速查",
 		"## rules",
 		"## skills",
 		"## commands",

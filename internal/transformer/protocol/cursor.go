@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"path"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // Cursor 是 Cursor IDE 的协议族实现。
@@ -17,15 +17,15 @@ import (
 // MCP（.cursor/mcp.json 顶层 mcpServers）。
 //
 // 不原生支持的 type 走 graceful degradation：
-//   - references -> .cursor/skills/<name>/SKILL.md（Agent Skills 标准 + frontmatter std-ai-type: references）
-//   - subagents -> .cursor/rules/subagents/<name>.md（子目录隔离 + frontmatter std-ai-type: subagents）
+//   - references -> .cursor/skills/<name>/SKILL.md（Agent Skills 标准 + frontmatter std-agent-type: references）
+//   - subagents -> .cursor/rules/subagents/<name>.md（子目录隔离 + frontmatter std-agent-type: subagents）
 //
 // 方言要点（与 ClaudeMD / AgentsMD 不同）：
 //   - 文件后缀 .mdc（不是 .md）—rules 类专属
 //   - globs frontmatter 是逗号分隔字符串（GlobsCommaString），不是 YAML list
 //   - alwaysApply frontmatter 是 bool
 //   - Cursor 无单一根文件；InjectTypeGlossary=true 时把 glossary 落到
-//     .cursor/rules/glossary.md（无前缀，靠子目录隔离 + frontmatter std-ai-type: glossary）
+//     .cursor/rules/glossary.md（无前缀，靠子目录隔离 + frontmatter std-agent-type: glossary）
 type Cursor struct{}
 
 // Plan 按 type 分桶生成 FileOp。
@@ -143,7 +143,7 @@ func (c Cursor) buildCommand(d *parser.Document, adapter Adapter, cfg *config.Co
 }
 
 // buildGlossary 在 InjectTypeGlossary=true 时把 type glossary 落到
-// .cursor/rules/glossary.md（无下划线前缀，靠子目录隔离 + frontmatter std-ai-type: glossary）。
+// .cursor/rules/glossary.md（无下划线前缀，靠子目录隔离 + frontmatter std-agent-type: glossary）。
 // Cursor 无单一根文件，glossary 不能 inline；落点选 RulesDir 顶层。
 //
 // 返回 nil 表示不输出 glossary 文件。
@@ -156,7 +156,7 @@ func (c Cursor) buildGlossary(adapter Adapter, cfg *config.Config) *writer.FileO
 		return nil
 	}
 	var fm transformerutil.FmBuilder
-	fm.Add("std-ai-type", "glossary")
+	fm.Add("std-agent-type", "glossary")
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, "", false)
 	op := transformerutil.BuildMarkdownFile(
 		path.Join(adapter.RulesDir, "glossary.md"),

@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | **한국어** | [Русский](README.ru.md) | [Français](README.fr.md)
 
@@ -53,10 +53,10 @@
 
 ```bash
 # 설치 (macOS / Linux)
-curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
 # 설치 (Windows PowerShell)
-irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
 # 프로젝트에서 초기화
 cd your-project
@@ -70,7 +70,7 @@ stdagent status
 stdagent fix
 ```
 
-## 기존 프로젝트를 std-ai 로 마이그레이션
+## 기존 프로젝트를 std-agent 로 마이그레이션
 
 프로젝트에 `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md` 등이 흩어져 있나요? 아래 프롬프트를 Claude Code / Codex / Cursor / Gemini CLI 에 그대로 붙여 넣으면 `.stdai/standards/` 구조로 재구성해 줍니다.
 
@@ -245,7 +245,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## 문서
 
-- **[docs/spec.md](docs/spec.md)** — 전체 사양: std-ai 표준 + 11 도구 차이 + 변환 전략
+- **[docs/spec.md](docs/spec.md)** — 전체 사양: std-agent 표준 + 11 도구 차이 + 변환 전략
 - [docs/prd.md](docs/prd.md) — 제품 요구 사항
 - [docs/architecture.md](docs/architecture.md) — 모듈 구성과 데이터 흐름
 - [docs/commands.md](docs/commands.md) — CLI 명령 사양

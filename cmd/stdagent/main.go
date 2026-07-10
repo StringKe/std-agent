@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"std-ai/internal/cli"
+	"github.com/StringKe/std-agent/internal/cli"
 )
 
 var (

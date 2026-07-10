@@ -45,18 +45,18 @@ https://agents.md, 访问日期 2026-05-17)
 无 trigger / globs / applyTo 等条件加载机制。AGENTS.md 是 always-on，
 嵌套版本按工作目录自动追加。
 
-## 4. std-ai 五类映射
+## 4. std-agent 五类映射
 
-| std-ai 类型 | Amp 落点 | 加载方式 |
+| std-agent 类型 | Amp 落点 | 加载方式 |
 |---|---|---|
 | rules | 内联到顶层 `AGENTS.md`（root rule body + nonRoot rule 段落） | 总是注入 |
-| skills | `.amp/rules/skills/<name>/SKILL.md`（std-ai 私有降级目录，Amp 不读取，仅供其他工具或 AI 在显式提示时检索） | 不自动加载，AI 通过 explainer 注释理解 |
+| skills | `.amp/rules/skills/<name>/SKILL.md`（std-agent 私有降级目录，Amp 不读取，仅供其他工具或 AI 在显式提示时检索） | 不自动加载，AI 通过 explainer 注释理解 |
 | commands | `.amp/rules/commands/<name>.md` | 不自动加载 |
 | references | `.amp/rules/references/<name>.md` | 不自动加载 |
 | subagents | `.amp/rules/subagents/<name>.md` | 不自动加载 |
 
-Amp 只原生消费 AGENTS.md；后四类 std-ai 类型在 amp transformer 下全
-部走 `.amp/rules/` 子目录降级，frontmatter 写 `std-ai-type` 私有字段，
+Amp 只原生消费 AGENTS.md；后四类 std-agent 类型在 amp transformer 下全
+部走 `.amp/rules/` 子目录降级，frontmatter 写 `std-agent-type` 私有字段，
 body 头部插 HTML 注释 explainer 说明该类型语义与"为何不在 AGENTS.md 主
 体"。
 
@@ -69,10 +69,10 @@ body 头部插 HTML 注释 explainer 说明该类型语义与"为何不在 AGENT
 3. `SkillsAsRule=false`：留空时 skills 降级走 Agent Skills 标准包形态写到
    `.amp/rules/skills/<name>/SKILL.md`，避免污染仓库根
 4. `FallbackDir=".amp/rules"`：commands / references / subagents 进
-   `.amp/rules/<type>/<name>.md`，frontmatter 写 `std-ai-type`
+   `.amp/rules/<type>/<name>.md`，frontmatter 写 `std-agent-type`
 5. `InjectExplainer=true`：fallback 文件 body 头部加 HTML 注释说明该类型
    语义，方便 AI / 人类读懂
-6. `InjectTypeGlossary=true`：AGENTS.md 头部注入 std-ai 五类速查段
+6. `InjectTypeGlossary=true`：AGENTS.md 头部注入 std-agent 五类速查段
 7. `NestedSupported=true`：子目录 `<subdir>/AGENTS.md` 由 root rule
    `nested_path` 字段触发，复用 codex 风格嵌套 root（无 manifest，无
    glossary）

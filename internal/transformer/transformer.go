@@ -1,9 +1,9 @@
 package transformer
 
 import (
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // Transformer 是所有 target 的统一接口

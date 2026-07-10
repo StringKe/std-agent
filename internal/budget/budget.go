@@ -12,7 +12,7 @@ package budget
 import (
 	"fmt"
 
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 // Limit 描述某 target 在某 kind 上的字符上限

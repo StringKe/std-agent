@@ -1,7 +1,7 @@
 package transformer
 
 import (
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 func pathSet(plan *writer.Plan) map[string]bool {

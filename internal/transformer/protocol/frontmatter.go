@@ -3,8 +3,8 @@ package protocol
 import (
 	"strings"
 
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
 )
 
 // RenderGlobs 按 adapter 配置渲染 globs 类 frontmatter 字段。

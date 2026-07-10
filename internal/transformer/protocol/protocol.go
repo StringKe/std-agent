@@ -8,9 +8,9 @@
 package protocol
 
 import (
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // Protocol 是协议族层抽象。每个协议族（AgentsMD / ClaudeMD / Cursor /

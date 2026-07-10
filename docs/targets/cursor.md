@@ -78,12 +78,12 @@ Cursor 已正式推出独立于 rules 的 Agent Skills 概念，目录为 `.curs
 通用 rules 字符上限：**100,000 字符**（自 2025-04-18 由 20,000 提升至 100,000）。
 超限触发截断并提示 `Rule exceeds X characters and may be truncated`。
 
-User Rules 是否独立适用此上限：INSUFFICIENT-EVIDENCE。**std-ai 默认按 100k 字符处理**，
+User Rules 是否独立适用此上限：INSUFFICIENT-EVIDENCE。**std-agent 默认按 100k 字符处理**，
 单条超限时 WARN 并截断。
 
-## 8. std-ai 四类映射
+## 8. std-agent 四类映射
 
-| std-ai 类型 | Cursor 落点 |
+| std-agent 类型 | Cursor 落点 |
 |---|---|
 | rules | `.cursor/rules/<name>.mdc`（项目）；frontmatter 由 std `applyTo` `alwaysApply` `description` 直接 mapped |
 | skills | `.cursor/skills/<name>/SKILL.md`（带 frontmatter，与 Claude Code skills 字段对齐） |

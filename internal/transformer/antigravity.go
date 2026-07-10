@@ -1,10 +1,10 @@
 package transformer
 
 import (
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/protocol"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/protocol"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func (a *Antigravity) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 // antigravityAdapter 配置 AgentsMD 协议族的 antigravity 变体
 //
 // v3 修订：SkillsAsRule=false。原 SkillsAsRule=true 会产 `.agents/rules/skill-<name>.md`
-// 含 std-ai 私有 `skill-` 前缀，违反 v3 "不造私有前缀，用子目录隔离" 原则。
+// 含 std-agent 私有 `skill-` 前缀，违反 v3 "不造私有前缀，用子目录隔离" 原则。
 // 改走 BuildDegradedSkillPackage 标准 Agent Skills fallback：`.agents/rules/skills/<name>/SKILL.md`。
 var antigravityAdapter = protocol.Adapter{
 	Name:                 "antigravity",

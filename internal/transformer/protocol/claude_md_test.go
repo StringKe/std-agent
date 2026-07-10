@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // claudeTestAdapter 返回与 claude-code transformer 等价的 Adapter literal。
@@ -64,7 +64,7 @@ func TestClaudeMD_Disabled(t *testing.T) {
 func TestClaudeMD_RootWithManifestAndGlossary(t *testing.T) {
 	adapter := claudeTestAdapter()
 	docs := []*parser.Document{
-		{Type: parser.TypeRules, Name: "project", Root: true, Body: "# Project Overview\n\nstd-ai is..."},
+		{Type: parser.TypeRules, Name: "project", Root: true, Body: "# Project Overview\n\nstd-agent is..."},
 		{Type: parser.TypeRules, Name: "style", Description: "code style", ApplyTo: []string{"**/*.go"}, Body: "use gofmt"},
 	}
 	plan, err := ClaudeMD{}.Plan(docs, adapter, claudeTestCfg())
@@ -79,7 +79,7 @@ func TestClaudeMD_RootWithManifestAndGlossary(t *testing.T) {
 		t.Error("CLAUDE.md must have IsRoot=true")
 	}
 	c := string(op.Content)
-	if !strings.Contains(c, "std-ai 类型速查") {
+	if !strings.Contains(c, "std-agent 类型速查") {
 		t.Errorf("expected glossary section in root, got:\n%s", c)
 	}
 	if !strings.Contains(c, "# Project Overview") {
@@ -108,7 +108,7 @@ func TestClaudeMD_RootGlossaryDisabled(t *testing.T) {
 	}
 	op, _ := claudeFileByPath(plan, "CLAUDE.md")
 	c := string(op.Content)
-	if strings.Contains(c, "std-ai 类型速查") {
+	if strings.Contains(c, "std-agent 类型速查") {
 		t.Errorf("InjectTypeGlossary=false should suppress glossary, got:\n%s", c)
 	}
 	if strings.Contains(c, "auto-injected") {
@@ -151,7 +151,7 @@ func TestClaudeMD_NestedRoot(t *testing.T) {
 		t.Error("nested CLAUDE.md must have IsRoot=true")
 	}
 	c := string(op.Content)
-	if strings.Contains(c, "std-ai 类型速查") {
+	if strings.Contains(c, "std-agent 类型速查") {
 		t.Error("nested CLAUDE.md must not contain glossary")
 	}
 	if strings.Contains(c, "## Imported Rules") {
@@ -218,7 +218,7 @@ func TestClaudeMD_SkillPrivateFields(t *testing.T) {
 			DisableModelInvocation: true,
 			License:                "MIT",
 			Compatibility:          ">=1.0",
-			Metadata:               map[string]interface{}{"author": "std-ai"},
+			Metadata:               map[string]interface{}{"author": "std-agent"},
 			Hooks:                  map[string]interface{}{"pre": "echo ready"},
 			Body:                   "Do a thorough review.",
 		},
@@ -253,7 +253,7 @@ func TestClaudeMD_SkillPrivateFields(t *testing.T) {
 		"license: MIT",
 		"compatibility:",
 		"metadata:",
-		"  author: std-ai",
+		"  author: std-agent",
 		"hooks:",
 		"Do a thorough review.",
 	}
@@ -387,10 +387,10 @@ func TestClaudeMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 		t.Fatalf("references must go to subdir (not SkillsDir), got files: %v", claudePlanPaths(plan))
 	}
 	c := string(op.Content)
-	if !strings.Contains(c, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type: references frontmatter, got:\n%s", c)
+	if !strings.Contains(c, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type: references frontmatter, got:\n%s", c)
 	}
-	if !strings.Contains(c, "<!-- std-ai degraded references: transformer-design") {
+	if !strings.Contains(c, "<!-- std-agent degraded references: transformer-design") {
 		t.Errorf("expected explainer comment, got:\n%s", c)
 	}
 	if !strings.Contains(c, "Reference body content.") {

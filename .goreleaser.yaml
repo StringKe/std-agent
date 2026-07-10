@@ -1,6 +1,6 @@
 version: 2
 
-project_name: std-ai
+project_name: std-agent
 
 before:
   hooks:

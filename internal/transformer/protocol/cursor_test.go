@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // cursorTestAdapter 模拟 cursor target 的 adapter（实际 cursorAdapter 在
@@ -176,10 +176,10 @@ func TestCursor_Glossary_FallsTo_RulesDir_NoPrefix(t *testing.T) {
 		}
 	}
 	s := string(op.Content)
-	if !strings.Contains(s, "std-ai-type: glossary") {
-		t.Errorf("expected frontmatter std-ai-type: glossary, got:\n%s", s)
+	if !strings.Contains(s, "std-agent-type: glossary") {
+		t.Errorf("expected frontmatter std-agent-type: glossary, got:\n%s", s)
 	}
-	if !strings.Contains(s, "std-ai 类型速查") {
+	if !strings.Contains(s, "std-agent 类型速查") {
 		t.Errorf("expected glossary body content, got:\n%s", s)
 	}
 }
@@ -213,10 +213,10 @@ func TestCursor_ReferencesFallback_GoesToReferencesSubdir(t *testing.T) {
 		t.Fatalf("references fallback should land at %q, files:%s", want, cursorPlanPaths(plan.Files))
 	}
 	s := string(op.Content)
-	if !strings.Contains(s, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type: references frontmatter, got:\n%s", s)
+	if !strings.Contains(s, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type: references frontmatter, got:\n%s", s)
 	}
-	if !strings.Contains(s, "<!-- std-ai degraded references") {
+	if !strings.Contains(s, "<!-- std-agent degraded references") {
 		t.Errorf("expected explainer comment, got:\n%s", s)
 	}
 	// 路径不应含私有前缀
@@ -244,10 +244,10 @@ func TestCursor_SubagentsFallback_GoesToRulesSubdir(t *testing.T) {
 		t.Fatalf("subagent fallback should land at %q, files:%s", want, cursorPlanPaths(plan.Files))
 	}
 	s := string(op.Content)
-	if !strings.Contains(s, "std-ai-type: subagents") {
-		t.Errorf("expected std-ai-type: subagents frontmatter, got:\n%s", s)
+	if !strings.Contains(s, "std-agent-type: subagents") {
+		t.Errorf("expected std-agent-type: subagents frontmatter, got:\n%s", s)
 	}
-	if !strings.Contains(s, "<!-- std-ai degraded subagents") {
+	if !strings.Contains(s, "<!-- std-agent degraded subagents") {
 		t.Errorf("expected explainer comment, got:\n%s", s)
 	}
 	if !strings.Contains(s, "SUBAGENT BODY") {

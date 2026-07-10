@@ -4,10 +4,10 @@ import (
 	"path"
 	"strings"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/transformer/transformerutil"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/transformer/transformerutil"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // defaultFallbackSubdir 返回 doc type 对应的默认 fallback 子目录名。
@@ -36,7 +36,7 @@ func defaultFallbackSubdir(t parser.DocType) string {
 //
 // frontmatter 行为：
 //   - description（若 doc.Description 非空）
-//   - std-ai-type: <type>（若 adapter.InjectStdaiTypeField=true）
+//   - std-agent-type: <type>（若 adapter.InjectStdaiTypeField=true）
 //
 // body 行为：
 //   - 若 explainer 启用（adapter.InjectExplainer，可被 InjectExplainerOverride 覆盖），
@@ -52,7 +52,7 @@ func BuildDegradedFileOp(doc *parser.Document, adapter Adapter, cfg *config.Conf
 		fm.Add("description", doc.Description)
 	}
 	if adapter.InjectStdaiTypeField {
-		fm.Add("std-ai-type", string(doc.Type))
+		fm.Add("std-agent-type", string(doc.Type))
 	}
 
 	body := doc.Body
@@ -75,7 +75,7 @@ func BuildDegradedFileOp(doc *parser.Document, adapter Adapter, cfg *config.Conf
 // 同时把 SkillFiles 一并 fan-out 到同目录下。
 //
 // frontmatter 含 Agent Skills 规范字段（name / description / license /
-// compatibility / metadata）+ std-ai-type 私有标识（若 InjectStdaiTypeField=true）。
+// compatibility / metadata）+ std-agent-type 私有标识（若 InjectStdaiTypeField=true）。
 // body 头部含 explainer HTML 注释（若 InjectExplainer=true）。
 func BuildDegradedSkillPackage(doc *parser.Document, adapter Adapter, cfg *config.Config) []writer.FileOp {
 	skillDir := degradedSkillDir(doc, adapter)
@@ -87,7 +87,7 @@ func BuildDegradedSkillPackage(doc *parser.Document, adapter Adapter, cfg *confi
 	fm.Add("compatibility", doc.Compatibility)
 	fm.AddMap("metadata", doc.Metadata)
 	if adapter.InjectStdaiTypeField {
-		fm.Add("std-ai-type", string(doc.Type))
+		fm.Add("std-agent-type", string(doc.Type))
 	}
 
 	body := doc.Body
@@ -155,7 +155,7 @@ func shouldInjectExplainer(t parser.DocType, adapter Adapter) bool {
 func renderExplainerHeader(t parser.DocType, name, target string) string {
 	semantics := explainerSemanticsFor(t)
 	var b strings.Builder
-	b.WriteString("<!-- std-ai degraded ")
+	b.WriteString("<!-- std-agent degraded ")
 	b.WriteString(string(t))
 	b.WriteString(": ")
 	b.WriteString(name)
@@ -191,7 +191,7 @@ func explainerSemanticsFor(t parser.DocType) string {
 func renderSubagentInvokeBody(doc *parser.Document, invokeCmd, adapterName string) string {
 	cmd := strings.ReplaceAll(invokeCmd, "{name}", doc.Name)
 	var b strings.Builder
-	b.WriteString("<!-- std-ai degraded subagents: ")
+	b.WriteString("<!-- std-agent degraded subagents: ")
 	b.WriteString(doc.Name)
 	b.WriteString(" via CLI invocation -->\n")
 	b.WriteString("<!-- Target tool \"")

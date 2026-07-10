@@ -71,9 +71,9 @@ memory-bank/
 
 由 `.clinerules` 中指令引导 Cline 读取。Cline 自身不强制此结构。
 
-## 7. std-ai 四类映射
+## 7. std-agent 四类映射
 
-| std-ai 类型 | Cline 落点 |
+| std-agent 类型 | Cline 落点 |
 |---|---|
 | rules | `.clinerules/<NN>-<name>.md`（数字前缀控制顺序）；frontmatter `paths:` 来自 std `applyTo` |
 | skills | `.clinerules/workflows/<name>.md`（近似 skill 触发，需手动 `/<name>.md`） |

@@ -80,14 +80,14 @@ enabled = true
 
 closest wins：越靠近 cwd 的优先级越高，向 root 拼接。
 
-## 6. std-ai 四类映射
+## 6. std-agent 四类映射
 
-| std-ai 类型 | Codex 落点 |
+| std-agent 类型 | Codex 落点 |
 |---|---|
 | rules | 项目 `AGENTS.md`（全部 rules 全文 inline 到一个文件）；子目录 rules 写入 `<sub>/AGENTS.md` |
 | skills | `<repo>/.agents/skills/<name>/SKILL.md` + 同目录辅助文件 |
 | commands | 内置 slash 不可扩展；自定义 prompt 已 deprecated。降级为 skill 写到 `.agents/skills/commands/<n>/SKILL.md`（v3 子目录隔离），description 含 slash 调用 hint 让模型主动调用 |
-| references | `.agents/references/<n>.md`（降级，AI 按 frontmatter std-ai-type 识别） |
+| references | `.agents/references/<n>.md`（降级，AI 按 frontmatter std-agent-type 识别） |
 | subagents | `.agents/subagents/<n>.md`（降级） |
 
 **禁止落点 `.codex/`**：项目级 `.codex/` 是官方 Team Config 配置目录

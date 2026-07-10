@@ -35,7 +35,7 @@ adapter 字段差异表见 §7。
 
 ## 4. skills / commands / subagents 原生支持
 
-| std-ai 类型 | Kilo Code 原生 | std-ai 落点 |
+| std-agent 类型 | Kilo Code 原生 | std-agent 落点 |
 |---|---|---|
 | rules | YES（核心） | `.kilo/rules/<name>.md` |
 | commands | 部分（workflows） | `.kilo/rules/workflows/<name>.md` |
@@ -55,7 +55,7 @@ stdagent v0.0.4 不强制此限制。
 - FallbackDir：`.kilo/rules`（skills / references / subagents 自动加 subdir）
 - SingleFileFallback：`""`（kilo 无单文件 fallback，与 cline `.clinerules` / roo `.roorules` 不同）
 - 数字前缀：无（与 cline 区别，跟 roo 一致）
-- glossary：`.kilo/rules/glossary.md`（frontmatter `std-ai-type: glossary`）
+- glossary：`.kilo/rules/glossary.md`（frontmatter `std-agent-type: glossary`）
 
 ### v0.0.5 待办：kilo.jsonc 写入
 
@@ -80,7 +80,7 @@ kilo.jsonc 的合并写入（保留用户既有键，仅维护 stdagent 注入�
 ## 8. 信息来源
 
 - https://github.com/Kilo-Org/kilocode
-- 协议族对比：/tmp/std-ai-protocol-research.md §2.D（行 34, 113-121）
+- 协议族对比：/tmp/std-agent-protocol-research.md §2.D（行 34, 113-121）
 
 ## 9. UNKNOWN
 

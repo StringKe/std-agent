@@ -12,7 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/config"
+	"github.com/StringKe/std-agent/internal/config"
 )
 
 //go:embed init_assets/help/*.md init_assets/root.md

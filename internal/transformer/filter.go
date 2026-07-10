@@ -1,7 +1,7 @@
 package transformer
 
 import (
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 // FilterDocs 按 target 名筛选适用的 docs，返回新 slice

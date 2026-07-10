@@ -1,6 +1,6 @@
 package protocol
 
-import "std-ai/internal/parser"
+import "github.com/StringKe/std-agent/internal/parser"
 
 // Adapter 是每个 target 注入协议族的配置 struct。字段全部 zero-value 安全，
 // 协议实现根据零值决定行为，避免在调用侧写大量 if-else。
@@ -19,12 +19,12 @@ import "std-ai/internal/parser"
 //   - FallbackSubdir=nil 或 key 缺失 -> 按 defaultFallbackSubdir 自动 "skills"/"commands"/"references"/"subagents"
 //   - InjectExplainer=false -> fallback 文件 body 头部不注入 HTML 注释 explainer
 //   - InjectExplainerOverride[t]=false -> 即使 InjectExplainer=true，该 type 也不注入
-//   - InjectStdaiTypeField=false -> fallback 文件 frontmatter 不写 std-ai-type 字段
+//   - InjectStdaiTypeField=false -> fallback 文件 frontmatter 不写 std-agent-type 字段
 //   - RulePrefix=nil -> rule 文件无数字前缀（cline / roo / kilo 才设置）
 //   - RuleTriggerMode=TriggerNone -> rule frontmatter 不写 trigger / alwaysApply / applyTo
 //   - MaxBytesPerFile=0 -> 不做 HARD limit 检查
 //   - SoftBytes=0 -> 不做 SOFT WARN 检查
-//   - InjectTypeGlossary=false -> 根文件不注入 std-ai 类型速查段
+//   - InjectTypeGlossary=false -> 根文件不注入 std-agent 类型速查段
 //   - CommandsFileSuffix="" -> 默认 ".md"
 //   - SkillsAsSubagent=false -> skill 走标准 Agent Skills 包 / fallback；true 时
 //     输出扁平 <SkillsDir>/<name>.md 含 mode: subagent frontmatter（opencode 风格）

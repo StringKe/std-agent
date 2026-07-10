@@ -40,17 +40,17 @@ commands 用普通 markdown 而非 TOML，更接近 codex / claude-code 风格�
 - gemini-cli commands 用 TOML（`description` + `prompt` 双字段）
 - qwen-code commands 用 markdown（与 codex / claude-code 统一）
 
-## 4. std-ai 四类映射
+## 4. std-agent 四类映射
 
-| std-ai 类型 | Qwen Code 落点 | 加载方式 |
+| std-agent 类型 | Qwen Code 落点 | 加载方式 |
 |---|---|---|
 | rules | 项目根 `QWEN.md`，nonRoot rule 全部 inline 拼接到主文件（无子目录 rules） | 自动加载，无 frontmatter |
-| skills | fallback `.qwen/rules/skills/<name>/SKILL.md`（Agent Skills 标准包） | std-ai 降级，AI 按 description 触发 |
+| skills | fallback `.qwen/rules/skills/<name>/SKILL.md`（Agent Skills 标准包） | std-agent 降级，AI 按 description 触发 |
 | commands | `.qwen/commands/<name>.md`，frontmatter 描述参数 | `/` 触发 |
-| references | fallback `.qwen/rules/references/<name>.md` | std-ai 降级 |
-| subagents | fallback `.qwen/rules/subagents/<name>.md` | std-ai 降级 |
+| references | fallback `.qwen/rules/references/<name>.md` | std-agent 降级 |
+| subagents | fallback `.qwen/rules/subagents/<name>.md` | std-agent 降级 |
 
-嵌套 root（`std-ai/standards/rules/*.md` 带 `nestedPath`）写到对应子目录的
+嵌套 root（`std-agent/standards/rules/*.md` 带 `nestedPath`）写到对应子目录的
 `QWEN.md`，不带 manifest（与 codex / gemini-cli 一致）。
 
 ## 5. 转换器实现要点
@@ -66,12 +66,12 @@ commands 用普通 markdown 而非 TOML，更接近 codex / claude-code 风格�
    到 `.qwen/rules/skills/<name>/SKILL.md`
 5. references / subagents 走 BuildDegradedFileOp 到
    `.qwen/rules/{references,subagents}/<name>.md`
-6. 不写 `settings.json`：MCP / 全局配置不在 std-ai 范围内
+6. 不写 `settings.json`：MCP / 全局配置不在 std-agent 范围内
 
 ## 6. 信息来源
 
 - https://github.com/QwenLM/qwen-code （访问日期 2026-05-17）
-- /tmp/std-ai-protocol-research.md 行 22 / 77（Qwen Code 段）
+- /tmp/std-agent-protocol-research.md 行 22 / 77（Qwen Code 段）
 
 ## 7. 已确认
 

@@ -5,7 +5,7 @@ import _ "embed"
 //go:embed glossary.md
 var glossaryMarkdown string
 
-// RenderGlossaryFor 返回 std-ai 类型速查 markdown 段。
+// RenderGlossaryFor 返回 std-agent 类型速查 markdown 段。
 //
 // 协议实现把它 prepend 到根文件 body 之前（CLAUDE.md / AGENTS.md / GEMINI.md /
 // .github/copilot-instructions.md 等）。adapter.InjectTypeGlossary=false 时

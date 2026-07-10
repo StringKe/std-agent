@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 // priorityToPrefix 复现 cline.go 的 priority -> 数字前缀映射，仅供测试使用
@@ -173,10 +173,10 @@ func TestClinerules_SkillsFallbackToAgentSkillsPackage(t *testing.T) {
 	if !strings.Contains(got, "name: code-review") {
 		t.Errorf("expected name frontmatter, got:\n%s", got)
 	}
-	if !strings.Contains(got, "std-ai-type: skills") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", got)
+	if !strings.Contains(got, "std-agent-type: skills") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", got)
 	}
-	if !strings.Contains(got, "<!-- std-ai degraded skills: code-review") {
+	if !strings.Contains(got, "<!-- std-agent degraded skills: code-review") {
 		t.Errorf("expected explainer header, got:\n%s", got)
 	}
 }
@@ -208,10 +208,10 @@ func TestClinerules_ReferencesFallbackToSubdir(t *testing.T) {
 		}
 	}
 	got := string(op.Content)
-	if !strings.Contains(got, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", got)
+	if !strings.Contains(got, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", got)
 	}
-	if !strings.Contains(got, "<!-- std-ai degraded references: transformer-design") {
+	if !strings.Contains(got, "<!-- std-agent degraded references: transformer-design") {
 		t.Errorf("expected explainer header, got:\n%s", got)
 	}
 }
@@ -238,8 +238,8 @@ func TestClinerules_SubagentsFallbackToSubdir(t *testing.T) {
 		t.Errorf("path = %q, want %q", op.Path, want)
 	}
 	got := string(op.Content)
-	if !strings.Contains(got, "std-ai-type: subagents") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", got)
+	if !strings.Contains(got, "std-agent-type: subagents") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", got)
 	}
 }
 
@@ -272,10 +272,10 @@ func TestClinerules_GlossaryWhenEnabled(t *testing.T) {
 		}
 		t.Fatalf("expected .clinerules/glossary.md, files: %v", paths)
 	}
-	if !strings.Contains(glossaryOp.content, "std-ai-type: glossary") {
-		t.Errorf("expected std-ai-type frontmatter, got:\n%s", glossaryOp.content)
+	if !strings.Contains(glossaryOp.content, "std-agent-type: glossary") {
+		t.Errorf("expected std-agent-type frontmatter, got:\n%s", glossaryOp.content)
 	}
-	if !strings.Contains(glossaryOp.content, "std-ai 类型速查") {
+	if !strings.Contains(glossaryOp.content, "std-agent 类型速查") {
 		t.Errorf("expected glossary body title, got:\n%s", glossaryOp.content)
 	}
 }

@@ -29,11 +29,11 @@ func TestVersionMatchesTag(t *testing.T) {
 }
 
 func TestFindChecksum(t *testing.T) {
-	cs := `abcdef1234567890  std-ai_0.2.0_linux_amd64.tar.gz
-fedcba0987654321  std-ai_0.2.0_darwin_arm64.tar.gz
-1111111111111111  std-ai_0.2.0_windows_amd64.zip
+	cs := `abcdef1234567890  std-agent_0.2.0_linux_amd64.tar.gz
+fedcba0987654321  std-agent_0.2.0_darwin_arm64.tar.gz
+1111111111111111  std-agent_0.2.0_windows_amd64.zip
 `
-	if got := findChecksum(cs, "std-ai_0.2.0_darwin_arm64.tar.gz"); got != "fedcba0987654321" {
+	if got := findChecksum(cs, "std-agent_0.2.0_darwin_arm64.tar.gz"); got != "fedcba0987654321" {
 		t.Errorf("got %q", got)
 	}
 	if got := findChecksum(cs, "missing.tar.gz"); got != "" {

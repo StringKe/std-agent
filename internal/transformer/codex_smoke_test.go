@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func TestCodexAGENTSMd(t *testing.T) {
@@ -89,7 +89,7 @@ func TestCodexCommandsAsSkill(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected .agents/skills/commands/review/SKILL.md, paths: %v", pathSet(plan))
 	}
-	for _, want := range []string{"name: review", "std-ai-type: commands", "/review", "Run code review"} {
+	for _, want := range []string{"name: review", "std-agent-type: commands", "/review", "Run code review"} {
 		if !strings.Contains(c, want) {
 			t.Errorf("missing %q in:\n%s", want, c)
 		}

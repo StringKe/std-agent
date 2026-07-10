@@ -1,6 +1,6 @@
-<!-- std-ai type glossary auto-injected. Disable by setting inject_type_glossary=false in .stdai/config.toml -->
+<!-- std-agent type glossary auto-injected. Disable by setting inject_type_glossary=false in .stdai/config.toml -->
 
-## std-ai 类型速查
+## std-agent 类型速查
 
 本项目的 AI 配置由 stdagent 管理，分为 5 种类型：
 

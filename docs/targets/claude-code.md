@@ -105,9 +105,9 @@ settings.json 的 `hooks` 字段，事件名清单：
 三层合并优先级：managed（企业，最高）> project（`.claude/settings.json`）>
 user（`~/.claude/settings.json`）。数组合并不覆盖。
 
-## 8. std-ai 四类映射
+## 8. std-agent 四类映射
 
-| std-ai 类型 | Claude Code 落点 |
+| std-agent 类型 | Claude Code 落点 |
 |---|---|
 | rules | `.claude/rules/<name>.md`；可选合并到 `CLAUDE.md` 的尾部段（取决于 conversion 策略） |
 | skills | `.claude/skills/<name>/SKILL.md` + 同目录辅助文件 |

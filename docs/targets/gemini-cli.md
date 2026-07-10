@@ -103,9 +103,9 @@ prompt = """
 - 命令：项目同名覆盖全局；`/commands list`、`/commands reload` 管理
 - 扩展通过 `gemini extensions install <git-url>` 安装到全局
 
-## 8. std-ai 四类映射
+## 8. std-agent 四类映射
 
-| std-ai 类型 | Gemini CLI 落点 |
+| std-agent 类型 | Gemini CLI 落点 |
 |---|---|
 | rules | 项目根 `GEMINI.md` 主文件 + 子目录 `GEMINI.md`（按 std `applyTo` 路径决定写到哪个目录） |
 | skills | 通过命令 `prompt` 字段封装；复杂封装走 extensions（v1.0 不写） |

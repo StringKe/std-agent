@@ -46,7 +46,7 @@ gh run list --workflow=release.yml --limit 1
 
 确认：
 - Release 页面有 assets（每平台 .tar.gz / .zip + checksums.txt）
-- install.sh 能拉到新版本：`curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh`
+- install.sh 能拉到新版本：`curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh`
 - `./bin/stdagent version` 显示新版本号
 
 ## 5. 不要做的事

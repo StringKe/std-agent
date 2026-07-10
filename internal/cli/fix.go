@@ -3,7 +3,7 @@ package cli
 import (
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/runner"
+	"github.com/StringKe/std-agent/internal/runner"
 )
 
 // newFixCmd 是 sync 的语义别名：drift auto-fix 即重新 sync 覆盖 drift 文件

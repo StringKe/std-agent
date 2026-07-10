@@ -94,9 +94,9 @@ Cascade 同时可见 100 个工具上限。
 - Workflows 优先级：System > Workspace > Global > Built-in（同名时高层覆盖）
 - `.windsurfrules` 与 `.windsurf/rules/` 共存时现代格式优先，legacy 被忽略
 
-## 8. std-ai 四类映射
+## 8. std-agent 四类映射
 
-| std-ai 类型 | Windsurf 落点 |
+| std-agent 类型 | Windsurf 落点 |
 |---|---|
 | rules（无 applyTo） | `.windsurf/rules/<name>.md`，`trigger: always_on` |
 | rules（有 applyTo） | `.windsurf/rules/<name>.md`，`trigger: glob`，`globs:` 来自 std `applyTo` |

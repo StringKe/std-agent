@@ -65,8 +65,8 @@ func newExplainCmd() *cobra.Command {
 	var asJSON bool
 	cmd := &cobra.Command{
 		Use:   "explain [type]",
-		Short: "解释 std-ai 5 种类型（rules/skills/commands/references/subagents）的语义",
-		Long: `输出 std-ai 5 种 type 的语义速查：每种类型的触发语义 / 何时使用 / 何时不用 / 示例 frontmatter。
+		Short: "解释 std-agent 5 种类型（rules/skills/commands/references/subagents）的语义",
+		Long: `输出 std-agent 5 种 type 的语义速查：每种类型的触发语义 / 何时使用 / 何时不用 / 示例 frontmatter。
 
 不带参数时输出全部 5 种。带 type 参数时只输出该 type 一段。
 

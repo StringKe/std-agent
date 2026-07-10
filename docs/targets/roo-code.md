@@ -36,7 +36,7 @@ Roo Code 是 VS Code AI 编码扩展，源自 Cline 的 fork（早期名为 Roo 
 
 ## 4. skills / commands / subagents 原生支持
 
-| std-ai 类型 | Roo Code 原生 | std-ai 落点 |
+| std-agent 类型 | Roo Code 原生 | std-agent 落点 |
 |---|---|---|
 | rules | YES（核心） | `.roo/rules/<name>.md` |
 | commands | 部分（workflows） | `.roo/rules/workflows/<name>.md` |
@@ -58,7 +58,7 @@ workflows 类似 commands 但需用户输入 `/<name>` 触发，不自动执行�
 - FallbackDir：`.roo/rules`（skills/references/subagents 自动加 subdir）
 - SingleFileFallback：`.roorules`（保留，v0.0.4 默认走目录形式）
 - 数字前缀：无（与 cline 区别）
-- glossary：`.roo/rules/glossary.md`（frontmatter `std-ai-type: glossary`）
+- glossary：`.roo/rules/glossary.md`（frontmatter `std-agent-type: glossary`）
 
 ## 7. 与 cline / kilo-code 的关系
 
@@ -77,7 +77,7 @@ workflows 类似 commands 但需用户输入 `/<name>` 触发，不自动执行�
 
 - https://github.com/RooCodeInc/Roo-Code
 - https://docs.roocode.com/features/custom-instructions（rules / mode-specific 文档）
-- 协议族对比：/tmp/std-ai-protocol-research.md §2.D
+- 协议族对比：/tmp/std-agent-protocol-research.md §2.D
 
 ## 9. UNKNOWN
 

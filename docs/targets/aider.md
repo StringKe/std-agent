@@ -47,9 +47,9 @@ git: true
 test-cmd: "pytest -q"
 ```
 
-## 5. std-ai 四类映射
+## 5. std-agent 四类映射
 
-| std-ai 类型 | Aider 落点 | 加载方式 |
+| std-agent 类型 | Aider 落点 | 加载方式 |
 |---|---|---|
 | rules | `CONVENTIONS.md`（推荐）或 `AGENTS.md`，经 `read:` 显式声明 | 显式 |
 | skills | 不支持（aider 无 skill / agent / persona / chat-mode 扩展点） | 降级为 rules 段落写入 AGENTS.md |

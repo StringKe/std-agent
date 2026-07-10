@@ -13,9 +13,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // transformerVersion 由 cli 通过 SetVersion 注入；fallback "dev"

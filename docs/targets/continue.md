@@ -120,9 +120,9 @@ description: Standards for TypeScript development
 https://docs.continue.dev/customize/deep-dives/mcp,
 访问日期 2026-05-08)
 
-## 5. std-ai 四类映射
+## 5. std-agent 四类映射
 
-| std-ai 类型 | Continue 落点 | 加载方式 |
+| std-agent 类型 | Continue 落点 | 加载方式 |
 |---|---|---|
 | rules | `.continue/rules/*.md` 或 `config.yaml` 顶层 `rules:` 数组 | 自动扫描目录，按字典序追加；frontmatter 控制 globs / alwaysApply |
 | skills | 无原生 skill 概念。降级为带 `description` 的 model-decision rule（`alwaysApply: false`，仅描述触发） | 由模型读 description 决定；不是真正运行时切换 |
@@ -130,7 +130,7 @@ https://docs.continue.dev/customize/deep-dives/mcp,
 | references | `docs:` 字段（远程 doc 索引）或内联到 rule 正文。`@<file>` 在 chat 中按需引入 | docs 字段构建嵌入索引；rule 内嵌为静态文本 |
 
 注：Continue 没有 Cursor / Antigravity 那种独立 skill 文件夹概念。若
-std-ai 输入有 skill，建议作为 `.continue/rules/<skill-name>.md` 写入，
+std-agent 输入有 skill，建议作为 `.continue/rules/<skill-name>.md` 写入，
 通过 `description` + `alwaysApply: false` 实现 model-decision 触发。
 (https://docs.continue.dev/customize/deep-dives/rules,
 访问日期 2026-05-08;
@@ -139,10 +139,10 @@ https://docs.continue.dev/customize/deep-dives/prompts,
 
 ## 6. 转换器实现要点
 
-1. v1.0 默认产出 `<repo>/.continue/rules/<name>.md`：每条 std-ai rule
+1. v1.0 默认产出 `<repo>/.continue/rules/<name>.md`：每条 std-agent rule
    一个文件，frontmatter 写 `name` / `description` / `globs` /
    `alwaysApply`。globs 缺省时只写 `description`，由 model 决定
-2. std-ai commands -> `<repo>/.continue/prompts/<name>.prompt.md`，
+2. std-agent commands -> `<repo>/.continue/prompts/<name>.prompt.md`，
    frontmatter 必带 `invokable: true`，正文为命令模板
 3. 不主动写 `<repo>/config.yaml`：用户多用 Hub assistant 或全局
    `~/.continue/config.yaml`，避免冲突。仅在 `init --continue`

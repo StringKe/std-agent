@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 // agentsMDTestCfg 返回不注入 marker 的最小 cfg，让断言只关心 body 内容
@@ -129,11 +129,11 @@ func TestAgentsMD_GlossaryPrependedToRoot(t *testing.T) {
 		t.Fatalf("root not found, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(root.Content)
-	if !strings.Contains(content, "std-ai type glossary auto-injected") {
+	if !strings.Contains(content, "std-agent type glossary auto-injected") {
 		t.Errorf("expected glossary marker, got:\n%s", content)
 	}
 	// glossary 必须在 project overview 之前
-	gIdx := strings.Index(content, "std-ai type glossary")
+	gIdx := strings.Index(content, "std-agent type glossary")
 	pIdx := strings.Index(content, "PROJECT_OVERVIEW")
 	if gIdx < 0 || pIdx < 0 || gIdx >= pIdx {
 		t.Errorf("glossary should appear before project overview, gIdx=%d pIdx=%d", gIdx, pIdx)
@@ -161,7 +161,7 @@ func TestAgentsMD_NestedRootNoManifestNoGlossary(t *testing.T) {
 		t.Fatalf("nested AGENTS.md not produced, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(nested.Content)
-	if strings.Contains(content, "std-ai type glossary") {
+	if strings.Contains(content, "std-agent type glossary") {
 		t.Errorf("nested root should NOT contain glossary, got:\n%s", content)
 	}
 	if strings.Contains(content, "## Reference Rules") {
@@ -189,9 +189,9 @@ func TestAgentsMD_SkillNativePath(t *testing.T) {
 	if !strings.Contains(content, "name: code-review") {
 		t.Errorf("expected name frontmatter, got:\n%s", content)
 	}
-	// 不应有 std-ai-type 字段（原生路径）
-	if strings.Contains(content, "std-ai-type:") {
-		t.Errorf("native skill should NOT have std-ai-type field, got:\n%s", content)
+	// 不应有 std-agent-type 字段（原生路径）
+	if strings.Contains(content, "std-agent-type:") {
+		t.Errorf("native skill should NOT have std-agent-type field, got:\n%s", content)
 	}
 }
 
@@ -218,10 +218,10 @@ func TestAgentsMD_SkillFallbackPath(t *testing.T) {
 		t.Fatalf("fallback skill path missing, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(op.Content)
-	if !strings.Contains(content, "std-ai-type: skills") {
-		t.Errorf("fallback skill should contain std-ai-type, got:\n%s", content)
+	if !strings.Contains(content, "std-agent-type: skills") {
+		t.Errorf("fallback skill should contain std-agent-type, got:\n%s", content)
 	}
-	if !strings.Contains(content, "<!-- std-ai degraded skills:") {
+	if !strings.Contains(content, "<!-- std-agent degraded skills:") {
 		t.Errorf("fallback skill should contain explainer, got:\n%s", content)
 	}
 }
@@ -264,7 +264,7 @@ func TestAgentsMD_CommandsInjectedToRoot(t *testing.T) {
 }
 
 // TestAgentsMD_CommandsAsSkillSubdir：CommandsAsSkillSubdir 非空时 command 降级为 skill 走子目录
-// （v3 子目录隔离，无 std-ai 私有前缀；路径 = <SkillsDir>/<Subdir>/<name>/SKILL.md）
+// （v3 子目录隔离，无 std-agent 私有前缀；路径 = <SkillsDir>/<Subdir>/<name>/SKILL.md）
 func TestAgentsMD_CommandsAsSkillSubdir(t *testing.T) {
 	a := codexLikeAdapter()
 	a.InjectCommandsToRoot = false // 关掉 inject 才走 skill subdir
@@ -286,8 +286,8 @@ func TestAgentsMD_CommandsAsSkillSubdir(t *testing.T) {
 	if !strings.Contains(content, "name: release") {
 		t.Errorf("expected name=release frontmatter (no cmd- prefix), got:\n%s", content)
 	}
-	if !strings.Contains(content, "std-ai-type: commands") {
-		t.Errorf("expected std-ai-type: commands frontmatter, got:\n%s", content)
+	if !strings.Contains(content, "std-agent-type: commands") {
+		t.Errorf("expected std-agent-type: commands frontmatter, got:\n%s", content)
 	}
 	if !strings.Contains(content, "/release") {
 		t.Errorf("description should mention slash invocation, got:\n%s", content)
@@ -315,8 +315,8 @@ func TestAgentsMD_ReferencesFallbackNoPrefix(t *testing.T) {
 		}
 	}
 	content := string(op.Content)
-	if !strings.Contains(content, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type=references, got:\n%s", content)
+	if !strings.Contains(content, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type=references, got:\n%s", content)
 	}
 }
 
@@ -338,8 +338,8 @@ func TestAgentsMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 		t.Fatalf("references should be in subdir not SkillsDir, paths=%v", agentsMDPlanPaths(plan))
 	}
 	content := string(op.Content)
-	if !strings.Contains(content, "std-ai-type: references") {
-		t.Errorf("expected std-ai-type=references, got:\n%s", content)
+	if !strings.Contains(content, "std-agent-type: references") {
+		t.Errorf("expected std-agent-type=references, got:\n%s", content)
 	}
 	// 反向验证：不应该出现在 .agents/skills/ 路径下
 	if findAgentsMDOp(plan, ".agents/skills/design/SKILL.md") != nil {

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 // TestKiloCodeOutputs 验证 kilo-code adapter 的 4 类 type 落点：
@@ -14,7 +14,7 @@ import (
 //   - skills   -> .kilo/rules/skills/<n>/SKILL.md（Agent Skills 标准 fallback）
 //   - references / subagents -> .kilo/rules/<sub>/<name>.md
 //
-// 关键断言：路径无 std-ai 私有前缀；rule 文件名不含 100/500/900 等 cline 数字前缀。
+// 关键断言：路径无 std-agent 私有前缀；rule 文件名不含 100/500/900 等 cline 数字前缀。
 func TestKiloCodeOutputs(t *testing.T) {
 	tr := &KiloCode{}
 	cfg := &config.Config{Inject: true, InjectWhatIs: false, InjectTypeGlossary: true}
@@ -58,14 +58,14 @@ func TestKiloCodeOutputs(t *testing.T) {
 		}
 	}
 
-	// 路径不应包含 std-ai 私有前缀
+	// 路径不应包含 std-agent 私有前缀
 	for p := range paths {
 		base := p
 		if idx := strings.LastIndex(p, "/"); idx >= 0 {
 			base = p[idx+1:]
 		}
-		if strings.HasPrefix(base, "std-") && base != "std-ai-type" {
-			t.Errorf("unexpected std-ai private prefix in filename: %s", p)
+		if strings.HasPrefix(base, "std-") && base != "std-agent-type" {
+			t.Errorf("unexpected std-agent private prefix in filename: %s", p)
 		}
 	}
 }

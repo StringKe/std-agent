@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/config"
-	"std-ai/internal/state"
-	"std-ai/internal/writer"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/state"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 type targetReport struct {

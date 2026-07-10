@@ -1,16 +1,16 @@
 <#
 .SYNOPSIS
-  std-ai 安装脚本 (Windows PowerShell 5.1+ / PowerShell 7+)
+  std-agent 安装脚本 (Windows PowerShell 5.1+ / PowerShell 7+)
 
 .DESCRIPTION
   用法:
-    irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
   可选环境变量:
-    STD_AI_OWNER       GitHub owner (默认 StringKe)
-    STD_AI_REPO        仓库名 (默认 std-ai)
-    STD_AI_VERSION     版本 tag (如 v0.1.0；默认 latest)
-    STD_AI_INSTALL_DIR 安装目录 (默认 $LOCALAPPDATA\Programs\std-ai)
+    STD_AGENT_OWNER       GitHub owner (默认 StringKe)
+    STD_AGENT_REPO        仓库名 (默认 std-agent)
+    STD_AGENT_VERSION     版本 tag (如 v0.1.0；默认 latest)
+    STD_AGENT_INSTALL_DIR 安装目录 (默认 $LOCALAPPDATA\Programs\std-agent)
 #>
 
 [CmdletBinding()]
@@ -23,10 +23,10 @@ function Write-Info($msg) { Write-Host "[install] $msg" -ForegroundColor Cyan }
 function Write-Warn($msg) { Write-Host "[install] $msg" -ForegroundColor Yellow }
 function Write-Err($msg)  { Write-Host "[install] $msg" -ForegroundColor Red }
 
-$Owner       = if ($env:STD_AI_OWNER)       { $env:STD_AI_OWNER }       else { 'StringKe' }
-$Repo        = if ($env:STD_AI_REPO)        { $env:STD_AI_REPO }        else { 'std-ai' }
-$Version     = if ($env:STD_AI_VERSION)     { $env:STD_AI_VERSION }     else { 'latest' }
-$InstallDir  = if ($env:STD_AI_INSTALL_DIR) { $env:STD_AI_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\std-ai' }
+$Owner       = if ($env:STD_AGENT_OWNER)       { $env:STD_AGENT_OWNER }       else { 'StringKe' }
+$Repo        = if ($env:STD_AGENT_REPO)        { $env:STD_AGENT_REPO }        else { 'std-agent' }
+$Version     = if ($env:STD_AGENT_VERSION)     { $env:STD_AGENT_VERSION }     else { 'latest' }
+$InstallDir  = if ($env:STD_AGENT_INSTALL_DIR) { $env:STD_AGENT_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\std-agent' }
 $BinName     = 'stdagent.exe'
 
 $arch = switch ($env:PROCESSOR_ARCHITECTURE) {
@@ -38,10 +38,10 @@ $arch = switch ($env:PROCESSOR_ARCHITECTURE) {
 if ($Version -eq 'latest') {
     Write-Info '解析最新版本'
     $apiUrl = "https://api.github.com/repos/$Owner/$Repo/releases/latest"
-    $headers = @{ 'User-Agent' = 'std-ai-install' }
+    $headers = @{ 'User-Agent' = 'std-agent-install' }
     if ($env:GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $($env:GITHUB_TOKEN)" }
     $Version = (Invoke-RestMethod -Uri $apiUrl -Headers $headers).tag_name
-    if (-not $Version) { throw '无法解析最新版本，请显式指定 STD_AI_VERSION' }
+    if (-not $Version) { throw '无法解析最新版本，请显式指定 STD_AGENT_VERSION' }
 }
 
 $verNoV       = $Version.TrimStart('v')
@@ -50,7 +50,7 @@ $downloadBase = "https://github.com/$Owner/$Repo/releases/download/$Version"
 $archiveUrl   = "$downloadBase/$archive"
 $checksumUrl  = "$downloadBase/checksums.txt"
 
-$tmpRoot = Join-Path $env:TEMP ("std-ai-install-" + [guid]::NewGuid().ToString('N'))
+$tmpRoot = Join-Path $env:TEMP ("std-agent-install-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tmpRoot -Force | Out-Null
 try {
     Write-Info "下载 $archiveUrl"

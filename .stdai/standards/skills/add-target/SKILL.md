@@ -41,9 +41,9 @@ stdagent 的扩展点是 `internal/transformer/`：每个 AI CLI 工具一个 .g
 package transformer
 
 import (
-    "std-ai/internal/config"
-    "std-ai/internal/parser"
-    "std-ai/internal/writer"
+    "std-agent/internal/config"
+    "std-agent/internal/parser"
+    "std-agent/internal/writer"
 )
 
 type fooTransformer struct{}

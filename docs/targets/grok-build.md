@@ -50,9 +50,9 @@ xAI 官方文档无 GROK.md / AGENTS.override.md 任何提及。v0.0.5 重做 gr
 - **SKILL.md**：YAML frontmatter，agentskills.io 标准字段 + Claude Code 扩展字段被兼容
 - 字节限制：UNKNOWN
 
-## 5 种 std-ai type 原生支持
+## 5 种 std-agent type 原生支持
 
-| std-ai type | grok-build | 落点 |
+| std-agent type | grok-build | 落点 |
 |---|---|---|
 | rules | 原生（AGENTS.md / .claude/rules/） | `AGENTS.md`（推荐）或 `.claude/rules/*.md` |
 | skills | 原生 | `.grok/skills/<name>/SKILL.md`（大写）|

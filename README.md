@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
 **English** | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
@@ -64,10 +64,10 @@ Each integration is documented under [docs/targets/](docs/targets/).
 
 ```bash
 # Install (macOS / Linux)
-curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
 # Install (Windows PowerShell)
-irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
 # Initialize in your project
 cd your-project
@@ -81,7 +81,7 @@ stdagent status
 stdagent fix
 ```
 
-## Migrate an existing project to std-ai
+## Migrate an existing project to std-agent
 
 Project already littered with `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Paste the prompt below into Claude Code / Codex / Cursor / Gemini CLI and it will reorganize everything into `.stdai/standards/` for you.
 
@@ -139,7 +139,7 @@ stdagent intro --json              # for agent / automation integrations
 | `stdagent clean` | Remove generated files (preserves `.stdai/`) |
 | `stdagent budget` | LLM context budget check (chars + token estimate) |
 | `stdagent which <path>` | List rules / references applicable to a file (on-demand context routing for AI) |
-| `stdagent explain` | Print std-ai 5 type semantics (rules/skills/commands/references/subagents) for AI |
+| `stdagent explain` | Print std-agent 5 type semantics (rules/skills/commands/references/subagents) for AI |
 | `stdagent intro` | Print a migration prompt for an LLM to convert your existing config |
 | `stdagent upgrade` | Self-upgrade from GitHub Releases (sha256 + atomic replace) |
 | `stdagent version` | Build info |
@@ -150,7 +150,7 @@ Every command supports `--help`. Full reference: [docs/commands.md](docs/command
 
 v0.0.4 introduced a three-layer transformer architecture: each target's `Plan()` delegates to one of 6 protocols (AgentsMD / ClaudeMD / Cursor / Clinerules / WindsurfStyle / Copilot), parametrized by a `protocol.Adapter` struct literal. Adding a new tool now costs ~25-35 lines instead of 145 (60-70% code dedup).
 
-Graceful degradation: when a target doesn't natively support a std-ai type (e.g. skills in codex / references everywhere), stdagent falls back to subdirectory-isolated paths (`<RulesDir>/skills/<name>/SKILL.md`) with frontmatter `std-ai-type: <type>` + HTML comment explainer, no std-ai-private prefixes.
+Graceful degradation: when a target doesn't natively support a std-agent type (e.g. skills in codex / references everywhere), stdagent falls back to subdirectory-isolated paths (`<RulesDir>/skills/<name>/SKILL.md`) with frontmatter `std-agent-type: <type>` + HTML comment explainer, no std-agent-private prefixes.
 
 ## Source format
 
@@ -264,7 +264,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Documentation
 
-- **[docs/spec.md](docs/spec.md)** — full spec: std-ai standard + 22-tool divergence + conversion strategy
+- **[docs/spec.md](docs/spec.md)** — full spec: std-agent standard + 22-tool divergence + conversion strategy
 - [docs/prd.md](docs/prd.md) — product requirements
 - [docs/architecture.md](docs/architecture.md) — module layout + data flow
 - [docs/commands.md](docs/commands.md) — CLI command reference

@@ -4,7 +4,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/StringKe/std-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-ai/actions/workflows/ci.yml)
+[![CI](https://github.com/StringKe/std-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/StringKe/std-agent/actions/workflows/ci.yml)
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | **Русский** | [Français](README.fr.md) | [Deutsch](README.de.md) | [Español](README.es.md) | [Português](README.pt-BR.md)
 
@@ -53,10 +53,10 @@
 
 ```bash
 # Установка (macOS / Linux)
-curl -fsSL https://raw.githubusercontent.com/StringKe/std-ai/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
 # Установка (Windows PowerShell)
-irm https://raw.githubusercontent.com/StringKe/std-ai/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 
 # Инициализация в проекте
 cd your-project
@@ -70,7 +70,7 @@ stdagent status
 stdagent fix
 ```
 
-## Миграция существующего проекта на std-ai
+## Миграция существующего проекта на std-agent
 
 В проекте уже разбросаны `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Вставьте промпт ниже в Claude Code / Codex / Cursor / Gemini CLI, и он переорганизует всё в структуру `.stdai/standards/`.
 
@@ -246,7 +246,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Документация
 
-- **[docs/spec.md](docs/spec.md)** — полная спецификация: стандарт std-ai + различия 11 инструментов + стратегия конвертации
+- **[docs/spec.md](docs/spec.md)** — полная спецификация: стандарт std-agent + различия 11 инструментов + стратегия конвертации
 - [docs/prd.md](docs/prd.md) — требования к продукту
 - [docs/architecture.md](docs/architecture.md) — модульная структура и потоки данных
 - [docs/commands.md](docs/commands.md) — справочник CLI

@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"std-ai/internal/config"
-	"std-ai/internal/source"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/source"
 )
 
 func newPullCmd() *cobra.Command {

@@ -12,7 +12,7 @@ _.path = ["{{config_root}}/.go/bin", "{{config_root}}/bin"]
 description = "格式化代码 (gofumpt + goimports，独立运行)"
 run = """
 gofumpt -w -extra .
-go run golang.org/x/tools/cmd/goimports@latest -local std-ai -w .
+go run golang.org/x/tools/cmd/goimports@latest -local std-agent -w .
 """
 
 [tasks.lint]

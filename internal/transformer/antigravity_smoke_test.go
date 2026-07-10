@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func TestAntigravityRuleTriggers(t *testing.T) {
@@ -44,7 +44,7 @@ func TestAntigravityWorkflowAndSkill(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	// v3：skill 走 Agent Skills 标准 fallback（子目录隔离，无 std-ai 私有前缀）
+	// v3：skill 走 Agent Skills 标准 fallback（子目录隔离，无 std-agent 私有前缀）
 	if !paths[".agents/rules/skills/review/SKILL.md"] {
 		t.Errorf("missing skill fallback (Agent Skills standard path), paths: %v", paths)
 	}

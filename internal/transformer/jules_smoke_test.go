@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"std-ai/internal/config"
-	"std-ai/internal/parser"
+	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/parser"
 )
 
 func TestJulesOutputs(t *testing.T) {
@@ -31,7 +31,7 @@ func TestJulesOutputs(t *testing.T) {
 		t.Errorf("nonRoot rule should be inlined into AGENTS.md:\n%s", main)
 	}
 	// glossary 注入
-	if !strings.Contains(main, "std-ai 类型速查") {
+	if !strings.Contains(main, "std-agent 类型速查") {
 		t.Errorf("glossary missing in AGENTS.md:\n%s", main)
 	}
 	// 不应存在 .jules/rules 下的独立 rule 文件（RulesDir=""，nonRoot 全 inline）

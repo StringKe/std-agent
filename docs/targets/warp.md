@@ -39,13 +39,13 @@ Warp Drive 全局 Rules 通过 GUI 创建管理，stdagent 不写入。
 
 Warp 不解析任何 frontmatter 字段，全部走纯文本指令。
 
-## 4. std-ai 四类映射
+## 4. std-agent 四类映射
 
-| std-ai 类型 | Warp 落点 | 加载方式 |
+| std-agent 类型 | Warp 落点 | 加载方式 |
 |---|---|---|
 | rules | 项目根 `AGENTS.md`（inline）；嵌套 root rule 写 `<NestedPath>/AGENTS.md` | 进入目录自动加载 |
 | skills | 降级为 `model_decision` rule（`SkillsAsRule=true`）；Warp 无原生 skill 概念 | 同上 |
-| commands | `.warp/rules/commands/<name>.md`（fallback，含 explainer + `std-ai-type: commands`） | 模型按 explainer 提示理解 |
+| commands | `.warp/rules/commands/<name>.md`（fallback，含 explainer + `std-agent-type: commands`） | 模型按 explainer 提示理解 |
 | references | `.warp/rules/references/<name>.md`（同上） | 同上 |
 | subagents | `.warp/rules/subagents/<name>.md`（同上） | 同上 |
 
@@ -58,18 +58,18 @@ fallback 文件靠根 `AGENTS.md` 中 manifest 段引用让模型可见。
 2. `NestedSupported=true`：嵌套 root rule（含 `NestedPath`）写到子目录 `AGENTS.md`，
    不带 manifest / glossary 头
 3. `SkillsAsRule=true`：skill 降级为 `trigger: model_decision` rule
-4. `InjectTypeGlossary=true`：根 `AGENTS.md` 头部注入 std-ai 类型速查段，
-   方便 Warp Agent 理解 `std-ai-type` 字段语义
+4. `InjectTypeGlossary=true`：根 `AGENTS.md` 头部注入 std-agent 类型速查段，
+   方便 Warp Agent 理解 `std-agent-type` 字段语义
 5. `FallbackDir=".warp/rules"`：其他 type 走 `BuildDegradedFileOp` 落到
    该目录下子目录（commands / references / subagents），frontmatter 含
-   `std-ai-type` + body 头含 explainer HTML 注释
+   `std-agent-type` + body 头含 explainer HTML 注释
 6. 不写入 `WARP.md`（旧路径），统一走 `AGENTS.md`（与 codex / cursor / antigravity
    共用根文件）
 7. 不写入 Warp Drive 全局 Rules（GUI-only，无文件系统接口）
 
 ## 6. 信息来源
 
-- /tmp/std-ai-protocol-research.md 第 27 行（调研日期 2026-05-17）
+- /tmp/std-agent-protocol-research.md 第 27 行（调研日期 2026-05-17）
 - https://warp.dev （主页）
 - https://docs.warp.dev/agent-mode/configuration （AGENTS.md 默认切换公告）
 
