@@ -65,7 +65,17 @@ type Document struct {
 	ArgumentHint           string
 	Model                  string
 	DisableModelInvocation bool
-	Body                   string
+	// UserInvocable 控制 skill / command 是否进 slash 菜单（Claude Code / Copilot /
+	// Factory / Grok 等 2026 起支持）。nil = 未设置（工具默认 true），指针区分显式 false。
+	UserInvocable *bool
+	// DisallowedTools 在 skill 活跃期间从工具池移除的工具（Claude Code skills），
+	// 或 subagent 的禁用工具（Claude Code subagent disallowedTools）。
+	DisallowedTools []string
+	// ReadOnly 限制 subagent 写权限（Cursor .cursor/agents readonly 字段）
+	ReadOnly bool
+	// Background 让 subagent 后台运行（Cursor is_background / Claude Code background）
+	Background bool
+	Body       string
 
 	// SKILL package 扩展字段（agentskills.io 标准 + Claude Code 私有扩展）
 	WhenToUse     string                 // Claude Code: 触发匹配补充

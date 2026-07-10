@@ -34,8 +34,12 @@ func (c *ContinueDev) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 // RuleTriggerMode=TriggerTrigger 与 windsurf 一致（continue 支持 globs + 推断
 // alwaysApply / model_decision / manual 语义）。
 var continueAdapter = protocol.Adapter{
-	Name:                 "continue-dev",
-	RulesDir:             ".continue/rules",
+	Name:     "continue-dev",
+	RulesDir: ".continue/rules",
+	// continue 不读嵌套 AGENTS.md，只认任意目录下固定文件名 rules.md 的
+	// colocated rule（continuedev/continue#6048）
+	NestedSupported:      true,
+	NestedFileName:       "rules.md",
 	SkillsDir:            ".continue/skills",
 	CommandsDir:          ".continue/prompts",
 	CommandsFileSuffix:   ".prompt.md",

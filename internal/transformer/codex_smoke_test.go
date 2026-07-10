@@ -40,9 +40,9 @@ func TestCodexAGENTSMd(t *testing.T) {
 	}
 }
 
-// TestCodexNoMemoriesOutput：防回归。codex plan 对任何 type 都不得再产
-// .codex/ 下的路径（项目级 .codex/ 是官方 Team Config 配置目录，
-// memories 是 ~/.codex/memories/ 用户级自动系统）。
+// TestCodexNoMemoriesOutput：防回归。codex plan 在 .codex/ 下只允许官方
+// 文档化的项目级配置面 .codex/agents/*.toml（developers.openai.com/codex/subagents）；
+// .codex/memories/ 等其他路径仍禁止（memories 是 ~/.codex/memories/ 用户级自动系统）。
 func TestCodexNoMemoriesOutput(t *testing.T) {
 	tr := &Codex{}
 	cfg := &config.Config{Inject: true, InjectWhatIs: false}
@@ -55,8 +55,8 @@ func TestCodexNoMemoriesOutput(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	for p := range pathSet(plan) {
-		if strings.HasPrefix(p, ".codex/") {
-			t.Errorf("codex plan must not write into .codex/ (official Team Config namespace), got %s", p)
+		if strings.HasPrefix(p, ".codex/") && !strings.HasPrefix(p, ".codex/agents/") {
+			t.Errorf("codex plan must not write into .codex/ outside agents/ (official Team Config namespace), got %s", p)
 		}
 	}
 }
@@ -160,5 +160,37 @@ func TestCodexAGENTSMdInlineWhenNoRoot(t *testing.T) {
 		if !strings.Contains(main, want) {
 			t.Errorf("missing %q in AGENTS.md:\n%s", want, main)
 		}
+	}
+}
+
+// TestCodexSubagentTOML 验证 subagents 追加 Codex 原生可消费的 .codex/agents/<n>.toml
+func TestCodexSubagentTOML(t *testing.T) {
+	tr := &Codex{}
+	cfg := &config.Config{Inject: true}
+	docs := []*parser.Document{
+		{Type: parser.TypeSubagents, Name: "reviewer", Description: "Review specialist", Model: "gpt-5.3-codex", Body: "Review carefully.", Path: "subagents/reviewer.md"},
+	}
+	plan, err := tr.Plan(docs, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, ok := contentOf(plan, ".codex/agents/reviewer.toml")
+	if !ok {
+		t.Fatalf("missing .codex/agents/reviewer.toml, paths: %v", pathSet(plan))
+	}
+	for _, want := range []string{
+		`name = "reviewer"`,
+		`description = "Review specialist"`,
+		`model = "gpt-5.3-codex"`,
+		"developer_instructions = '''",
+		"Review carefully.",
+	} {
+		if !strings.Contains(c, want) {
+			t.Errorf("missing %q in TOML:\n%s", want, c)
+		}
+	}
+	// 过渡期保留 Markdown 降级产物
+	if !pathSet(plan)[".agents/subagents/reviewer.md"] {
+		t.Errorf("transition markdown output should be kept, paths: %v", pathSet(plan))
 	}
 }

@@ -40,3 +40,24 @@ func TestContinueDevOutputs(t *testing.T) {
 		t.Errorf("prompt missing invokable: %s", prompt)
 	}
 }
+
+// TestContinueDevNestedRulesMd 验证嵌套目录说明写 <NestedPath>/rules.md
+// （continue 只认固定文件名 rules.md 的 colocated rule，不读嵌套 AGENTS.md）
+func TestContinueDevNestedRulesMd(t *testing.T) {
+	tr := &ContinueDev{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "web-root", NestedPath: "apps/web", Body: "web guidance"},
+	}
+	plan, _ := tr.Plan(docs, cfg)
+	c, ok := contentOf(plan, "apps/web/rules.md")
+	if !ok {
+		t.Fatalf("missing apps/web/rules.md, paths: %v", pathSet(plan))
+	}
+	if !strings.Contains(c, "web guidance") {
+		t.Errorf("nested body missing:\n%s", c)
+	}
+	if pathSet(plan)[".continue/rules/web-root.md"] {
+		t.Errorf("nested doc should not also land in .continue/rules, paths: %v", pathSet(plan))
+	}
+}

@@ -29,6 +29,10 @@ type rawFrontmatter struct {
 	ArgumentHint           string   `yaml:"argument_hint"`
 	Model                  string   `yaml:"model"`
 	DisableModelInvocation bool     `yaml:"disable_model_invocation"`
+	UserInvocable          *bool    `yaml:"user_invocable"`
+	DisallowedTools        []string `yaml:"disallowed_tools"`
+	ReadOnly               bool     `yaml:"readonly"`
+	Background             bool     `yaml:"background"`
 
 	// SKILL package 扩展字段
 	WhenToUse     string                 `yaml:"when_to_use"`
@@ -255,6 +259,10 @@ func Parse(path string, raw []byte) (*Document, error) {
 	doc.ArgumentHint = fm.ArgumentHint
 	doc.Model = fm.Model
 	doc.DisableModelInvocation = fm.DisableModelInvocation
+	doc.UserInvocable = fm.UserInvocable
+	doc.DisallowedTools = fm.DisallowedTools
+	doc.ReadOnly = fm.ReadOnly
+	doc.Background = fm.Background
 
 	// SKILL package 扩展字段
 	doc.WhenToUse = fm.WhenToUse

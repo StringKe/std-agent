@@ -211,9 +211,14 @@ func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
 	// 官方 skills frontmatter 字段是 allowed-tools（subagent 才叫 tools），
 	// 写错字段名会被 Claude Code 静默忽略。
 	fm.AddList("allowed-tools", d.AllowedTools)
+	fm.AddList("disallowed-tools", d.DisallowedTools)
 	fm.AddList("paths", transformerutil.EffectiveApplyTo(d, adapter.Name))
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
+	}
+	// user-invocable 默认 true，只有显式 false 才需要写出
+	if d.UserInvocable != nil && !*d.UserInvocable {
+		fm.AddBool("user-invocable", false)
 	}
 	// Agent Skills 标准字段
 	fm.Add("license", d.License)
@@ -226,30 +231,33 @@ func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
 
 // buildClaudeCommandFile 输出 .claude/commands/<name>.md
 //
-// frontmatter：description / argument-hint / allowed-tools / model。
+// 官方已把 commands 与 skills 的 frontmatter 合并（"support the same
+// frontmatter"），直接复用 skill 全字段集渲染，command 才能用上
+// when_to_use / disable-model-invocation / paths / context / agent / effort 等能力。
 func buildClaudeCommandFile(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
-	var fm transformerutil.FmBuilder
-	fm.Add("description", d.Description)
-	fm.Add("argument-hint", d.ArgumentHint)
-	fm.AddList("allowed-tools", d.AllowedTools)
-	fm.Add("model", d.Model)
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(claudeCommandsDir(adapter), d.Name, ".md"),
-		fm.String(), d.Body, opts,
+		renderClaudeSkillFrontmatter(d, adapter), d.Body, opts,
 	)
 }
 
 // buildClaudeSubagentFile 输出 .claude/agents/<name>.md
 //
 // Claude Code 原生支持 subagent 定义，frontmatter：name / description /
-// model / tools，body 是 subagent 的系统提示词。
+// model / tools / disallowedTools / background，body 是 subagent 的系统提示词。
+// （官方另有 permissionMode / maxTurns / skills / memory / isolation 等字段，
+// 源 schema 暂无对应概念，后续按需扩展。）
 func buildClaudeSubagentFile(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
 	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	fm.Add("description", d.Description)
 	fm.Add("model", d.Model)
 	fm.AddList("tools", d.AllowedTools)
+	fm.AddList("disallowedTools", d.DisallowedTools)
+	if d.Background {
+		fm.AddBool("background", true)
+	}
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(claudeSubagentsDir(adapter), d.Name, ".md"),

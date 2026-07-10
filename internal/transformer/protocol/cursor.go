@@ -3,6 +3,7 @@ package protocol
 import (
 	"encoding/json"
 	"path"
+	"strings"
 
 	"github.com/StringKe/std-agent/internal/config"
 	"github.com/StringKe/std-agent/internal/parser"
@@ -84,13 +85,19 @@ func (c Cursor) Plan(docs []*parser.Document, adapter Adapter, cfg *config.Confi
 
 // buildSubagent 生成 .cursor/agents/<name>.md（Cursor 原生 subagent）
 //
-// frontmatter：name / description / model（官方另支持 readonly / is_background，
-// 源 schema 暂无对应字段，后续扩展）。body 是 subagent 系统提示词。
+// frontmatter：name / description / model / readonly / is_background
+// （https://cursor.com/docs/subagents.md）。body 是 subagent 系统提示词。
 func (c Cursor) buildSubagent(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
 	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
 	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
 	fm.Add("model", d.Model)
+	if d.ReadOnly {
+		fm.AddBool("readonly", true)
+	}
+	if d.Background {
+		fm.AddBool("is_background", true)
+	}
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(adapter.SubagentsDir, d.Name, ".md"),
@@ -191,12 +198,5 @@ func (c Cursor) buildGlossary(adapter Adapter, cfg *config.Config) *writer.FileO
 // joinComma 把字符串 slice 用逗号拼接。
 // 不复用 transformerutil.CommaJoin 仅为本协议方言显式化，未来可能切换分隔符。
 func joinComma(items []string) string {
-	out := ""
-	for i, s := range items {
-		if i > 0 {
-			out += ","
-		}
-		out += s
-	}
-	return out
+	return strings.Join(items, ",")
 }

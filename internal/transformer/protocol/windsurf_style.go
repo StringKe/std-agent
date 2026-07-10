@@ -49,6 +49,13 @@ func (p WindsurfStyle) Plan(docs []*parser.Document, adapter Adapter, cfg *confi
 	transformerutil.SortDocs(subs)
 
 	for _, d := range rules {
+		// 嵌套目录说明文档：continue-dev 只认固定文件名 rules.md 的 colocated
+		// rule（continuedev/continue#6048），NestedFileName 配置后写
+		// <NestedPath>/<NestedFileName>（纯 body 无 trigger frontmatter）
+		if d.NestedPath != "" && adapter.NestedSupported && adapter.NestedFileName != "" {
+			plan.Files = append(plan.Files, p.buildNestedRule(d, adapter, cfg))
+			continue
+		}
 		plan.Files = append(plan.Files, p.buildRule(d, adapter, cfg))
 	}
 	for _, d := range skills {
@@ -68,6 +75,16 @@ func (p WindsurfStyle) Plan(docs []*parser.Document, adapter Adapter, cfg *confi
 		plan.Files = append(plan.Files, *g)
 	}
 	return plan, nil
+}
+
+// buildNestedRule 把嵌套目录说明文档写到 <NestedPath>/<NestedFileName>
+// （纯 body，无 trigger frontmatter 无 manifest，工具按目录 colocation 语义加载）
+func (p WindsurfStyle) buildNestedRule(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
+	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		path.Join(d.NestedPath, adapter.NestedFileName),
+		"", d.Body, opts,
+	)
 }
 
 // buildRule -> RulesDir/<name>.md，trigger frontmatter 由

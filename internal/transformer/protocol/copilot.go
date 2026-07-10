@@ -216,6 +216,14 @@ func buildCopilotSubagent(d *parser.Document, adapter Adapter, cfg *config.Confi
 	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
 	fm.AddList("tools", d.AllowedTools)
 	fm.Add("model", d.Model)
+	// 官方 .agent.md 扩展字段（GitHub.com custom agents 参考文档）：
+	// disable-model-invocation 取代已废弃的 infer；user-invocable 默认 true
+	if d.DisableModelInvocation {
+		fm.AddBool("disable-model-invocation", true)
+	}
+	if d.UserInvocable != nil && !*d.UserInvocable {
+		fm.AddBool("user-invocable", false)
+	}
 	if adapter.InjectStdaiTypeField && adapter.SubagentInvokeCmd != "" {
 		fm.Add("std-agent-type", string(parser.TypeSubagents))
 	}
