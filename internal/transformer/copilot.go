@@ -27,17 +27,22 @@ func (c *Copilot) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pla
 //   - .github/instructions/<n>.instructions.md（path-specific rules）
 //   - .github/prompts/<n>.prompt.md（slash commands）
 //   - .github/agents/<n>.agent.md（subagents 原生）
+//   - .github/skills/<n>/SKILL.md（Agent Skills，cloud agent / code review /
+//     CLI / VS Code 均已 GA，https://docs.github.com/en/copilot/concepts/agents/about-agent-skills）
 //   - .vscode/mcp.json（顶级键 servers，与 Claude 的 mcpServers 不同）
 //
 // instructions / prompts / agents 的特殊文件后缀由 CopilotProtocol 内部处理。
 var copilotAdapter = protocol.Adapter{
-	Name:                 "copilot",
-	RootFileName:         ".github/copilot-instructions.md",
-	ManifestSection:      "Reference Rules",
-	RulesDir:             ".github/instructions",
-	CommandsDir:          ".github/prompts",
-	SubagentsDir:         ".github/agents",
-	SkillsDir:            "", // fallback 到 instructions/skills/
+	Name:            "copilot",
+	RootFileName:    ".github/copilot-instructions.md",
+	ManifestSection: "Reference Rules",
+	RulesDir:        ".github/instructions",
+	CommandsDir:     ".github/prompts",
+	SubagentsDir:    ".github/agents",
+	SkillsDir:       ".github/skills",
+	// 官方 SKILL.md 字段：name（必填=目录名，≤64）/ description（必填，≤1024）/
+	// license / compatibility（≤500）/ metadata / allowed-tools（experimental）
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools"},
 	ReferencesDir:        "", // fallback 到 instructions/references/
 	FallbackDir:          ".github/instructions",
 	InjectExplainer:      true,

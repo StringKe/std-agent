@@ -29,15 +29,17 @@ func (a *Antigravity) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 
 // antigravityAdapter 配置 AgentsMD 协议族的 antigravity 变体
 //
-// v3 修订：SkillsAsRule=false。原 SkillsAsRule=true 会产 `.agents/rules/skill-<name>.md`
-// 含 std-agent 私有 `skill-` 前缀，违反 v3 "不造私有前缀，用子目录隔离" 原则。
-// 改走 BuildDegradedSkillPackage 标准 Agent Skills fallback：`.agents/rules/skills/<name>/SKILL.md`。
+// skills 原生 `.agents/skills/<n>/SKILL.md`（antigravity.google/docs/skills 确认
+// workspace 路径固定）。与 codex 共享同一落点，SkillSupportedFields 保持与 codex
+// 一致让两个 target 产出字节相同、writer 按 unchanged 去重（antigravity 官方
+// frontmatter 仅 name/description，多余的 Agent Skills 标准字段被忽略无害）。
 var antigravityAdapter = protocol.Adapter{
 	Name:                 "antigravity",
 	RootFileName:         "", // 复用 codex 写的根 AGENTS.md，不重复写
 	NestedSupported:      false,
 	RulesDir:             ".agents/rules",
-	SkillsAsRule:         false, // 走 fallback（v3 子目录隔离）
+	SkillsDir:            ".agents/skills",
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandsDir:          ".agents/workflows",
 	FallbackDir:          ".agents/rules",
 	InjectExplainer:      true,

@@ -38,10 +38,13 @@ func (a *AugmentCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 }
 
 // augmentCodeAdapter 配置 WindsurfStyle 协议族的 augment-code 变体
+//
+// skills 原生 .augment/skills/<n>/SKILL.md
+// （https://docs.augmentcode.com/using-augment/skills，Auto/Manual/Disabled 三态）。
 var augmentCodeAdapter = protocol.Adapter{
 	Name:                 "augment-code",
 	RulesDir:             ".augment/rules",
-	SkillsDir:            "", // 无原生 skills，fallback 走 Agent Skills 标准包
+	SkillsDir:            ".augment/skills",
 	CommandsDir:          ".augment/rules/workflows",
 	CommandsFileSuffix:   ".md",
 	SingleFileFallback:   ".augment-guidelines", // 老版兼容（v0.0.4 不主动产出）

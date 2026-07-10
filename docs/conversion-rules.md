@@ -13,7 +13,7 @@ Tier 1 9 列以保证可读性；Tier 2（continue-dev / antigravity）落点：
 |---|---|---|
 | rules（无 applyTo） | `.continue/rules/<n>.md` | `.agents/rules/<n>.md` (always_on) |
 | rules（有 applyTo） | `.continue/rules/<n>.md` (globs) | `.agents/rules/<n>.md` (glob+globs) |
-| skills | 降级 model_decision rule -> `.continue/rules/skill-<n>.md` | 降级 model_decision rule -> `.agents/rules/skill-<n>.md` |
+| skills | `.continue/skills/<n>/SKILL.md`（原生，continuedev/continue#9353） | `.agents/skills/<n>/SKILL.md`（原生，与 codex 共享落点） |
 | commands | `.continue/prompts/<n>.prompt.md` (invokable: true) | `.agents/workflows/<n>.md` |
 | references | rule 内嵌 / `docs:` 索引 | rule 正文 `@<file>` 引用 |
 | MCP | 跳过（config.yaml 用户级） | 跳过（用户级 mcp_config.json） |
@@ -26,8 +26,8 @@ Tier 1 9 列以保证可读性；Tier 2（continue-dev / antigravity）落点：
 |---|---|---|---|---|---|---|---|---|---|
 | **rules** (无 applyTo) | `.claude/rules/<n>.md` | 拼接到 `AGENTS.md` | `.cursor/rules/<n>.mdc` (Always/AgentReq) | `.github/copilot-instructions.md` 拼接 | `.windsurf/rules/<n>.md` (always_on) | 拼接到 `GEMINI.md` | `read:` 引用 `AGENTS.md` | `.clinerules/<NNN>-<n>.md` | `AGENTS.md` 复用 |
 | **rules** (有 applyTo) | `.claude/rules/<n>.md` (frontmatter applyTo) | `<sub>/AGENTS.md` | `.cursor/rules/<n>.mdc` (globs) | `.github/instructions/<n>.instructions.md` (applyTo) | `.windsurf/rules/<n>.md` (glob+globs) | `<sub>/GEMINI.md` | 同 rules | `.clinerules/<NNN>-<n>.md` (paths) | `AGENTS.md` 复用（applyTo 信息丢弃，OpenCode 无条件激活） |
-| **skills** | `.claude/skills/<n>/SKILL.md` | `.agents/skills/<n>/SKILL.md` | `.cursor/skills/<n>/SKILL.md` | `.github/agents/<n>.agent.md` | `.windsurf/skills/<n>/SKILL.md` | 降级为 commands `prompt` | 不支持（降级为 rules） | `.clinerules/workflows/<n>.md` | `.opencode/agents/<n>.md` |
-| **commands** | `.claude/commands/<n>.md` | `.agents/skills/cmd-<n>/SKILL.md`（降级 skill） | `.cursor/commands/<n>.md` | `.github/prompts/<n>.prompt.md` | `.windsurf/workflows/<n>.md` | `.gemini/commands/<n>.toml` | `--load` 启动脚本（v1.0 不生成） | `.clinerules/workflows/<n>.md` | `.opencode/commands/<n>.md` |
+| **skills** | `.claude/skills/<n>/SKILL.md` | `.agents/skills/<n>/SKILL.md` | `.cursor/skills/<n>/SKILL.md` | `.github/skills/<n>/SKILL.md`（2026 GA） | `.windsurf/skills/<n>/SKILL.md` | `.gemini/skills/<n>/SKILL.md`（GA 默认启用） | 不支持（降级为 rules） | `.clinerules/skills/<n>/SKILL.md`（官方备用扫描路径） | `.opencode/skills/<n>/SKILL.md` |
+| **commands** | `.claude/commands/<n>.md` | `.agents/skills/commands/<n>/SKILL.md`（降级 skill） | `.cursor/commands/<n>.md` | `.github/prompts/<n>.prompt.md` | `.windsurf/workflows/<n>.md` | `.gemini/commands/<n>.toml` | `--load` 启动脚本（v1.0 不生成） | `.clinerules/workflows/<n>.md` | `.opencode/commands/<n>.md` |
 | **references** | `@<path>` import | 不主动写 | 不主动写 | 不主动写 | 不主动写 | `@<path>` import | `read:` 引用 | `memory-bank/<file>.md`（命中 6 文件之一） | `@<path>` 变量替换 |
 
 ## 2. 主入口文件

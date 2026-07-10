@@ -18,8 +18,12 @@ func TestOpenCodeSkillsAndCommands(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	if !paths[".opencode/agents/review.md"] {
-		t.Errorf("missing agent file, paths: %v", paths)
+	// skills 原生 Agent Skills 标准包（官方 GA，旧的 mode: subagent 降级方案已废弃）
+	if !paths[".opencode/skills/review/SKILL.md"] {
+		t.Errorf("missing native skill package, paths: %v", paths)
+	}
+	if paths[".opencode/agents/review.md"] {
+		t.Errorf("stale skill-as-subagent output still produced, paths: %v", paths)
 	}
 	if !paths[".opencode/commands/deploy.md"] {
 		t.Errorf("missing command file, paths: %v", paths)
@@ -27,6 +31,15 @@ func TestOpenCodeSkillsAndCommands(t *testing.T) {
 	for p := range paths {
 		if strings.HasPrefix(p, "AGENTS") || strings.HasPrefix(p, ".opencode/rules") {
 			t.Errorf("opencode should not write rules, got %s", p)
+		}
+	}
+	// 原生 skill 不携带 mode: subagent frontmatter
+	if c, ok := contentOf(plan, ".opencode/skills/review/SKILL.md"); ok {
+		if strings.Contains(c, "mode: subagent") {
+			t.Errorf("native skill should not carry subagent frontmatter:\n%s", c)
+		}
+		if !strings.Contains(c, "name: review") {
+			t.Errorf("native skill missing Agent Skills frontmatter:\n%s", c)
 		}
 	}
 }

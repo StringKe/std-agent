@@ -26,18 +26,19 @@ func (o *OpenCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 // opencodeAdapter 配置 opencode 的协议族行为：
 //   - 不写根 AGENTS.md（RootFileName 为空，复用 codex 的根文件）
 //   - rules 不落盘（RulesDir 为空 + RootFileName 为空 -> rules 静默丢弃，由 codex AGENTS.md 承担）
-//   - skills 走 opencode 单文件 agent 形态（SkillsAsSubagent=true + permission 全 ask 保守安全）
-//   - commands 原生 markdown 到 .opencode/commands/
+//   - skills 原生 Agent Skills 标准包 .opencode/skills/<n>/SKILL.md（官方已 GA，
+//     旧的"skill 降级为 mode: subagent 单文件 agent"方案随之废弃）
+//   - commands 原生 markdown 到 .opencode/commands/（官方复数为主，单数向后兼容）
+//   - NestedSupported=false：opencode 会在 read 子目录文件时动态注入沿途
+//     AGENTS.md，但嵌套文件本身由 codex target 写入，这里不重复写
 var opencodeAdapter = protocol.Adapter{
-	Name:                     "opencode",
-	RootFileName:             "",
-	NestedSupported:          false,
-	RulesDir:                 "",
-	SkillsDir:                ".opencode/agents",
-	CommandsDir:              ".opencode/commands",
-	FallbackDir:              ".opencode", // references / subagents fallback 子目录隔离
-	InjectExplainer:          true,
-	InjectStdaiTypeField:     true,
-	SkillsAsSubagent:         true,
-	SkillsSubagentPermission: "{ edit: ask, bash: ask, read: allow, glob: allow, grep: allow, list: allow, task: ask, lsp: allow }",
+	Name:                 "opencode",
+	RootFileName:         "",
+	NestedSupported:      false,
+	RulesDir:             "",
+	SkillsDir:            ".opencode/skills",
+	CommandsDir:          ".opencode/commands",
+	FallbackDir:          ".opencode", // references / subagents fallback 子目录隔离
+	InjectExplainer:      true,
+	InjectStdaiTypeField: true,
 }

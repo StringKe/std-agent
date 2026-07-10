@@ -62,9 +62,15 @@ func (p Clinerules) Plan(docs []*parser.Document, adapter Adapter, cfg *config.C
 		plan.Files = append(plan.Files, p.buildWorkflow(d, adapter, cfg))
 	}
 
-	// skills fallback -> <RulesDir>/skills/<n>/SKILL.md
+	// skills：SkillsDir 非空走原生 Agent Skills 包（roo `.roo/skills/` /
+	// kilo `.kilo/skills/` 2026 起 GA）；为空走 fallback（cline `.clinerules/skills/`
+	// 是官方备用扫描路径，degraded 形式仍被消费）
 	for _, d := range skills {
-		plan.Files = append(plan.Files, BuildDegradedSkillPackage(d, adapter, cfg)...)
+		if adapter.SkillsDir != "" {
+			plan.Files = append(plan.Files, BuildNativeSkillPackage(d, adapter, cfg)...)
+		} else {
+			plan.Files = append(plan.Files, BuildDegradedSkillPackage(d, adapter, cfg)...)
+		}
 	}
 	// references fallback -> <RulesDir>/references/<n>.md
 	for _, d := range references {
@@ -120,15 +126,25 @@ func (p Clinerules) buildRuleFrontmatter(d *parser.Document, adapter Adapter) st
 }
 
 // buildWorkflow 写 workflow / command 文件
-// 路径：<RulesDir>/workflows/<name>.md
-// description 非空时 prepend 到 body 头
+//
+//   - CommandsDir 非空（roo `.roo/commands/` / kilo `.kilo/command/` 原生 slash
+//     commands）：<CommandsDir>/<name>.md，frontmatter 写 description / argument-hint
+//   - CommandsDir 为空（cline 无原生 commands）：<RulesDir>/workflows/<name>.md，
+//     description 非空时 prepend 到 body 头
 func (p Clinerules) buildWorkflow(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
+	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
+	if adapter.CommandsDir != "" {
+		var fm transformerutil.FmBuilder
+		fm.Add("description", d.Description)
+		fm.Add("argument-hint", d.ArgumentHint)
+		fullPath := transformerutil.FilePath(adapter.CommandsDir, d.Name, ".md")
+		return transformerutil.BuildMarkdownFile(fullPath, fm.String(), d.Body, opts)
+	}
 	body := d.Body
 	if d.Description != "" {
 		body = d.Description + "\n\n" + d.Body
 	}
 	fullPath := transformerutil.FilePath(path.Join(adapter.RulesDir, "workflows"), d.Name, ".md")
-	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(fullPath, "", body, opts)
 }
 

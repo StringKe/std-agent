@@ -8,12 +8,14 @@ import (
 	"github.com/StringKe/std-agent/internal/parser"
 )
 
-// TestRooCodeOutputs 验证 roo-code adapter 的 4 类 type 落点：
+// TestRooCodeOutputs 验证 roo-code adapter 的落点：
 //   - rules    -> .roo/rules/<name>.md（无数字前缀；ApplyTo 走 paths frontmatter list）
-//   - commands -> .roo/rules/workflows/<name>.md
-//   - skills   -> .roo/rules/skills/<name>/SKILL.md（Agent Skills 标准 fallback）
+//   - commands -> .roo/commands/<name>.md（原生 slash commands）
+//   - skills   -> .roo/skills/<name>/SKILL.md（原生 Agent Skills，2026-05 GA）
 //   - references / subagents -> .roo/rules/<sub>/<name>.md
 //
+// 注意：roo 不递归扫描 .roo/rules/ 子目录，skills / commands 必须走原生目录
+// 才会被消费；references / subagents 降级物本就不该自动加载，留子目录无害。
 // 关键断言：路径无 std-agent 私有前缀；rule 文件名不含 100/500/900 等 cline 数字前缀。
 func TestRooCodeOutputs(t *testing.T) {
 	tr := &RooCode{}
@@ -38,8 +40,8 @@ func TestRooCodeOutputs(t *testing.T) {
 	wantPaths := []string{
 		".roo/rules/style.md",
 		".roo/rules/always.md",
-		".roo/rules/workflows/release.md",
-		".roo/rules/skills/code-review/SKILL.md",
+		".roo/commands/release.md",
+		".roo/skills/code-review/SKILL.md",
 		".roo/rules/references/spec.md",
 		".roo/rules/subagents/qa.md",
 		".roo/rules/glossary.md",
@@ -47,6 +49,18 @@ func TestRooCodeOutputs(t *testing.T) {
 	for _, p := range wantPaths {
 		if !paths[p] {
 			t.Errorf("missing %s, paths: %v", p, paths)
+		}
+	}
+	// 不递归的 rules 子目录里不能再放 skills / workflows（roo 读不到）
+	for p := range paths {
+		if strings.HasPrefix(p, ".roo/rules/skills/") || strings.HasPrefix(p, ".roo/rules/workflows/") {
+			t.Errorf("dead path under non-recursive .roo/rules/: %s", p)
+		}
+	}
+	// 原生 command 带 frontmatter description
+	if c, ok := contentOf(plan, ".roo/commands/release.md"); ok {
+		if !strings.Contains(c, "description: Cut release") {
+			t.Errorf("native command missing description frontmatter:\n%s", c)
 		}
 	}
 
@@ -96,7 +110,7 @@ func TestRooCodeFallbackSubdirs(t *testing.T) {
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
 	for _, want := range []string{
-		".roo/rules/skills/foo/SKILL.md",
+		".roo/skills/foo/SKILL.md",
 		".roo/rules/references/foo.md",
 		".roo/rules/subagents/foo.md",
 	} {

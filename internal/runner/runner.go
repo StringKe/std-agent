@@ -257,7 +257,6 @@ func Sync(opts Options) (*Result, error) {
 			if sp := submoduleContaining(op.Path, submodulePaths); sp != "" {
 				op.Skip = true
 				op.Reason = fmt.Sprintf("WARN: refused write into submodule %q (run stdagent inside that submodule instead)", sp)
-				res.Warnings = append(res.Warnings, fmt.Sprintf("%s/%s: %s", name, op.Path, op.Reason))
 			}
 		}
 
@@ -268,16 +267,6 @@ func Sync(opts Options) (*Result, error) {
 			}
 			for _, msg := range budget.CheckRootFile(name, f.Path, len(f.Content)) {
 				res.Warnings = append(res.Warnings, "[budget] "+msg)
-			}
-		}
-
-		// 收集 transformer 标记的 WARN reason（如 copilot/opencode SkillFiles 被忽略）
-		for _, f := range plan.Files {
-			if f.Skip || f.Reason == "" {
-				continue
-			}
-			if strings.HasPrefix(f.Reason, "WARN") {
-				res.Warnings = append(res.Warnings, fmt.Sprintf("%s/%s: %s", name, f.Path, f.Reason))
 			}
 		}
 
@@ -299,12 +288,25 @@ func Sync(opts Options) (*Result, error) {
 		res.Written += written
 		res.Skipped += skipped
 
+		// 统一收集 WARN reason（transformer 标记的、submodule 边界的、以及
+		// Apply 阶段产生的如 JSONMerge 解析失败）。放在 Apply 之后才能拿全。
+		for _, f := range plan.Files {
+			if strings.HasPrefix(f.Reason, "WARN") {
+				res.Warnings = append(res.Warnings, fmt.Sprintf("%s/%s: %s", name, f.Path, f.Reason))
+			}
+		}
+
 		// current = 本次 plan 中"应当存在于磁盘"的 path 集合：
 		// 包含未 skip 的（写入）+ Reason=="unchanged" 的（内容一致）。
 		// 排除 transformer / submodule 标的 WARN skip（这些 path 不在我们管理范围）。
 		current := make(map[string]struct{}, len(plan.Files))
 		for _, f := range plan.Files {
 			if !f.Skip || f.Reason == "unchanged" {
+				current[f.Path] = struct{}{}
+			}
+			// JSONMerge 目标（crush.json / kilo.jsonc）是用户配置文件，即使本次
+			// 因 JSONC 解析失败被 WARN skip 也永远不能进 prune 名单
+			if f.JSONMerge {
 				current[f.Path] = struct{}{}
 			}
 		}

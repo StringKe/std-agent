@@ -34,22 +34,25 @@ func (g *GrokBuild) Plan(docs []*parser.Document, cfg *config.Config) (*writer.P
 //
 //   - 主指令 AGENTS.md（多层 walk 叠加，无 frontmatter）
 //   - SkillsDir=".grok/skills"（Agent Skills 标准，SKILL.md 大写）
-//   - CommandsDir 空：项目级无独立 commands，user-invocable skill 自动暴露为 /<name> slash
-//   - ReferencesDir 空：无原生 references 概念，走 fallback 子目录
-//   - SubagentsDir 空：plugins 内 agents/ 才是 subagents 路径，项目级无独立路径
+//   - commands 降级为 .grok/skills/commands/<n>/SKILL.md：项目级无独立 commands
+//     目录，user-invocable skill 自动暴露为 /<name> slash
+//   - FallbackDir=".grok/docs"（不能用 .grok/rules——那是 Grok 每 session 全量
+//     加载的原生 rules 目录，把 references / subagents 降级物放进去等于把低频
+//     参考资料永久注入 context，https://docs.x.ai/build/features/project-rules）
 var grokBuildAdapter = protocol.Adapter{
-	Name:                 "grok-build",
-	RootFileName:         "AGENTS.md",
-	ManifestSection:      "Reference Rules",
-	NestedSupported:      true,
-	RulesDir:             "",
-	SkillsDir:            ".grok/skills",
-	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools", "disable-model-invocation"},
-	CommandsDir:          "",
-	ReferencesDir:        "",
-	SubagentsDir:         "",
-	FallbackDir:          ".grok/rules",
-	InjectExplainer:      true,
-	InjectStdaiTypeField: true,
-	InjectTypeGlossary:   true,
+	Name:                  "grok-build",
+	RootFileName:          "AGENTS.md",
+	ManifestSection:       "Reference Rules",
+	NestedSupported:       true,
+	RulesDir:              "",
+	SkillsDir:             ".grok/skills",
+	SkillSupportedFields:  []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools", "disable-model-invocation"},
+	CommandFormat:         protocol.CommandSkillPrefix,
+	CommandsAsSkillSubdir: "commands",
+	ReferencesDir:         "",
+	SubagentsDir:          "",
+	FallbackDir:           ".grok/docs",
+	InjectExplainer:       true,
+	InjectStdaiTypeField:  true,
+	InjectTypeGlossary:    true,
 }

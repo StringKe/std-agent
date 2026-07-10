@@ -109,10 +109,10 @@ func TestWarpFallbacks(t *testing.T) {
 	}
 }
 
-// TestWarpSkillFallback 验证 SkillsAsRule=false 时 skill 走 Agent Skills 标准 fallback
-// （warp 无原生 skills 子目录，fallback 到 .warp/rules/skills/<name>/SKILL.md，
-// 避免落到仓库根的 skill-<name>.md 污染）
-func TestWarpSkillFallback(t *testing.T) {
+// TestWarpNativeSkill 验证 skill 走 Warp 原生推荐路径 .agents/skills/<name>/SKILL.md
+// （https://docs.warp.dev/agent-platform/capabilities/skills/，与 codex 共享落点，
+// 内容字节一致由 writer unchanged 去重）
+func TestWarpNativeSkill(t *testing.T) {
 	tr := &Warp{}
 	cfg := &config.Config{Inject: false}
 	docs := []*parser.Document{
@@ -122,11 +122,14 @@ func TestWarpSkillFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("plan err: %v", err)
 	}
-	c, ok := contentOf(plan, ".warp/rules/skills/review/SKILL.md")
+	c, ok := contentOf(plan, ".agents/skills/review/SKILL.md")
 	if !ok {
-		t.Fatalf("missing skill fallback output, paths=%v", pathSet(plan))
+		t.Fatalf("missing native skill output, paths=%v", pathSet(plan))
 	}
 	if !strings.Contains(c, "Code review skill") {
 		t.Errorf("skill description should be preserved:\n%s", c)
+	}
+	if paths := pathSet(plan); paths[".warp/rules/skills/review/SKILL.md"] {
+		t.Errorf("stale degraded skill path still produced: %v", paths)
 	}
 }

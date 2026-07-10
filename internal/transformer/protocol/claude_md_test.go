@@ -241,7 +241,7 @@ func TestClaudeMD_SkillPrivateFields(t *testing.T) {
 		"context: fork",
 		"agent: reviewer",
 		"shell: bash",
-		"tools:",
+		"allowed-tools:",
 		"  - Read",
 		"  - Grep",
 		"paths:",

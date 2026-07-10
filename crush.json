@@ -1,0 +1,7 @@
+{
+  "options": {
+    "skills_paths": [
+      ".crush/skills"
+    ]
+  }
+}

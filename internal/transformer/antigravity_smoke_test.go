@@ -44,11 +44,33 @@ func TestAntigravityWorkflowAndSkill(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	// v3：skill 走 Agent Skills 标准 fallback（子目录隔离，无 std-agent 私有前缀）
-	if !paths[".agents/rules/skills/review/SKILL.md"] {
-		t.Errorf("missing skill fallback (Agent Skills standard path), paths: %v", paths)
+	// skills 原生 .agents/skills/（antigravity.google/docs/skills，workspace 固定路径）
+	if !paths[".agents/skills/review/SKILL.md"] {
+		t.Errorf("missing native skill path, paths: %v", paths)
+	}
+	if paths[".agents/rules/skills/review/SKILL.md"] {
+		t.Errorf("stale degraded skill path still produced, paths: %v", paths)
 	}
 	if !paths[".agents/workflows/deploy.md"] {
 		t.Errorf("missing workflow, paths: %v", paths)
+	}
+}
+
+// TestAntigravityCodexSkillByteIdentical 保证 antigravity 与 codex 对同一 skill
+// 产出字节一致（共享 .agents/skills/ 落点，writer unchanged 去重）。
+func TestAntigravityCodexSkillByteIdentical(t *testing.T) {
+	cfg := &config.Config{Inject: true, InjectWhatIs: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeSkills, Name: "review", Description: "Review", WhenToUse: "on review", Body: "steps"},
+	}
+	agPlan, _ := (&Antigravity{}).Plan(docs, cfg)
+	codexPlan, _ := (&Codex{}).Plan(docs, cfg)
+	a, aok := contentOf(agPlan, ".agents/skills/review/SKILL.md")
+	c, cok := contentOf(codexPlan, ".agents/skills/review/SKILL.md")
+	if !aok || !cok {
+		t.Fatalf("both targets must produce the shared skill (antigravity=%v codex=%v)", aok, cok)
+	}
+	if a != c {
+		t.Errorf("antigravity and codex output differ for shared path:\nantigravity:\n%s\ncodex:\n%s", a, c)
 	}
 }

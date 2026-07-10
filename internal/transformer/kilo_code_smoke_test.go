@@ -8,10 +8,10 @@ import (
 	"github.com/StringKe/std-agent/internal/parser"
 )
 
-// TestKiloCodeOutputs 验证 kilo-code adapter 的 4 类 type 落点：
-//   - rules    -> .kilo/rules/<name>.md（无数字前缀）
-//   - commands -> .kilo/rules/workflows/<name>.md
-//   - skills   -> .kilo/rules/skills/<n>/SKILL.md（Agent Skills 标准 fallback）
+// TestKiloCodeOutputs 验证 kilo-code adapter 的落点：
+//   - rules    -> .kilo/rules/<name>.md（无数字前缀）+ kilo.jsonc instructions 注册
+//   - commands -> .kilo/command/<name>.md（新平台单数目录）
+//   - skills   -> .kilo/skills/<n>/SKILL.md（原生 Agent Skills）
 //   - references / subagents -> .kilo/rules/<sub>/<name>.md
 //
 // 关键断言：路径无 std-agent 私有前缀；rule 文件名不含 100/500/900 等 cline 数字前缀。
@@ -37,15 +37,29 @@ func TestKiloCodeOutputs(t *testing.T) {
 	wantPaths := []string{
 		".kilo/rules/style.md",
 		".kilo/rules/always.md",
-		".kilo/rules/workflows/release.md",
-		".kilo/rules/skills/code-review/SKILL.md",
+		".kilo/command/release.md",
+		".kilo/skills/code-review/SKILL.md",
 		".kilo/rules/references/spec.md",
 		".kilo/rules/subagents/qa.md",
 		".kilo/rules/glossary.md",
+		"kilo.jsonc",
 	}
 	for _, p := range wantPaths {
 		if !paths[p] {
 			t.Errorf("missing %s, paths: %v", p, paths)
+		}
+	}
+
+	// kilo.jsonc 注册 op：JSONMerge + instructions glob（.kilo/rules/ 不被自动
+	// 扫描，必须显式注册才会加载）
+	for _, f := range plan.Files {
+		if f.Path == "kilo.jsonc" {
+			if !f.JSONMerge {
+				t.Error("kilo.jsonc op must be JSONMerge to avoid clobbering user config")
+			}
+			if !strings.Contains(string(f.Content), `.kilo/rules/*.md`) {
+				t.Errorf("kilo.jsonc fragment missing instructions glob: %s", f.Content)
+			}
 		}
 	}
 
@@ -83,7 +97,7 @@ func TestKiloCodeFallbackSubdirs(t *testing.T) {
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
 	for _, want := range []string{
-		".kilo/rules/skills/foo/SKILL.md",
+		".kilo/skills/foo/SKILL.md",
 		".kilo/rules/references/foo.md",
 		".kilo/rules/subagents/foo.md",
 	} {

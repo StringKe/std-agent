@@ -31,13 +31,18 @@ func (r *RooCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pla
 // rooCodeAdapter 注入 Clinerules 协议族（spec v3 §2.4）
 //
 // 与 cline 的差异：
-//   - RulesDir `.roo/rules` 而非 `.clinerules`
+//   - RulesDir `.roo/rules` 而非 `.clinerules`。注意 roo 不递归扫描 rules 子目录
+//     （只读顶层 .md），skills / commands 必须走各自原生目录
+//   - SkillsDir `.roo/skills`（2026-05-15 GA，https://docs.roocode.com/features/skills）
+//   - CommandsDir `.roo/commands`（原生 slash commands，frontmatter
+//     description / argument-hint，https://roocodeinc.github.io/Roo-Code/features/slash-commands/）
 //   - SingleFileFallback `.roorules`（cline 是 `.clinerules`）
 //   - RulePrefix=nil：roo-code 走子目录组织，无 100/500/900 数字前缀
 var rooCodeAdapter = protocol.Adapter{
 	Name:                 "roo-code",
 	RulesDir:             ".roo/rules",
-	CommandsDir:          ".roo/rules/workflows",
+	SkillsDir:            ".roo/skills",
+	CommandsDir:          ".roo/commands",
 	SingleFileFallback:   ".roorules", // 向后兼容老 roo 项目
 	FallbackDir:          ".roo/rules",
 	GlobsFieldName:       "paths",

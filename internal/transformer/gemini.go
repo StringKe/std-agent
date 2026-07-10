@@ -51,14 +51,16 @@ func (g *Gemini) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan
 
 // geminiAdapter 描述 Gemini 的根文件协议族行为。
 //
-// 仅渲染 GEMINI.md（无原生 rules / skills / references / subagents 子目录），
-// 多余的 doc 类型走 FallbackDir `.gemini/rules` 兜底。commands 不归 protocol
-// 处理（在 Plan 里提前剥离），所以这里 CommandsDir 留空、InjectCommandsToRoot
-// 也保持 false。
+// 渲染 GEMINI.md + 原生 skills（.gemini/skills/<n>/SKILL.md，v0.38+ GA 默认启用，
+// https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md）。
+// references / subagents 走 FallbackDir `.gemini/rules` 兜底。commands 不归
+// protocol 处理（在 Plan 里提前剥离 TOML 渲染），所以这里 CommandsDir 留空、
+// InjectCommandsToRoot 也保持 false。
 var geminiAdapter = protocol.Adapter{
 	Name:                 "gemini",
 	RootFileName:         "GEMINI.md",
 	NestedSupported:      true,
+	SkillsDir:            ".gemini/skills",
 	FallbackDir:          ".gemini/rules",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,

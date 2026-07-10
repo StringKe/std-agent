@@ -230,7 +230,9 @@ codex = { enabled = true, convert = true }
 	}
 }
 
-func TestSyncCollectsCopilotWARN(t *testing.T) {
+// TestSyncCopilotNativeSkill 验证 copilot skills 走原生 .github/skills/ 包
+// （Agent Skills 已 GA，历史的 .instructions.md 降级 + WARN 行为已移除）。
+func TestSyncCopilotNativeSkill(t *testing.T) {
 	tmp := t.TempDir()
 	stdai := filepath.Join(tmp, ".stdai")
 	mustMkdir(t, filepath.Join(stdai, "standards/skills/foo/scripts"))
@@ -241,7 +243,7 @@ description: Test
 ---
 body
 `)
-	mustWrite(t, filepath.Join(stdai, "standards/skills/foo/scripts/x.sh"), "#!/bin/sh")
+	mustWrite(t, filepath.Join(stdai, "standards/skills/foo/scripts/x.md"), "aux file")
 	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
 inject = false
 backup = false
@@ -259,15 +261,64 @@ copilot = { enabled = true, convert = true }
 	if err != nil {
 		t.Fatal(err)
 	}
-	found := false
 	for _, w := range res.Warnings {
 		if strings.Contains(w, "copilot") && strings.Contains(w, "WARN") {
+			t.Errorf("copilot native skills should not WARN, got %v", res.Warnings)
+		}
+	}
+	if _, serr := os.Stat(filepath.Join(tmp, ".github/skills/foo/SKILL.md")); serr != nil {
+		t.Errorf("expected native .github/skills/foo/SKILL.md: %v", serr)
+	}
+	if _, serr := os.Stat(filepath.Join(tmp, ".github/skills/foo/scripts/x.md")); serr != nil {
+		t.Errorf("expected skill aux file fan-out: %v", serr)
+	}
+}
+
+// TestSyncCollectsJSONMergeWARN 验证 Apply 阶段产生的 WARN（kilo.jsonc 为 JSONC
+// 无法解析时跳过合并）会被 runner 收集，且用户文件不被改动、不被 prune。
+func TestSyncCollectsJSONMergeWARN(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/style.md"), `---
+type: rules
+name: style
+description: Style
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+kilo-code = { enabled = true, convert = true }
+`)
+	userConfig := "{\n  // user comment survives\n  \"instructions\": []\n}"
+	mustWrite(t, filepath.Join(tmp, "kilo.jsonc"), userConfig)
+
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, w := range res.Warnings {
+		if strings.Contains(w, "kilo.jsonc") && strings.Contains(w, "WARN") {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected copilot WARN in res.Warnings, got %v", res.Warnings)
+		t.Errorf("expected kilo.jsonc JSONMerge WARN in res.Warnings, got %v", res.Warnings)
+	}
+	after, _ := os.ReadFile(filepath.Join(tmp, "kilo.jsonc")) //nolint:gosec
+	if string(after) != userConfig {
+		t.Errorf("user kilo.jsonc must stay untouched, got:\n%s", after)
 	}
 }
 

@@ -32,17 +32,22 @@ func (q *QwenCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 
 // qwenCodeAdapter 描述 Qwen Code 的根文件协议族行为。
 //
-// 与 gemini-cli adapter 区别：commands 走原生 markdown（不是 TOML），
-// 因此 CommandsDir 直接生效，无需 transformer 自定义 buildCommandTOML。
-// skills / references / subagents 全部走 fallback 到 .qwen/rules/ 子目录。
+// 与 gemini-cli adapter 区别：commands 走原生 markdown（不是 TOML）；
+// `.qwen/rules/` 是原生 RulesDir（源码 loadRules，支持 frontmatter paths
+// 条件规则，https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/memory.md），
+// nonRoot rules 落独立文件而非全量 inline QWEN.md；skills 原生
+// `.qwen/skills/<n>/SKILL.md`。references / subagents 走 fallback。
 var qwenCodeAdapter = protocol.Adapter{
 	Name:                 "qwen-code",
 	RootFileName:         "QWEN.md",
 	ManifestSection:      "Reference Rules",
 	NestedSupported:      true,
-	RulesDir:             "", // 与 gemini-cli 同源，无子目录 rules，全 inline 到 QWEN.md
+	RulesDir:             ".qwen/rules",
+	GlobsFieldName:       "paths",
+	GlobsFieldFormat:     protocol.GlobsList,
+	SupportsDescription:  true,
 	CommandsDir:          ".qwen/commands",
-	SkillsAsRule:         false, // RulesDir 为空时 SkillsAsRule 会把 skill 写到仓库根（与 amp 同理），改走 BuildDegradedSkillPackage -> .qwen/rules/skills/<name>/SKILL.md
+	SkillsDir:            ".qwen/skills",
 	ReferencesDir:        "",
 	SubagentsDir:         "",
 	FallbackDir:          ".qwen/rules",

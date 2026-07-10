@@ -32,9 +32,9 @@ func (w *Warp) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan, 
 //   - RootFileName=AGENTS.md（warp 2026-01 起默认）
 //   - NestedSupported=true（嵌套子目录 AGENTS.md 自动叠加）
 //   - RulesDir 空 -> nonRoot rules inline 进根 AGENTS.md（amp / warp 共享风格）
-//   - SkillsAsRule=false（RulesDir="" 时 SkillsAsRule=true 会让 skill 落到仓库根
-//     skill-<name>.md，污染 repo 根；用 BuildDegradedSkillPackage 走 .warp/rules/skills/
-//     Agent Skills 标准路径，与 amp / jules / qwen / grok 同模式）
+//   - SkillsDir=".agents/skills"：Warp 原生 Skills 推荐路径
+//     （https://docs.warp.dev/agent-platform/capabilities/skills/），与 codex / amp
+//     共享落点，SkillSupportedFields 同集保证字节一致由 writer 去重
 //   - 其他 type 全部 fallback 到 .warp/rules/<subdir>/<name>.md
 var warpAdapter = protocol.Adapter{
 	Name:                 "warp",
@@ -42,7 +42,8 @@ var warpAdapter = protocol.Adapter{
 	ManifestSection:      "Reference Rules",
 	NestedSupported:      true,
 	RulesDir:             "",
-	SkillsAsRule:         false,
+	SkillsDir:            ".agents/skills",
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandsDir:          "",
 	ReferencesDir:        "",
 	SubagentsDir:         "",

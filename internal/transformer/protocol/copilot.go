@@ -21,9 +21,13 @@ import (
 //   - .github/agents/<n>.agent.md（subagents 原生）
 //   - .vscode/mcp.json（顶级键 `servers`，与 Claude 的 mcpServers 不同）
 //
+// skills：Copilot Agent Skills 已 GA（cloud agent / code review / CLI / VS Code），
+// SkillsDir 非空时输出原生 .github/skills/<n>/SKILL.md 标准包。
+//
 // graceful degradation：
-//   - skills / references 不原生支持，落到 .github/instructions/skills|references/<n>.instructions.md
+//   - references 不原生支持，落到 .github/instructions/references/<n>.instructions.md
 //     （保留 .instructions.md 特殊后缀；frontmatter alwaysApply=false / std-agent-type=<type>）
+//   - SkillsDir 为空时 skills 同走 .instructions.md 降级（历史行为）
 //   - SubagentInvokeCmd 非空时 subagent 走 CLI 调用降级（body 含 shell 调用指引）
 type Copilot struct{}
 
@@ -75,7 +79,11 @@ func (Copilot) Plan(docs []*parser.Document, adapter Adapter, cfg *config.Config
 		plan.Files = append(plan.Files, buildCopilotSubagent(d, adapter, cfg))
 	}
 	for _, d := range skills {
-		plan.Files = append(plan.Files, buildCopilotFallbackInstruction(d, adapter, cfg))
+		if adapter.SkillsDir != "" {
+			plan.Files = append(plan.Files, BuildNativeSkillPackage(d, adapter, cfg)...)
+		} else {
+			plan.Files = append(plan.Files, buildCopilotFallbackInstruction(d, adapter, cfg))
+		}
 	}
 	for _, d := range references {
 		plan.Files = append(plan.Files, buildCopilotFallbackInstruction(d, adapter, cfg))

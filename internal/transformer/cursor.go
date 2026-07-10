@@ -21,10 +21,13 @@ func (c *Cursor) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan
 }
 
 var cursorAdapter = protocol.Adapter{
-	Name:                 "cursor",
-	RulesDir:             ".cursor/rules",
-	SkillsDir:            ".cursor/skills",
-	CommandsDir:          ".cursor/commands",
+	Name:        "cursor",
+	RulesDir:    ".cursor/rules",
+	SkillsDir:   ".cursor/skills",
+	CommandsDir: ".cursor/commands",
+	// Cursor 原生 subagents（https://cursor.com/docs/subagents.md），
+	// 兼容读取 .claude/agents/ 与 .codex/agents/，.cursor/ 优先级最高
+	SubagentsDir:         ".cursor/agents",
 	FallbackDir:          ".cursor/rules",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,

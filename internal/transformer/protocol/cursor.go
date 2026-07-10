@@ -16,9 +16,12 @@ import (
 // .cursor/skills/<name>/SKILL.md） / commands（.cursor/commands/<name>.md） /
 // MCP（.cursor/mcp.json 顶层 mcpServers）。
 //
+// subagents：Cursor 已原生支持 .cursor/agents/<name>.md（frontmatter name /
+// description / model，另有 readonly / is_background 可选字段），SubagentsDir
+// 非空时走原生落点，为空时降级到 .cursor/rules/subagents/<name>.md。
+//
 // 不原生支持的 type 走 graceful degradation：
-//   - references -> .cursor/skills/<name>/SKILL.md（Agent Skills 标准 + frontmatter std-agent-type: references）
-//   - subagents -> .cursor/rules/subagents/<name>.md（子目录隔离 + frontmatter std-agent-type: subagents）
+//   - references -> .cursor/rules/references/<name>.md（子目录隔离 + frontmatter std-agent-type: references）
 //
 // 方言要点（与 ClaudeMD / AgentsMD 不同）：
 //   - 文件后缀 .mdc（不是 .md）—rules 类专属
@@ -68,11 +71,31 @@ func (c Cursor) Plan(docs []*parser.Document, adapter Adapter, cfg *config.Confi
 	for _, d := range references {
 		plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
 	}
-	// subagents：cursor 无原生 subagent，走路径降级（.cursor/rules/subagents/<name>.md）
+	// subagents：SubagentsDir 非空走原生 .cursor/agents/<name>.md，否则路径降级
 	for _, d := range subagents {
-		plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
+		if adapter.SubagentsDir != "" {
+			plan.Files = append(plan.Files, c.buildSubagent(d, adapter, cfg))
+		} else {
+			plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
+		}
 	}
 	return plan, nil
+}
+
+// buildSubagent 生成 .cursor/agents/<name>.md（Cursor 原生 subagent）
+//
+// frontmatter：name / description / model（官方另支持 readonly / is_background，
+// 源 schema 暂无对应字段，后续扩展）。body 是 subagent 系统提示词。
+func (c Cursor) buildSubagent(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
+	var fm transformerutil.FmBuilder
+	fm.Add("name", d.Name)
+	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
+	fm.Add("model", d.Model)
+	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(adapter.SubagentsDir, d.Name, ".md"),
+		fm.String(), d.Body, opts,
+	)
 }
 
 // buildMCPJSON 生成 .cursor/mcp.json，顶层键固定 mcpServers

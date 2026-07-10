@@ -18,16 +18,18 @@ func TestContinueDevOutputs(t *testing.T) {
 	}
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
-	// 迁移到 WindsurfStyle 协议后，skills 不再降级为 skill-<name>.md，
-	// 改走 Agent Skills 标准 fallback：.continue/rules/skills/<name>/SKILL.md
+	// skills 原生 .continue/skills/<name>/SKILL.md（continuedev/continue#9353 GA）
 	for _, want := range []string{
 		".continue/rules/ts-style.md",
-		".continue/rules/skills/review/SKILL.md",
+		".continue/skills/review/SKILL.md",
 		".continue/prompts/explain.prompt.md",
 	} {
 		if !paths[want] {
 			t.Errorf("missing %s, paths: %v", want, paths)
 		}
+	}
+	if paths[".continue/rules/skills/review/SKILL.md"] {
+		t.Errorf("stale degraded skill path still produced, paths: %v", paths)
 	}
 	rule, _ := contentOf(plan, ".continue/rules/ts-style.md")
 	if !strings.Contains(rule, "globs:") || !strings.Contains(rule, "**/*.ts") {

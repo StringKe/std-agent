@@ -25,8 +25,8 @@ func (c *ContinueDev) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 // continueAdapter 配置 WindsurfStyle 协议族的 continue-dev 变体。
 //
 // 与 windsurf 差异：
-//   - 无原生 skills -> SkillsDir 留空，SkillsAsRule=false 走 Agent Skills 标准 fallback
-//     落到 .continue/rules/skills/<name>/SKILL.md
+//   - skills 原生 .continue/skills/<name>/SKILL.md（VS Code/JetBrains + CLI 双端 GA，
+//     https://github.com/continuedev/continue/pull/9353）
 //   - commands 走 .continue/prompts/<name>.prompt.md，frontmatter 含
 //     name/description/version/invokable=true
 //   - 无根文件（continue-dev 主入口就是 .continue/rules/ 多文件）
@@ -36,7 +36,7 @@ func (c *ContinueDev) Plan(docs []*parser.Document, cfg *config.Config) (*writer
 var continueAdapter = protocol.Adapter{
 	Name:                 "continue-dev",
 	RulesDir:             ".continue/rules",
-	SkillsDir:            "", // 无原生 skills，走 BuildDegradedSkillPackage
+	SkillsDir:            ".continue/skills",
 	CommandsDir:          ".continue/prompts",
 	CommandsFileSuffix:   ".prompt.md",
 	CommandFrontmatter:   []string{"name", "description", "version", "invokable"},

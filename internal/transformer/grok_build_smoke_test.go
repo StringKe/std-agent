@@ -45,15 +45,22 @@ func TestGrokBuildFallbackPaths(t *testing.T) {
 		t.Fatalf("Plan: %v", err)
 	}
 	paths := pathSet(plan)
-	// xAI 官方 SkillsDir=.grok/skills（Agent Skills 标准）；其他 type 无原生 -> fallback
+	// skills 原生 .grok/skills；commands 降级为 user-invocable skill；
+	// references / subagents 落 .grok/docs（不能进 .grok/rules——那是 Grok
+	// 每 session 全量加载的原生 rules 目录，放低频参考资料会永久污染 context）
 	for _, want := range []string{
-		".grok/skills/code-review/SKILL.md", // 原生 SkillsDir
-		".grok/rules/commands/deploy.md",
-		".grok/rules/references/api-spec.md",
-		".grok/rules/subagents/reviewer.md",
+		".grok/skills/code-review/SKILL.md",
+		".grok/skills/commands/deploy/SKILL.md",
+		".grok/docs/references/api-spec.md",
+		".grok/docs/subagents/reviewer.md",
 	} {
 		if !paths[want] {
-			t.Errorf("missing fallback path %s, paths: %v", want, paths)
+			t.Errorf("missing path %s, paths: %v", want, paths)
+		}
+	}
+	for p := range paths {
+		if strings.HasPrefix(p, ".grok/rules/") {
+			t.Errorf("degraded output must stay out of session-loaded .grok/rules/: %s", p)
 		}
 	}
 }

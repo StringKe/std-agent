@@ -74,9 +74,27 @@ transformer 在 Plan 内要先按 Root / NestedPath 分流，再按 Type 分发�
 |---|---|---|---|---|---|
 | rules (Root) | CLAUDE.md（含 manifest） | AGENTS.md | （写入 .cursor/rules/<n>.mdc + 在根文件） | .github/copilot-instructions.md | .windsurf/rules/<n>.md |
 | rules（非 Root） | .claude/rules/<n>.md | 全文 inline 到 AGENTS.md（.codex/memories 已废弃，撞官方语义） | .cursor/rules/<n>.mdc | .github/instructions/<n>.instructions.md（applyTo 转 frontmatter） | .windsurf/rules/<n>.md |
-| skills | .claude/skills/<n>/SKILL.md + 子目录 | .agents/skills/<n>/SKILL.md | .cursor/skills/<n>/SKILL.md | WARN（不支持） | .windsurf/skills/<n>/SKILL.md |
+| skills | .claude/skills/<n>/SKILL.md + 子目录（frontmatter 工具字段是 allowed-tools，不是 tools） | .agents/skills/<n>/SKILL.md | .cursor/skills/<n>/SKILL.md | .github/skills/<n>/SKILL.md（2026 GA） | .windsurf/skills/<n>/SKILL.md |
 | commands | .claude/commands/<n>.md | .agents/skills/commands/<n>/SKILL.md（降级 skill） | .cursor/commands/<n>.md | .github/prompts/<n>.prompt.md | .windsurf/workflows/<n>.md |
-| subagents | .claude/agents/<n>.md | .agents/subagents/<n>.md（降级） | （nope） | .github/agents/<n>.agent.md | （nope） |
+| subagents | .claude/agents/<n>.md | .agents/subagents/<n>.md（降级） | .cursor/agents/<n>.md（原生） | .github/agents/<n>.agent.md | （nope） |
+
+2026-07 规范对齐后的其他关键落点（详见 docs/sdlc/2026-07-10/spec-refresh/spec.md）：
+
+- Agent Skills 原生目录已全行业铺开：gemini `.gemini/skills/`、qwen `.qwen/skills/`、
+  roo `.roo/skills/`、kilo `.kilo/skills/`、opencode `.opencode/skills/`、
+  continue `.continue/skills/`、augment `.augment/skills/`；amp / warp / antigravity
+  与 codex 共享 `.agents/skills/`（SkillSupportedFields 同集保证字节一致，writer
+  unchanged 去重）。降级 skill 子目录方案只剩 cline / pi / jules 等仍在用。
+- amp 官方已移除自定义 commands（并入 skills），与 codex 相同降级为
+  `.agents/skills/commands/<n>/SKILL.md`；grok-build 同模式走 `.grok/skills/commands/`。
+- roo 原生 commands `.roo/commands/<n>.md`；kilo 原生 `.kilo/command/<n>.md`（单数）+
+  kilo.jsonc `instructions[]` 由 JSONMerge op 注册（`.kilo/rules/` 不被自动扫描）。
+- crush 项目级 skills 必须写进 crush.json `options.skills_paths`（JSONMerge op）；
+  crush 无嵌套发现，NestedSupported=false。
+- grok-build 的 references / subagents 降级物放 `.grok/docs/`——`.grok/rules/`
+  是每 session 全量加载目录，放低频资料会污染 context。
+- qwen `.qwen/rules/` 是原生 RulesDir（支持 paths 条件规则），nonRoot rules 不再
+  inline 进 QWEN.md。
 
 完整矩阵：`docs/conversion-rules.md`。frontmatter 字段方言：`docs/format-spec.md`。
 

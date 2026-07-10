@@ -32,6 +32,17 @@ func (w *Writer) Apply(plan *Plan) (written, skipped int, err error) {
 			continue
 		}
 		exist, _ := os.ReadFile(full) //nolint:gosec
+		if op.JSONMerge {
+			merged, mErr := MergeJSON(exist, op.Content)
+			if mErr != nil {
+				// 目标不是合法 JSON（如 JSONC 注释），跳过而不是破坏用户配置
+				op.Skip = true
+				op.Reason = fmt.Sprintf("WARN: %s 无法解析为 JSON（%v），请手动合并以下片段: %s", op.Path, mErr, op.Content)
+				skipped++
+				continue
+			}
+			op.Content = merged
+		}
 		if len(exist) > 0 && bytes.Equal(exist, op.Content) {
 			op.Skip = true
 			op.Reason = "unchanged"

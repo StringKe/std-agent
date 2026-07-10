@@ -29,7 +29,9 @@ func (f *Factory) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pla
 //
 //   - SubagentsDir = `.factory/droids`（factory 把 subagents 叫 droids）
 //   - GlobsFieldName = ""（factory rules 无 glob 支持，frontmatter 跳过 applyTo）
-//   - CommandsDir / ReferencesDir 留空 -> 走 graceful degradation 到 FallbackDir
+//   - CommandsDir = `.factory/commands`（官方已把 commands 并入 skills，legacy
+//     commands 目录仍被消费，https://docs.factory.ai/cli/configuration/custom-slash-commands）
+//   - ReferencesDir 留空 -> 走 graceful degradation 到 FallbackDir
 var factoryAdapter = protocol.Adapter{
 	Name:                 "factory",
 	RootFileName:         "AGENTS.md",
@@ -38,7 +40,7 @@ var factoryAdapter = protocol.Adapter{
 	RulesDir:             ".factory/rules",
 	SkillsDir:            ".factory/skills",
 	SubagentsDir:         ".factory/droids",
-	CommandsDir:          "",
+	CommandsDir:          ".factory/commands",
 	ReferencesDir:        "",
 	FallbackDir:          ".factory/rules",
 	InjectExplainer:      true,

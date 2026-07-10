@@ -26,9 +26,6 @@ import "github.com/StringKe/std-agent/internal/parser"
 //   - SoftBytes=0 -> 不做 SOFT WARN 检查
 //   - InjectTypeGlossary=false -> 根文件不注入 std-agent 类型速查段
 //   - CommandsFileSuffix="" -> 默认 ".md"
-//   - SkillsAsSubagent=false -> skill 走标准 Agent Skills 包 / fallback；true 时
-//     输出扁平 <SkillsDir>/<name>.md 含 mode: subagent frontmatter（opencode 风格）
-//   - SkillsSubagentPermission="" -> SkillsAsSubagent=true 时不渲染 permission 字段
 type Adapter struct {
 	Name string
 
@@ -68,13 +65,6 @@ type Adapter struct {
 	SkillSupportedFields []string
 	SkillsAsRule         bool
 	SkillsAsCmd          bool
-	// SkillsAsSubagent=true：skill 输出为 <SkillsDir>/<name>.md 扁平文件，
-	// frontmatter 含 mode: subagent + description + model + permission（opencode 风格）。
-	// 检测到 d.SkillFiles 非空时 op.Reason 加 WARN（单文件不支持 SKILL package 子目录）。
-	SkillsAsSubagent bool
-	// SkillsSubagentPermission 是 SkillsAsSubagent=true 时写入 frontmatter 的 permission YAML inline。
-	// 为空时不渲染 permission 字段。opencode v1.0 简化为全 ask（保守安全）。
-	SkillsSubagentPermission string
 
 	// Commands
 	CommandFormat        CommandFormat

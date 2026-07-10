@@ -44,7 +44,7 @@ func TestAmpOutputs(t *testing.T) {
 	}
 }
 
-func TestAmpFallback(t *testing.T) {
+func TestAmpNativeSkillsAndFallback(t *testing.T) {
 	tr := &Amp{}
 	cfg := &config.Config{Inject: false}
 	docs := []*parser.Document{
@@ -58,15 +58,58 @@ func TestAmpFallback(t *testing.T) {
 		t.Fatal(err)
 	}
 	paths := pathSet(plan)
+	// skills 原生 .agents/skills/（与 codex 共享落点）；commands 官方已移除并入
+	// skills，同 codex 降级为 .agents/skills/commands/<n>/SKILL.md
 	wants := []string{
-		".amp/rules/skills/review/SKILL.md",
-		".amp/rules/commands/deploy.md",
+		".agents/skills/review/SKILL.md",
+		".agents/skills/commands/deploy/SKILL.md",
 		".amp/rules/references/api.md",
 		".amp/rules/subagents/tester.md",
 	}
 	for _, w := range wants {
 		if !paths[w] {
 			t.Errorf("missing %s in plan: %v", w, paths)
+		}
+	}
+	// 旧降级路径不应再产出
+	for p := range paths {
+		if strings.HasPrefix(p, ".amp/rules/skills/") || strings.HasPrefix(p, ".amp/rules/commands/") {
+			t.Errorf("stale degraded path still produced: %s", p)
+		}
+	}
+	// skill 原生包不含 degraded 标记
+	if c, ok := contentOf(plan, ".agents/skills/review/SKILL.md"); ok {
+		if strings.Contains(c, "std-agent degraded") || strings.Contains(c, "std-agent-type") {
+			t.Errorf("native skill should not carry degraded markers:\n%s", c)
+		}
+	}
+}
+
+// TestAmpCodexSkillByteIdentical 保证 amp 与 codex 对同一 skill / command 产出
+// 字节一致——两个 target 共享 .agents/skills/ 落点，靠 writer unchanged 去重，
+// 内容不一致会导致每次 sync 互相改写（flip-flop）。
+func TestAmpCodexSkillByteIdentical(t *testing.T) {
+	cfg := &config.Config{Inject: true, InjectWhatIs: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeSkills, Name: "review", Description: "Review code", WhenToUse: "on review", Body: "skill body"},
+		{Type: parser.TypeCommands, Name: "deploy", Description: "Deploy", Body: "deploy body"},
+	}
+	ampPlan, err := (&Amp{}).Plan(docs, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	codexPlan, err := (&Codex{}).Plan(docs, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{".agents/skills/review/SKILL.md", ".agents/skills/commands/deploy/SKILL.md"} {
+		a, aok := contentOf(ampPlan, p)
+		c, cok := contentOf(codexPlan, p)
+		if !aok || !cok {
+			t.Fatalf("both targets must produce %s (amp=%v codex=%v)", p, aok, cok)
+		}
+		if a != c {
+			t.Errorf("amp and codex output differ for shared path %s:\namp:\n%s\ncodex:\n%s", p, a, c)
 		}
 	}
 }

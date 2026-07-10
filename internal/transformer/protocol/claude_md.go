@@ -208,7 +208,9 @@ func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
 	fm.Add("context", d.SkillContext)
 	fm.Add("agent", d.Agent)
 	fm.Add("shell", d.Shell)
-	fm.AddList("tools", d.AllowedTools)
+	// 官方 skills frontmatter 字段是 allowed-tools（subagent 才叫 tools），
+	// 写错字段名会被 Claude Code 静默忽略。
+	fm.AddList("allowed-tools", d.AllowedTools)
 	fm.AddList("paths", transformerutil.EffectiveApplyTo(d, adapter.Name))
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)

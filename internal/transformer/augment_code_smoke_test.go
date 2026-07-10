@@ -50,9 +50,12 @@ func TestAugmentCodeFallback(t *testing.T) {
 	plan, _ := tr.Plan(docs, cfg)
 	paths := pathSet(plan)
 
-	// skills 走 Agent Skills 标准 fallback：<RulesDir>/skills/<name>/SKILL.md
-	if !paths[".augment/rules/skills/review/SKILL.md"] {
-		t.Errorf("missing skills fallback, paths: %v", paths)
+	// skills 原生 .augment/skills/<name>/SKILL.md（官方 GA）
+	if !paths[".augment/skills/review/SKILL.md"] {
+		t.Errorf("missing native skill, paths: %v", paths)
+	}
+	if paths[".augment/rules/skills/review/SKILL.md"] {
+		t.Errorf("stale degraded skill path still produced, paths: %v", paths)
 	}
 	// references 走 <RulesDir>/references/<name>.md
 	if !paths[".augment/rules/references/api-ref.md"] {

@@ -245,100 +245,17 @@ func (p AgentsMD) buildRuleFile(d *parser.Document, a Adapter, cfg *config.Confi
 
 // planSkill 输出单条 skill。
 //
-//   - SkillsAsRule=true：skill 降级为 rule 文件（antigravity 系）
-//   - SkillsAsSubagent=true + SkillsDir 非空：skill 输出扁平 <SkillsDir>/<name>.md
-//     含 mode: subagent frontmatter（opencode 系；SkillFiles 非空时 WARN）
+//   - SkillsAsRule=true：skill 降级为 rule 文件
 //   - SkillsDir 非空：原生 Agent Skills 标准 <SkillsDir>/<name>/SKILL.md
 //   - SkillsDir 为空：graceful degradation -> BuildDegradedSkillPackage
 func (p AgentsMD) planSkill(d *parser.Document, a Adapter, cfg *config.Config) []writer.FileOp {
 	if a.SkillsAsRule {
 		return []writer.FileOp{p.buildSkillAsRule(d, a, cfg)}
 	}
-	if a.SkillsAsSubagent && a.SkillsDir != "" {
-		return []writer.FileOp{p.buildSkillAsSubagent(d, a, cfg)}
-	}
 	if a.SkillsDir != "" {
-		return p.buildSkillPackage(d, a, cfg)
+		return BuildNativeSkillPackage(d, a, cfg)
 	}
 	return BuildDegradedSkillPackage(d, a, cfg)
-}
-
-// buildSkillAsSubagent 把 skill 输出为扁平 <SkillsDir>/<name>.md 文件
-// （opencode 风格：mode: subagent + description + model + permission）。
-//
-// SkillFiles 非空时单文件 agent 无法承载子目录辅助文件，op.Reason 加 WARN，
-// runner 收集后输出到 stderr 提示用户。
-func (p AgentsMD) buildSkillAsSubagent(d *parser.Document, a Adapter, cfg *config.Config) writer.FileOp {
-	var fm transformerutil.FmBuilder
-	fm.Add("mode", "subagent")
-	fm.Add("description", transformerutil.MergeDescription(d.Description, d.WhenToUse))
-	fm.Add("model", d.Model)
-	if a.SkillsSubagentPermission != "" {
-		fm.AddRaw("permission", a.SkillsSubagentPermission)
-	}
-	opts := transformerutil.MakeOpts(cfg, a.Name, d.Path, false)
-	op := transformerutil.BuildMarkdownFile(
-		transformerutil.FilePath(a.SkillsDir, d.Name, ".md"),
-		fm.String(), d.Body, opts,
-	)
-	if len(d.SkillFiles) > 0 {
-		op.Reason = fmt.Sprintf("WARN: %d SKILL package 辅助文件被忽略，%s skill 是单文件不支持子目录（参考 docs/spec.md 4.5 降级链）", len(d.SkillFiles), a.Name)
-	}
-	return op
-}
-
-// buildSkillPackage 在 SkillsDir 下输出 Agent Skills 标准包。
-// 受 adapter.SkillSupportedFields 白名单约束渲染 frontmatter；为空时取默认字段集。
-func (p AgentsMD) buildSkillPackage(d *parser.Document, a Adapter, cfg *config.Config) []writer.FileOp {
-	skillDir := transformerutil.SkillDir(a.SkillsDir, d.Name)
-	fm := buildSkillFrontmatter(d, a)
-	opts := transformerutil.MakeOpts(cfg, a.Name, d.Path, false)
-	skillMd := transformerutil.BuildMarkdownFile(skillDir+"/SKILL.md", fm, d.Body, opts)
-	return transformerutil.BuildSkillPackage(skillDir, skillMd, d.SkillFiles)
-}
-
-// buildSkillFrontmatter 按 SkillSupportedFields 白名单生成 frontmatter
-//
-// 空白名单 -> 默认 Agent Skills 标准字段集（name / description / license /
-// compatibility / metadata）。白名单非空时仅渲染白名单字段。
-func buildSkillFrontmatter(d *parser.Document, a Adapter) string {
-	allowed := a.SkillSupportedFields
-	if len(allowed) == 0 {
-		allowed = []string{"name", "description", "license", "compatibility", "metadata"}
-	}
-	in := func(k string) bool {
-		for _, v := range allowed {
-			if v == k {
-				return true
-			}
-		}
-		return false
-	}
-	var fm transformerutil.FmBuilder
-	if in("name") {
-		fm.Add("name", d.Name)
-	}
-	if in("description") {
-		// 不支持 when_to_use 的 target 把 when_to_use 拼到 description 末尾
-		desc := d.Description
-		if !in("when_to_use") {
-			desc = transformerutil.MergeDescription(d.Description, d.WhenToUse)
-		}
-		fm.Add("description", desc)
-	}
-	if in("when_to_use") {
-		fm.Add("when_to_use", d.WhenToUse)
-	}
-	if in("license") {
-		fm.Add("license", d.License)
-	}
-	if in("compatibility") {
-		fm.Add("compatibility", d.Compatibility)
-	}
-	if in("metadata") {
-		fm.AddMap("metadata", d.Metadata)
-	}
-	return fm.String()
 }
 
 // buildSkillAsRule 把 skill 降级为 model_decision rule（antigravity）
