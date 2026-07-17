@@ -17,7 +17,7 @@
 
 # std-agent
 
-`stdagent` 是一个轻量纯 Go CLI 工具：把项目的 AI 配置维护在单一 `.stdai/` 目录里，再扩散到 22 个 AI CLI 工具的原生格式（`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.windsurf/rules/` 等）。本仓库是它的源码仓，同时用 stdagent 管理自己的 AI 助手规则（自举）。
+`stdagent` 是一个轻量纯 Go CLI 工具：把项目的 AI 配置维护在单一 `.stdai/` 目录里，再扩散到 23 个 AI CLI 工具的原生格式（`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.windsurf/rules/` 等）。本仓库是它的源码仓，同时用 stdagent 管理自己的 AI 助手规则（自举）。
 
 ## 模块结构
 
@@ -28,7 +28,7 @@ internal/
 ├── config/                  config.toml 加载
 ├── parser/                  .md 源文件 + frontmatter 解析
 ├── source/                  本地 + git 源采集 + .stdaiignore
-├── transformer/             22 个 target 各自的转换实现
+├── transformer/             23 个 target 各自的转换实现
 ├── writer/                  原子写盘 + plan + backup
 ├── runner/                  Sync 编排器
 ├── state/                   state.json 持久化
@@ -50,7 +50,7 @@ docs/                        spec / architecture / 各 target 调研
 
 1. **已推送分支禁止改写历史**。所有 amend / rebase / reset --hard + force-push 行为只允许在本人独占的 WIP 分支。修补已推送的 commit 用追加新 commit + fast-forward push。
 2. **改 transformer / runner / writer 必带 `_test.go`**。新增 target 至少要有 plan + 关键 fanout 测试，破坏性变更要补充防回归用例。
-3. **frontmatter / target 字段不要乱删改**，参考 `docs/conversion-rules.md` 和 `docs/format-spec.md` 的字段映射矩阵，每条改动都可能影响 22 个 target。
+3. **frontmatter / target 字段不要乱删改**，参考 `docs/conversion-rules.md` 和 `docs/format-spec.md` 的字段映射矩阵，每条改动都可能影响 23 个 target。
 4. **AI 配置维护流程**：所有规则源在 `.stdai/standards/`。改了规则一定要跑 `stdagent sync` 让产物刷新（CLAUDE.md / AGENTS.md / .claude/rules/ 等），sync 默认会 prune 上次写过但本次不再产出的孤儿文件。
 5. **不要手改 stdagent 生成的根文件**（`CLAUDE.md` / `AGENTS.md` 等）；改源 `.stdai/standards/root.md` 或具体 rule 后跑 sync。
 

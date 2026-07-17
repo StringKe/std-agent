@@ -82,8 +82,8 @@ transformer 在 Plan 内要先按 Root / NestedPath 分流，再按 Type 分发�
 
 - Agent Skills 原生目录已全行业铺开：gemini `.gemini/skills/`、qwen `.qwen/skills/`、
   roo `.roo/skills/`、kilo `.kilo/skills/`、opencode `.opencode/skills/`、
-  continue `.continue/skills/`、augment `.augment/skills/`；amp / warp / antigravity
-  与 codex 共享 `.agents/skills/`（SkillSupportedFields 同集保证字节一致，writer
+  continue `.continue/skills/`、augment `.augment/skills/`；amp / warp / antigravity /
+  kimi-code 与 codex 共享 `.agents/skills/`（SkillSupportedFields 同集保证字节一致，writer
   unchanged 去重）。降级 skill 子目录方案只剩 cline / pi / jules 等仍在用。
 - amp 官方已移除自定义 commands（并入 skills），与 codex 相同降级为
   `.agents/skills/commands/<n>/SKILL.md`；grok-build 同模式走 `.grok/skills/commands/`。

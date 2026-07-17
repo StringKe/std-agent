@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent：22 個 AI CLI 工具的唯一事實來源](docs/assets/hero.png)
+![std-agent：23 個 AI CLI 工具的唯一事實來源](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` 是一個輕量的純 Go CLI 工具。它把專案的 AI 設定維護在單一的 `.stdai/` 目錄中作為唯一事實來源，再擴散到 **22 個 AI CLI 工具**，各工具的原生檔案格式、frontmatter 方言與各種限制都已經替你處理好。
+`stdagent` 是一個輕量的純 Go CLI 工具。它把專案的 AI 設定維護在單一的 `.stdai/` 目錄中作為唯一事實來源，再擴散到 **23 個 AI CLI 工具**，各工具的原生檔案格式、frontmatter 方言與各種限制都已經替你處理好。
 
 不要再手動維護 `CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/`、`.windsurf/rules/`、`.clinerules/`、`.github/copilot-instructions.md` 等檔案了。改一次，處處生效。
 
 ## 為什麼選 std-agent
 
 - **單一來源**：用 YAML frontmatter + Markdown 一次性寫好 `rules` / `skills` / `commands` / `references` / `subagents`。
-- **二十二個目標**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build。
+- **二十三個目標**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code。
 - **規格精確**：每個輸出路徑、frontmatter 方言、體積上限都對照各工具的官方文件核實過（最近一次全面審查：2026-07）；凡是原生支援 Agent Skills 目錄的工具，都直接落在原生目錄下。
 - **零鎖定**：writer 只碰觸一小份路徑白名單；每次 sync 前自動備份；`clean` 一鍵還原所有改動。
 - **drift 偵測**：`status` 顯示被外部修改過的檔案，`fix` 重新套用來源檔案。
@@ -48,7 +48,7 @@
 | Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2（8 個）
+### Tier 2（9 個）
 
 | 目標 | 主要輸出 |
 |---|---|
@@ -60,6 +60,7 @@
 | Augment Code | `.augment/{rules,skills}/` |
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
+| Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
 
 每個整合的詳細說明都在 [docs/targets/](docs/targets/) 下。
 
@@ -267,7 +268,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## 文件
 
-- **[docs/spec.md](docs/spec.md)**：完整規格，std-agent 標準 + 22 個工具的差異 + 轉換策略
+- **[docs/spec.md](docs/spec.md)**：完整規格，std-agent 標準 + 23 個工具的差異 + 轉換策略
 - [docs/prd.md](docs/prd.md)：產品需求
 - [docs/architecture.md](docs/architecture.md)：模組佈局與資料流
 - [docs/commands.md](docs/commands.md)：CLI 命令參考

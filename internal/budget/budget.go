@@ -46,6 +46,7 @@ var Limits = []Limit{
 
 	// target 硬上限（语义见 Note）
 	{"codex", "agents-md-total", 0, 32768, "codex project_doc_max_bytes 默认 32768：root->cwd 整条链（含嵌套 AGENTS.md）累计字节，超限后按链序整文件停止追加（链尾先丢）；该值是 config.toml 可调默认值而非硬上限"},
+	{"kimi-code", "agents-md-total", 0, 32768, "Kimi Code AGENTS.md 层级发现 32KiB 预算：项目根到 cwd 逐级合并，leaf-first 分配（超限祖先层先丢）"},
 	{"cursor", "rule", 80000, 100000, "Cursor 单 rule 文件 100000 字符上限（服务端下发，可能变动），超限截断并提示；>80000 接近上限"},
 	{"windsurf", "rule", 0, 12000, "Windsurf workspace rule 单文件上限 12000 字符（per-file 非总量）；超限行为官方未定义，legacy .windsurfrules 实测为截断"},
 	{"windsurf", "global-rules", 0, 6000, "Windsurf global_rules.md 上限 6000 字符"},
@@ -61,6 +62,7 @@ var Limits = []Limit{
 	{"claude-code", "root-file", 8000, 0, "CLAUDE.md 每次 session 启动整体加载且官方明确全量不截断（无硬上限，软指导 under 200 lines）；> 8k 字符（~2k tokens）建议把详细规则拆到非 root rule，用 @import 按需加载"},
 	{"codex", "root-file", 8000, 32768, "AGENTS.md 由 codex 启动整体加载；project_doc_max_bytes 默认 32768（链累计口径、可调），codex rules 全文 inline 到 AGENTS.md，> 8k（~2k tokens）建议精简规则或对低优先级 rule 关闭 codex target"},
 	{"cursor", "root-file", 80000, 100000, "Cursor 把 AGENTS.md / CLAUDE.md 按单 rule 同一 100000 字符上限处理，超限截断（限额服务端下发可能变动）"},
+	{"kimi-code", "root-file", 8000, 32768, "AGENTS.md 由 Kimi Code 层级发现加载，全链 32KiB 预算（leaf-first），kimi-code rules 全文 inline 到 AGENTS.md，> 8k（~2k tokens）建议精简规则或对低优先级 rule 关闭 kimi-code target"},
 	{"gemini", "root-file", 8000, 0, "GEMINI.md 由 Gemini CLI 启动加载到 system prompt，官方无字节上限文档；> 8k 字符建议精简根文件，把详细规则拆到非 root rule"},
 	{"copilot", "root-file", 8000, 0, "copilot-instructions.md 无硬性字符上限（历史截断规则已于 2026-06-12 移除）；官方软指导不超过约 2 页，> 8k 建议精简"},
 }

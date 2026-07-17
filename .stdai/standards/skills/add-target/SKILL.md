@@ -82,7 +82,7 @@ mise run build
 ls -la .<new-name>/   # 或对应的根文件
 ```
 
-## 已实现的 22 个 target（参考实现深度）
+## 已实现的 23 个 target（参考实现深度）
 
 | target | 实现复杂度 | 参考 |
 |---|---|---|

@@ -4,12 +4,12 @@
 
 ## stdagent 在做什么
 
-stdagent 是一个**给 AI 用的发布器**。AI（你）负责把项目的"规则知识"整理成结构化的源文件，stdagent 负责把这些源文件**机械地**扩散到 22 个 AI CLI 工具的原生格式（CLAUDE.md / AGENTS.md / .cursor/rules/ 等）。
+stdagent 是一个**给 AI 用的发布器**。AI（你）负责把项目的"规则知识"整理成结构化的源文件，stdagent 负责把这些源文件**机械地**扩散到 23 个 AI CLI 工具的原生格式（CLAUDE.md / AGENTS.md / .cursor/rules/ 等）。
 
-支持的 22 个 target 分两梯队：
+支持的 23 个 target 分两梯队：
 
 - **Tier 1（14 个）**：claude-code / codex / cursor / copilot / windsurf / gemini / aider / cline / opencode / roo-code / crush / amp / warp / factory
-- **Tier 2（8 个）**：continue-dev / antigravity / qwen-code / pi / kilo-code / augment-code / jules / grok-build
+- **Tier 2（9 个）**：continue-dev / antigravity / qwen-code / pi / kilo-code / augment-code / jules / grok-build / kimi-code
 
 **Graceful degradation（v0.0.4+）**：当某个 target 不原生支持某 std-agent type（如 codex 没有 skills、绝大多数 target 没有 references），stdagent 自动 fallback 到子目录隔离路径（如 `<RulesDir>/skills/<name>/SKILL.md`），并加 frontmatter `std-agent-type: <type>` + HTML 注释说明，无 std-agent-private 前缀。AI 可以照常读写源，不必关心 target 的能力差异。
 

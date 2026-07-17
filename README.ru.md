@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: единый источник истины для 22 AI CLI инструментов](docs/assets/hero.png)
+![std-agent: единый источник истины для 23 AI CLI инструментов](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` -- это лёгкий CLI-инструмент на чистом Go. Он хранит одну директорию `.stdai/` как единый источник истины для AI-конфигурации проекта, а затем раскладывает её по **22 AI CLI инструментам**, беря на себя все нативные форматы файлов, диалекты frontmatter и особенности каждого инструмента.
+`stdagent` -- это лёгкий CLI-инструмент на чистом Go. Он хранит одну директорию `.stdai/` как единый источник истины для AI-конфигурации проекта, а затем раскладывает её по **23 AI CLI инструментам**, беря на себя все нативные форматы файлов, диалекты frontmatter и особенности каждого инструмента.
 
 Перестаньте вручную поддерживать `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md` и так далее. Пишите один раз -- синхронизируется везде.
 
 ## Почему std-agent?
 
 - **Единый источник** -- пишите `rules` / `skills` / `commands` / `references` / `subagents` один раз в YAML frontmatter + Markdown.
-- **Двадцать две цели** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build.
+- **Двадцать три цели** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
 - **Точное соответствие спецификациям** -- каждый выходной путь, диалект frontmatter и лимит размера проверяются по официальной документации инструментов (последний полный аудит: 2026-07); нативные директории Agent Skills используются везде, где они существуют.
 - **Без вендор-лока** -- writer трогает только небольшой белый список путей; перед каждой синхронизацией делается бэкап; `clean` откатывает всё.
 - **Обнаружение дрифта** -- `status` показывает файлы, изменённые вне stdagent; `fix` восстанавливает их из источника.
@@ -48,7 +48,7 @@
 | Warp | `AGENTS.md` (инлайн + вложенный) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (8)
+### Tier 2 (9)
 
 | Цель | Основные выходы |
 |---|---|
@@ -60,6 +60,7 @@
 | Augment Code | `.augment/{rules,skills}/` |
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
+| Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
 
 Каждая интеграция описана в [docs/targets/](docs/targets/).
 
@@ -267,7 +268,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Документация
 
-- **[docs/spec.md](docs/spec.md)** -- полная спецификация: стандарт std-agent + различия 22 инструментов + стратегия конвертации
+- **[docs/spec.md](docs/spec.md)** -- полная спецификация: стандарт std-agent + различия 23 инструментов + стратегия конвертации
 - [docs/prd.md](docs/prd.md) -- требования к продукту
 - [docs/architecture.md](docs/architecture.md) -- модульная структура и потоки данных
 - [docs/commands.md](docs/commands.md) -- справочник CLI

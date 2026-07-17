@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: 22 個の AI CLI ツールのための唯一の信頼できる情報源](docs/assets/hero.png)
+![std-agent: 23 個の AI CLI ツールのための唯一の信頼できる情報源](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` は軽量な純 Go 製 CLI ツールです。プロジェクトの AI 設定を単一の `.stdai/` ディレクトリに唯一の信頼できる情報源として集約し、**22 個の AI CLI ツール**へ展開します。各ツールのネイティブなファイル形式、frontmatter 方言、固有の制約はすべて代わりに処理します。
+`stdagent` は軽量な純 Go 製 CLI ツールです。プロジェクトの AI 設定を単一の `.stdai/` ディレクトリに唯一の信頼できる情報源として集約し、**23 個の AI CLI ツール**へ展開します。各ツールのネイティブなファイル形式、frontmatter 方言、固有の制約はすべて代わりに処理します。
 
 `CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/`、`.windsurf/rules/`、`.clinerules/`、`.github/copilot-instructions.md` などを手作業で維持するのはもうやめましょう。一度書けば、どこでも反映されます。
 
 ## なぜ std-agent なのか
 
 - **単一の情報源**：`rules` / `skills` / `commands` / `references` / `subagents` を YAML frontmatter + Markdown で一度だけ記述します。
-- **22 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build。
+- **23 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code。
 - **仕様に忠実**：すべての出力パス、frontmatter 方言、サイズ上限は各ツールの公式ドキュメントと照合済みです（直近の全面調査：2026-07）。ネイティブの Agent Skills ディレクトリが存在する場合は、そちらを使用します。
 - **ロックインなし**：writer はごく小さなパスのホワイトリストにしか触れません。sync ごとに自動バックアップ、`clean` で全て元に戻せます。
 - **drift 検出**：`status` が外部から変更されたファイルを表示し、`fix` でソースを再適用します。
@@ -48,7 +48,7 @@
 | Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2（8 個）
+### Tier 2（9 個）
 
 | ターゲット | 主な出力 |
 |---|---|
@@ -60,6 +60,7 @@
 | Augment Code | `.augment/{rules,skills}/` |
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
+| Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
 
 各統合の詳細は [docs/targets/](docs/targets/) にあります。
 
@@ -267,7 +268,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## ドキュメント
 
-- **[docs/spec.md](docs/spec.md)**：完全な仕様、std-agent 標準 + 22 ツールの差異 + 変換戦略
+- **[docs/spec.md](docs/spec.md)**：完全な仕様、std-agent 標準 + 23 ツールの差異 + 変換戦略
 - [docs/prd.md](docs/prd.md)：製品要件
 - [docs/architecture.md](docs/architecture.md)：モジュール構成とデータフロー
 - [docs/commands.md](docs/commands.md)：CLI コマンドリファレンス

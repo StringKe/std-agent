@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: uma única fonte de verdade para 22 ferramentas de CLI de IA](docs/assets/hero.png)
+![std-agent: uma única fonte de verdade para 23 ferramentas de CLI de IA](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` é uma CLI leve, escrita em Go puro, que mantém um único diretório `.stdai/` como fonte de verdade para a configuração de IA do seu projeto e depois a distribui para **22 ferramentas de CLI de IA**, cuidando dos formatos de arquivo nativos, dialetos de frontmatter e peculiaridades de cada uma.
+`stdagent` é uma CLI leve, escrita em Go puro, que mantém um único diretório `.stdai/` como fonte de verdade para a configuração de IA do seu projeto e depois a distribui para **23 ferramentas de CLI de IA**, cuidando dos formatos de arquivo nativos, dialetos de frontmatter e peculiaridades de cada uma.
 
 Pare de manter `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`, ... manualmente. Edite uma vez, sincronize em todo lugar.
 
 ## Por que o std-agent?
 
 - **Fonte única** -- escreva `rules` / `skills` / `commands` / `references` / `subagents` uma vez em frontmatter YAML + Markdown.
-- **Vinte e dois destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build.
+- **Vinte e três destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
 - **Fiel à especificação** -- cada caminho de saída, dialeto de frontmatter e limite de tamanho é verificado com a documentação oficial das ferramentas (última auditoria completa: 2026-07); diretórios nativos de Agent Skills onde existirem.
 - **Zero lock-in** -- o writer só toca em uma pequena whitelist de caminhos; backups antes de cada sync; `clean` reverte tudo.
 - **Detecção de drift** -- `status` mostra arquivos modificados fora do stdagent; `fix` reaplica a fonte.
@@ -48,7 +48,7 @@ Pare de manter `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsu
 | Warp | `AGENTS.md` (inline + aninhado) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (8)
+### Tier 2 (9)
 
 | Destino | Saídas principais |
 |---|---|
@@ -60,6 +60,7 @@ Pare de manter `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsu
 | Augment Code | `.augment/{rules,skills}/` |
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
+| Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
 
 Cada integração está documentada em [docs/targets/](docs/targets/).
 
@@ -267,7 +268,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Documentação
 
-- **[docs/spec.md](docs/spec.md)** -- especificação completa: padrão std-agent + divergência das 22 ferramentas + estratégia de conversão
+- **[docs/spec.md](docs/spec.md)** -- especificação completa: padrão std-agent + divergência das 23 ferramentas + estratégia de conversão
 - [docs/prd.md](docs/prd.md) -- requisitos do produto
 - [docs/architecture.md](docs/architecture.md) -- estrutura de módulos + fluxo de dados
 - [docs/commands.md](docs/commands.md) -- referência de comandos da CLI

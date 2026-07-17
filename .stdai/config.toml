@@ -5,7 +5,7 @@ auto_pull = false
 backup = true
 backup_keep = 5
 
-# 仓库全开 22 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
+# 仓库全开 23 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
 # 在你自己项目里通常只开 2~3 个用得到的 target，无关的留 false 即可。
 [targets]
 # Tier 1
@@ -32,3 +32,4 @@ kilo-code    = { enabled = true,  convert = true }
 augment-code = { enabled = true,  convert = true }
 jules        = { enabled = true,  convert = true }
 grok-build   = { enabled = true,  convert = true }
+kimi-code    = { enabled = true,  convert = true }

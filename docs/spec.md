@@ -4,7 +4,7 @@ stdagent 跨工具 AI 配置同步标准与转换规则的权威文档。本 spe
 
 - std-agent 自身的源文件 schema（YAML frontmatter + Markdown）
 - 四种内容类型（rules / skills / commands / references）的语义
-- 22 个目标工具中相同概念的差异
+- 23 个目标工具中相同概念的差异
 - 转换器实现策略与边界情况
 
 读者：工具实现者、高级用户、新 target 集成方。
@@ -108,7 +108,7 @@ stdagent parse 阶段强制校验，违反整体 sync 中止：
 3. name 满足 kebab-case 正则
 4. 同 type 下 name 唯一
 5. targets 与 exclude_targets 不能同时非空
-6. targets / exclude_targets 内值必须是合法 target 名（22 个）
+6. targets / exclude_targets 内值必须是合法 target 名（23 个）
 7. priority 在 enum 内
 
 合法 target 名（v1.1）：
@@ -331,7 +331,7 @@ transformer 输出层
 
 **典型用例**：架构概览、API 端点列表、术语表。
 
-## Part 3: 22 个目标工具中的概念差异
+## Part 3: 23 个目标工具中的概念差异
 
 ### 3.1 总览矩阵（11 列）
 
@@ -585,7 +585,7 @@ tokenization 经验值约 2-4 字节/token，超 8000 字符约 2000-4000 tokens
 - [docs/file-structure.md](file-structure.md) 目录结构原则
 - [docs/format-spec.md](format-spec.md) frontmatter 详细 schema（本 spec 的补充）
 - [docs/roadmap.md](roadmap.md) 路线图
-- [docs/targets/](targets/) 22 个目标工具调研
+- [docs/targets/](targets/) 23 个目标工具调研
 
 ---
 

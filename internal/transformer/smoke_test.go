@@ -40,6 +40,7 @@ func TestAllTransformersSmoke(t *testing.T) {
 		"augment-code": true,
 		"grok-build":   true,
 		"jules":        true,
+		"kimi-code":    true,
 	}
 
 	for name, tr := range Registry {

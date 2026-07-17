@@ -1,6 +1,6 @@
 # std-agent 类型速查
 
-stdagent 把 AI 配置分 5 种类型，由 `stdagent sync` 扩散到 22 个 AI CLI 工具的原生格式。源文件统一放 `.stdai/standards/<type>/<name>.md`。
+stdagent 把 AI 配置分 5 种类型，由 `stdagent sync` 扩散到 23 个 AI CLI 工具的原生格式。源文件统一放 `.stdai/standards/<type>/<name>.md`。
 
 每种类型有不同的**触发语义**（AI 何时加载）与**适用边界**（什么内容该用、什么内容不该用）。
 
