@@ -36,8 +36,8 @@ Tier 1 9 个 target 的核心同步流，覆盖 85%+ 用户场景。
 - frontmatter schema 扩展：parser 接受 10 个 SKILL package 字段（when_to_use /
   arguments / effort / context / agent / shell / hooks / license / compatibility /
   metadata）
-- AGENTS.md ## Slash Commands 段：codex transformer 在 AGENTS.md 末尾追加
-  commands 段，aider 通过 `read:` 引用 AGENTS.md 时也能看到 slash 命令
+- shared AGENTS.md：runner 将所有 producer 的 rules canonicalize 为单一内容；
+  commands 保留在各 target 原生或降级 sidecar
 - source.Local 收集 skills/ 子树下的非 markdown 辅助文件
 - source.Git 复用 Local.Files 自动支持 SKILL package 辅助文件
 - runner.collectSkillPackageFiles 把 skill 目录辅助文件附到对应 Document

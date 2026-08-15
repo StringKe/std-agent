@@ -46,6 +46,7 @@ var Limits = []Limit{
 
 	// target 硬上限（语义见 Note）
 	{"codex", "agents-md-total", 0, 32768, "codex project_doc_max_bytes 默认 32768：root->cwd 整条链（含嵌套 AGENTS.md）累计字节，超限后按链序整文件停止追加（链尾先丢）；该值是 config.toml 可调默认值而非硬上限"},
+	{"codex", "skill-listing-total", 8000, 0, "Codex 启动技能清单最多占用 context 的 2%（未知窗口时按 8000 字符）；超限先缩短 description，仍超则省略部分 skill。此条为总量软建议，按全部 skill 的 name+description 合计估算"},
 	{"kimi-code", "agents-md-total", 0, 32768, "Kimi Code AGENTS.md 层级发现 32KiB 预算：项目根到 cwd 逐级合并，leaf-first 分配（超限祖先层先丢）"},
 	{"cursor", "rule", 80000, 100000, "Cursor 单 rule 文件 100000 字符上限（服务端下发，可能变动），超限截断并提示；>80000 接近上限"},
 	{"windsurf", "rule", 0, 12000, "Windsurf workspace rule 单文件上限 12000 字符（per-file 非总量）；超限行为官方未定义，legacy .windsurfrules 实测为截断"},
@@ -133,6 +134,34 @@ func CheckTotalRules(docs []*parser.Document) []string {
 		}
 		if total > l.Hard {
 			out = append(out, fmt.Sprintf("HARD [%s] total rules %d > %d (%s)", l.Target, total, l.Hard, l.Note))
+		}
+	}
+	return out
+}
+
+// CheckTotalSkills 对全部 skill 的 name+description 合计做清单预算检查。
+func CheckTotalSkills(docs []*parser.Document) []string {
+	total := 0
+	for _, d := range docs {
+		if d.Type != parser.TypeSkills {
+			continue
+		}
+		total += len(d.Name) + len(d.Description)
+		if d.WhenToUse != "" {
+			total += 1 + len(d.WhenToUse)
+		}
+	}
+	var out []string
+	for _, l := range Limits {
+		if l.Kind != "skill-listing-total" {
+			continue
+		}
+		if l.Hard > 0 && total > l.Hard {
+			out = append(out, fmt.Sprintf("HARD [%s] total skill listing %d > %d (%s)", l.Target, total, l.Hard, l.Note))
+			continue
+		}
+		if l.Soft > 0 && total > l.Soft {
+			out = append(out, fmt.Sprintf("SOFT [%s] total skill listing %d > %d (%s)", l.Target, total, l.Soft, l.Note))
 		}
 	}
 	return out

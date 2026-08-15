@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/json"
+	"fmt"
 	"path"
 	"strings"
 
@@ -99,7 +100,7 @@ func (ClaudeMD) Plan(docs []*parser.Document, adapter Adapter, cfg *config.Confi
 func buildClaudeRoot(roots, nonRoot []*parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, "", true)
 	var body strings.Builder
-	if g := RenderGlossaryFor(adapter); g != "" {
+	if g := RenderGlossaryFor(adapter, cfg); g != "" {
 		body.WriteString(g)
 		if !strings.HasSuffix(g, "\n") {
 			body.WriteString("\n")
@@ -220,6 +221,10 @@ func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
 	if d.UserInvocable != nil && !*d.UserInvocable {
 		fm.AddBool("user-invocable", false)
 	}
+	// context: fork 时官方 background 默认为 true；仅在源里显式打开时写出。
+	if d.SkillContext == "fork" && d.Background {
+		fm.AddBool("background", true)
+	}
 	// Agent Skills 标准字段
 	fm.Add("license", d.License)
 	fm.Add("compatibility", d.Compatibility)
@@ -244,10 +249,7 @@ func buildClaudeCommandFile(d *parser.Document, adapter Adapter, cfg *config.Con
 
 // buildClaudeSubagentFile 输出 .claude/agents/<name>.md
 //
-// Claude Code 原生支持 subagent 定义，frontmatter：name / description /
-// model / tools / disallowedTools / background，body 是 subagent 的系统提示词。
-// （官方另有 permissionMode / maxTurns / skills / memory / isolation 等字段，
-// 源 schema 暂无对应概念，后续按需扩展。）
+// Claude Code 原生支持 subagent 定义。body 是 subagent 的系统提示词。
 func buildClaudeSubagentFile(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
 	var fm transformerutil.FmBuilder
 	fm.Add("name", d.Name)
@@ -258,6 +260,14 @@ func buildClaudeSubagentFile(d *parser.Document, adapter Adapter, cfg *config.Co
 	if d.Background {
 		fm.AddBool("background", true)
 	}
+	fm.Add("effort", d.Effort)
+	fm.Add("isolation", d.Isolation)
+	fm.Add("memory", d.Memory)
+	fm.Add("permissionMode", d.PermissionMode)
+	if d.MaxTurns > 0 {
+		fm.AddRaw("maxTurns", fmt.Sprintf("%d", d.MaxTurns))
+	}
+	fm.AddList("skills", d.PreloadSkills)
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(claudeSubagentsDir(adapter), d.Name, ".md"),

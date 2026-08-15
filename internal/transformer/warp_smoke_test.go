@@ -11,7 +11,7 @@ import (
 // TestWarpOutputs 验证根 AGENTS.md：inline nonRoot rules + glossary + manifest 头
 func TestWarpOutputs(t *testing.T) {
 	tr := &Warp{}
-	cfg := &config.Config{Inject: false, InjectWhatIs: false}
+	cfg := &config.Config{Inject: false, InjectWhatIs: false, InjectTypeGlossary: true}
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "style", Description: "代码风格", Body: "Use clear names."},
 		{Type: parser.TypeRules, Name: "naming", Description: "命名规范", Body: "Use snake_case."},

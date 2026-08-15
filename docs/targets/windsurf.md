@@ -1,6 +1,6 @@
 # Target: Windsurf (Codeium / Cognition Devin Desktop)
 
-调研日期: 2026-05-07（2026-07-10 补充调研）
+调研日期: 2026-05-07（2026-07-10 补充调研；2026-08-15 复核 `.windsurf/{rules,skills,workflows}` 仍为官方主路径）
 官方文档: https://docs.windsurf.com/ ; https://docs.devin.ai/desktop/devin-desktop-faq
 
 ## 1. 摘要
@@ -133,7 +133,7 @@ Cascade 同时可见 100 个工具上限。
 3. `.windsurfrules` 不再生成（推送 modern 格式）
 4. workflows 输出 `.windsurf/workflows/<name>.md`，文件名即 slash 名
 5. skills 输出 `.windsurf/skills/<name>/SKILL.md`
-6. AGENTS.md 已由 codex transformer 写根目录；Windsurf 自动消费
+6. Windsurf 自动消费其他启用 producer 经 runner canonicalize 的共享 AGENTS.md
 7. v1.0 不写 MCP（用户级 path 已知，项目级未知，等 v1.1 项目级路径确认后落地）
 8. Devin 双写：`Windsurf.Plan` 在 `WindsurfStyle` 协议产出的 Plan 基础上，把所有
    `.windsurf/rules/` 前缀的 `FileOp` 复制一份，路径改写为 `.devin/rules/` 前缀，

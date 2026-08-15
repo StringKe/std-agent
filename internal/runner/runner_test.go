@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 func TestSyncEndToEnd(t *testing.T) {
@@ -177,7 +179,7 @@ claude-code = { enabled = true, convert = true }
 	}
 }
 
-func TestSyncCodexCommandsInAGENTSMd(t *testing.T) {
+func TestSyncCodexCommandsStayOutOfSharedAGENTSMd(t *testing.T) {
 	tmp := t.TempDir()
 	stdai := filepath.Join(tmp, ".stdai")
 	mustMkdir(t, filepath.Join(stdai, "standards/commands"))
@@ -217,16 +219,144 @@ codex = { enabled = true, convert = true }
 		t.Fatal(err)
 	}
 	s := string(agentsContent)
-	for _, want := range []string{
-		"Use clear names.",        // rule body inline（.codex/memories 已废弃）
-		"## Slash Commands",       // commands 段
-		"### /review",             // command name
-		"Run code review",         // command description
-		"Please review the diff.", // command body
-	} {
+	for _, want := range []string{"Use clear names."} {
 		if !strings.Contains(s, want) {
 			t.Errorf("AGENTS.md missing %q", want)
 		}
+	}
+	if strings.Contains(s, "## Slash Commands") {
+		t.Errorf("shared AGENTS.md should not contain target-specific commands:\n%s", s)
+	}
+	commandContent, err := os.ReadFile(filepath.Join(tmp, ".agents/skills/commands/review/SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Run code review", "Please review the diff."} {
+		if !strings.Contains(string(commandContent), want) {
+			t.Errorf("command skill missing %q", want)
+		}
+	}
+}
+
+func TestSyncSharedAGENTSStableAcrossTargets(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustMkdir(t, filepath.Join(stdai, "standards/commands"))
+	mustWrite(t, filepath.Join(stdai, "standards/root.md"), `# Project
+
+Project overview.
+`)
+	mustWrite(t, filepath.Join(stdai, "standards/rules/style.md"), `---
+type: rules
+name: style
+description: Shared style
+---
+Use clear names.
+`)
+	mustWrite(t, filepath.Join(stdai, "standards/commands/review.md"), `---
+type: commands
+name: review
+description: Run review
+---
+Review the current diff.
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+inject_type_glossary = false
+backup = false
+auto_pull = false
+
+[targets]
+codex = { enabled = true, convert = true }
+factory = { enabled = true, convert = true }
+`)
+
+	first, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("first Sync: %v", err)
+	}
+	if first.Written == 0 {
+		t.Fatal("first sync should write outputs")
+	}
+
+	content, err := os.ReadFile(filepath.Join(tmp, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(content)
+	for _, want := range []string{"Project overview.", "Use clear names."} {
+		if !strings.Contains(got, want) {
+			t.Errorf("shared AGENTS.md missing %q:\n%s", want, got)
+		}
+	}
+	for _, unwanted := range []string{".factory/rules", "## Slash Commands"} {
+		if strings.Contains(got, unwanted) {
+			t.Errorf("shared AGENTS.md should not contain target-specific %q:\n%s", unwanted, got)
+		}
+	}
+
+	second, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("second Sync: %v", err)
+	}
+	if second.Written != 0 {
+		t.Errorf("second sync should be stable, wrote %d files", second.Written)
+	}
+}
+
+func TestValidatePlanCollisions(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		plans   []*writer.Plan
+		wantErr bool
+	}{
+		{
+			name: "identical shared output",
+			plans: []*writer.Plan{
+				{Target: "codex", Files: []writer.FileOp{{Path: "AGENTS.md", Content: []byte("same")}}},
+				{Target: "factory", Files: []writer.FileOp{{Path: "AGENTS.md", Content: []byte("same")}}},
+			},
+		},
+		{
+			name: "divergent shared output",
+			plans: []*writer.Plan{
+				{Target: "codex", Files: []writer.FileOp{{Path: "AGENTS.md", Content: []byte("one")}}},
+				{Target: "factory", Files: []writer.FileOp{{Path: "AGENTS.md", Content: []byte("two")}}},
+			},
+			wantErr: true,
+		},
+		{
+			name: "different merge semantics",
+			plans: []*writer.Plan{
+				{Target: "one", Files: []writer.FileOp{{Path: "settings.json", Content: []byte("{}")}}},
+				{Target: "two", Files: []writer.FileOp{{Path: "settings.json", Content: []byte("{}"), JSONMerge: true}}},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			err := validatePlanCollisions(tt.plans)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("validatePlanCollisions() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr && !strings.Contains(err.Error(), tt.plans[0].Files[0].Path) {
+				t.Errorf("error should identify collision path: %v", err)
+			}
+		})
 	}
 }
 

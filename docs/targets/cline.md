@@ -1,6 +1,6 @@
 # Target: Cline
 
-调研日期: 2026-05-07（2026-07-10 更新：skills GA、AGENTS.md 消费行为回填）
+调研日期: 2026-05-07（2026-07-10 更新：skills GA、AGENTS.md 消费行为回填；2026-08-15 迁移到官方推荐 skills 路径）
 官方文档: https://docs.cline.bot/
 
 ## 1. 摘要
@@ -9,9 +9,9 @@ Cline（VS Code 扩展，原 Claude Dev）使用 `.clinerules/` 目录承载多�
 自动合并为统一 rules。支持 frontmatter `paths:` 进行 glob 条件激活。
 
 Agent Skills 已 GA：官方推荐路径 `.cline/skills/<name>/SKILL.md`，同时保留
-`.clinerules/skills/<name>/SKILL.md` 作为备用扫描路径。当前 transformer 仍写备用路径
-`.clinerules/skills/`（沿用 Clinerules 协议族 fallback 机制，未迁移到推荐路径，
-非紧急，见 spec.md P2 清单）。
+`.clinerules/skills/` 与 `.claude/skills/` 作为扫描兼容路径
+（https://docs.cline.bot/customization/skills）。transformer 现写推荐路径
+`.cline/skills/`。
 
 Cline **消费根 `AGENTS.md`**（项目根一份）与全局 `~/.agents/AGENTS.md`，**不读嵌套子目录**
 的 AGENTS.md（仅 workspace root 生效）。旧结论"不消费 AGENTS.md"已过时并纠正。
@@ -26,8 +26,8 @@ Memory Bank 是文档约定 + 提示词模式（6 个文件名社区标准），
 | 全局 rules（macOS/Linux） | `~/Documents/Cline/Rules/` | OS 级别 |
 | 全局 rules（Windows） | `Documents\Cline\Rules\` | OS 级别 |
 | 项目级 workflows | `<repo>/.clinerules/workflows/` | 自定义 slash 命令源 |
-| skills（推荐） | `<repo>/.cline/skills/<name>/SKILL.md` | 官方 Agent Skills 标准包，GA |
-| skills（备用） | `<repo>/.clinerules/skills/<name>/SKILL.md` | 备用扫描路径，仍生效；transformer 当前落此路径 |
+| skills（推荐，transformer 落点） | `<repo>/.cline/skills/<name>/SKILL.md` | 官方 Agent Skills 标准包 |
+| skills（备用扫描） | `<repo>/.clinerules/skills/`、`<repo>/.claude/skills/` | Cline 仍会发现，stdagent 不再写入 |
 | 根文件（消费） | `<repo>/AGENTS.md` | 项目根一份，Cline 自动读取，不读嵌套子目录 |
 | 全局根文件（消费） | `~/.agents/AGENTS.md` | 全局默认上下文 |
 | Memory Bank | `<repo>/memory-bank/`（约定） | 由 .clinerules 触发 |
@@ -86,7 +86,7 @@ memory-bank/
 | std-agent 类型 | Cline 落点 |
 |---|---|
 | rules | `.clinerules/<NN>-<name>.md`（数字前缀控制顺序）；frontmatter `paths:` 来自 std `applyTo` |
-| skills | `.clinerules/skills/<name>/SKILL.md`（备用扫描路径，Agent Skills 标准包；官方推荐路径 `.cline/skills/` 未迁移，见 §1） |
+| skills | `.cline/skills/<name>/SKILL.md`（官方推荐原生包） |
 | commands | `.clinerules/workflows/<name>.md` |
 | references | 推荐落到 `memory-bank/` 6 文件之一，由 std `name` 决定（如 `name=project-brief` -> `projectbrief.md`） |
 
@@ -96,11 +96,10 @@ memory-bank/
    - NNN 由 std `priority` 决定排序（high=100、normal=500、low=900，余按字母）
    - frontmatter `paths:` 来自 std `applyTo`
 2. workflows 与 commands 共用目录 `.clinerules/workflows/`
-3. skills 走 Agent Skills 标准包，落 `.clinerules/skills/<name>/SKILL.md`（`internal/transformer/cline.go`
-   `clineAdapter` 未设 `SkillsDir`，走 Clinerules 协议族 fallback -> `BuildDegradedSkillPackage`，
-   实际落点即 `<FallbackDir>/skills/`）；迁移到官方推荐路径 `.cline/skills/` 留待后续版本（非紧急）
-4. AGENTS.md / CLAUDE.md 不由本 transformer 写（由 codex / claude-code transformer 负责根文件），
-   Cline 会自动消费项目根 AGENTS.md，无需重复产出
+3. skills 走原生 Agent Skills 包，落 `.cline/skills/<name>/SKILL.md`
+   （`clineAdapter.SkillsDir`）
+4. AGENTS.md / CLAUDE.md 不由本 transformer 写；Cline 可消费启用 producer 经
+   runner canonicalize 的共享 AGENTS.md
 5. 全局 rules（用户级）目录 v1.0 不主动写入；保留 v1.1
 6. Memory Bank：仅当 std reference 文件 `name` 命中 6 文件之一时映射；其他 reference 不写
 
@@ -110,7 +109,8 @@ memory-bank/
 - https://docs.cline.bot/prompting/cline-memory-bank
 - https://docs.cline.bot/features/slash-commands/workflows
 - https://docs.cline.bot/features/commands-and-shortcuts/overview
-- https://docs.cline.bot/features/skills（2026-07-10 新增，Agent Skills GA 确认）
+- https://docs.cline.bot/customization/skills
+- https://docs.cline.bot/customization/cline-rules
 
 ## 10. 已确认与剩余 UNKNOWN
 
@@ -118,7 +118,9 @@ memory-bank/
 - `/newrule` 弹出 scope 选择，无静默默认值（见 # 5.1）
 - 全局 Rules 路径在 macOS/Linux/Windows/WSL 各 OS 上的具体位置
 - 2026-07-10：Agent Skills 已 GA，推荐路径 `.cline/skills/`，`.clinerules/skills/` 为官方保留的
-  备用扫描路径，两者均生效（https://docs.cline.bot/features/skills）
+  备用扫描路径
+- 2026-08-15：transformer 已迁移到 `.cline/skills/`；规则 `paths` 条件激活、根 `AGENTS.md`
+  消费行为与 2026-07 一致
 - 2026-07-10：Cline 消费项目根 `AGENTS.md` 与全局 `~/.agents/AGENTS.md`，不读嵌套子目录
   AGENTS.md（原"不消费 AGENTS.md"结论已纠正）
 

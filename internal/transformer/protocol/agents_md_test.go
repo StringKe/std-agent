@@ -11,7 +11,7 @@ import (
 
 // agentsMDTestCfg 返回不注入 marker 的最小 cfg，让断言只关心 body 内容
 func agentsMDTestCfg() *config.Config {
-	return &config.Config{Inject: false, InjectWhatIs: false}
+	return &config.Config{Inject: false, InjectWhatIs: false, InjectTypeGlossary: true}
 }
 
 // findAgentsMDOp 在 plan.Files 里找匹配 path 的 FileOp；找不到返回 nil
@@ -137,6 +137,27 @@ func TestAgentsMD_GlossaryPrependedToRoot(t *testing.T) {
 	pIdx := strings.Index(content, "PROJECT_OVERVIEW")
 	if gIdx < 0 || pIdx < 0 || gIdx >= pIdx {
 		t.Errorf("glossary should appear before project overview, gIdx=%d pIdx=%d", gIdx, pIdx)
+	}
+}
+
+func TestAgentsMD_GlossaryDisabledByConfig(t *testing.T) {
+	a := codexLikeAdapter()
+	a.InjectTypeGlossary = true
+	docs := []*parser.Document{
+		{Type: parser.TypeRules, Name: "root", Root: true, Body: "PROJECT_OVERVIEW"},
+	}
+	cfg := agentsMDTestCfg()
+	cfg.InjectTypeGlossary = false
+	plan, err := AgentsMD{}.Plan(docs, a, cfg)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	root := findAgentsMDOp(plan, "AGENTS.md")
+	if root == nil {
+		t.Fatalf("root not found, paths=%v", agentsMDPlanPaths(plan))
+	}
+	if strings.Contains(string(root.Content), "std-agent type glossary") {
+		t.Errorf("config should suppress glossary, got:\n%s", root.Content)
 	}
 }
 

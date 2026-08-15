@@ -51,7 +51,7 @@ func (p Clinerules) Plan(docs []*parser.Document, adapter Adapter, cfg *config.C
 	transformerutil.SortDocs(subagents)
 
 	// glossary 落到 <RulesDir>/glossary.md（无根文件，子目录隔离方案）
-	if adapter.InjectTypeGlossary && adapter.RulesDir != "" {
+	if adapter.InjectTypeGlossary && cfg != nil && cfg.InjectTypeGlossary && adapter.RulesDir != "" {
 		plan.Files = append(plan.Files, p.buildGlossary(adapter, cfg))
 	}
 
@@ -62,9 +62,9 @@ func (p Clinerules) Plan(docs []*parser.Document, adapter Adapter, cfg *config.C
 		plan.Files = append(plan.Files, p.buildWorkflow(d, adapter, cfg))
 	}
 
-	// skills：SkillsDir 非空走原生 Agent Skills 包（roo `.roo/skills/` /
-	// kilo `.kilo/skills/` 2026 起 GA）；为空走 fallback（cline `.clinerules/skills/`
-	// 是官方备用扫描路径，degraded 形式仍被消费）
+	// skills：SkillsDir 非空走原生 Agent Skills 包（cline `.cline/skills/`、
+	// roo `.roo/skills/`、kilo `.kilo/skills/`）；为空走 fallback
+	// （`.clinerules/skills/` 仍是 Cline 官方备用扫描路径）
 	for _, d := range skills {
 		if adapter.SkillsDir != "" {
 			plan.Files = append(plan.Files, BuildNativeSkillPackage(d, adapter, cfg)...)

@@ -1,6 +1,6 @@
 # Target: OpenCode
 
-调研日期: 2026-05-07（2026-07-10 更新：skills 原生 GA、目录复数/单数兼容、嵌套 AGENTS.md 动态注入回填）
+调研日期: 2026-05-07（2026-07-10 更新：skills 原生 GA、目录复数/单数兼容、嵌套 AGENTS.md 动态注入回填；2026-08-15 复核路径未变）
 官方文档: https://opencode.ai/docs/
 
 ## 1. 摘要
@@ -66,7 +66,8 @@ Agent Skills **已原生 GA**：官方标准包路径 `.opencode/skills/<name>/S
 OpenCode 在 `read` 工具读取某子目录下的文件时，会**动态注入**沿途各级目录的 AGENTS.md
 （read 触发式，非启动时一次性全量加载）。stdagent 侧 `opencodeAdapter` 设
 `NestedSupported=false`：这不代表 OpenCode 不支持嵌套 AGENTS.md，而是嵌套文件本身由
-codex transformer 写入 `x/y/AGENTS.md`，opencode transformer 不重复写，避免同一嵌套文件
+启用的 AGENTS.md producer 计划由 runner canonicalize 后写入 `x/y/AGENTS.md`，
+opencode transformer 不重复写，避免同一嵌套文件
 被两个 transformer 各写一次。
 
 ## 5. agent permission 三态
@@ -107,7 +108,7 @@ OpenCode rules 不支持 frontmatter 条件激活。拆分多文件的官方机�
 
 | std-agent 类型 | OpenCode 落点 |
 |---|---|
-| rules（无 applyTo） | 不落盘（`opencodeAdapter.RulesDir` 为空，由 codex transformer 写的根 `AGENTS.md` 承担） |
+| rules（无 applyTo） | 不落盘（`opencodeAdapter.RulesDir` 为空，由 shared `AGENTS.md` 承担） |
 | rules（有 applyTo） | 同上；OpenCode 无条件激活，applyTo 信息会被丢弃。可选额外写入 `opencode.json` 的 `instructions` 数组让多个 rule 文件被同时加载（v1.0 未实现，见 §8） |
 | skills | `.opencode/skills/<name>/SKILL.md`（原生 Agent Skills 标准包；旧的 `mode: subagent` 降级方案已废弃） |
 | commands | `.opencode/commands/<name>.md`（自动注册 `/<filename>` 触发） |
@@ -115,7 +116,7 @@ OpenCode rules 不支持 frontmatter 条件激活。拆分多文件的官方机�
 
 ## 8. 转换器实现要点（2026-07-10 更新）
 
-1. AGENTS.md 已由 codex transformer 生成；OpenCode 直接复用，opencode transformer 不重复写
+1. OpenCode transformer 不写 AGENTS.md；复用其他启用 producer 经 runner canonicalize 的共享文件
 2. commands 转 `.opencode/commands/<name>.md`：
    - std `description` -> `description`
    - std `model` -> `model`

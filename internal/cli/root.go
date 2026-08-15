@@ -14,7 +14,7 @@ func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "stdagent",
 		Short:         "std-agent 多 AI CLI 配置同步器",
-		Long:          "stdagent 以 .stdai/ 为内部单一真相源，把 YAML frontmatter + Markdown 同步到 9 个 AI CLI 工具的扩散文件。",
+		Long:          "stdagent 以 .stdai/ 为单一真相源，把 YAML frontmatter + Markdown 同步到 23 个 AI CLI 工具的原生配置。",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

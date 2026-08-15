@@ -17,15 +17,14 @@ func TestExplainAll(t *testing.T) {
 	}
 	got := out.String()
 	for _, want := range []string{
-		"std-agent 类型速查",
+		"std-agent 类型",
 		"## rules",
 		"## skills",
 		"## commands",
 		"## references",
 		"## subagents",
-		"SEMANTICS",
-		"WHEN TO USE",
-		"WHEN NOT",
+		"## 选择标准",
+		"stdagent budget --rendered",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in default explain output", want)

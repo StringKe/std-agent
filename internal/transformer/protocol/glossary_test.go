@@ -3,17 +3,19 @@ package protocol
 import (
 	"strings"
 	"testing"
+
+	"github.com/StringKe/std-agent/internal/config"
 )
 
 func TestRenderGlossaryFor_Disabled(t *testing.T) {
-	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: false})
+	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: false}, &config.Config{InjectTypeGlossary: true})
 	if got != "" {
 		t.Errorf("disabled should return empty, got %q", got)
 	}
 }
 
 func TestRenderGlossaryFor_Enabled(t *testing.T) {
-	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: true})
+	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: true}, &config.Config{InjectTypeGlossary: true})
 	if got == "" {
 		t.Fatal("enabled should return non-empty")
 	}
@@ -28,8 +30,15 @@ func TestRenderGlossaryFor_Enabled(t *testing.T) {
 }
 
 func TestRenderGlossaryFor_AutoInjectMarker(t *testing.T) {
-	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: true})
+	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: true}, &config.Config{InjectTypeGlossary: true})
 	if !strings.Contains(got, "std-agent type glossary auto-injected") {
 		t.Errorf("expected auto-inject marker comment, got:\n%s", got)
+	}
+}
+
+func TestRenderGlossaryFor_ConfigDisabled(t *testing.T) {
+	got := RenderGlossaryFor(Adapter{InjectTypeGlossary: true}, &config.Config{InjectTypeGlossary: false})
+	if got != "" {
+		t.Errorf("config disabled should return empty, got %q", got)
 	}
 }

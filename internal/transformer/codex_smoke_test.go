@@ -95,6 +95,10 @@ func TestCodexCommandsAsSkill(t *testing.T) {
 		}
 	}
 	assertSkillYAMLFrontmatterFirst(t, c)
+	root, ok := contentOf(plan, "AGENTS.md")
+	if ok && strings.Contains(root, "Run code review") {
+		t.Errorf("commands must stay out of shared AGENTS.md:\n%s", root)
+	}
 }
 
 // TestCodexSkillYAMLFrontmatterFirst：Codex 要求 SKILL.md 以 --- 开头的 YAML frontmatter；

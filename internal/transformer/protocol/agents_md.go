@@ -137,7 +137,7 @@ func (p AgentsMD) Plan(docs []*parser.Document, a Adapter, cfg *config.Config) (
 func (p AgentsMD) buildRoot(roots, inlineNonRoot []*parser.Document, a Adapter, cfg *config.Config) writer.FileOp {
 	opts := transformerutil.MakeOpts(cfg, a.Name, "", true)
 	var body strings.Builder
-	if g := RenderGlossaryFor(a); g != "" {
+	if g := RenderGlossaryFor(a, cfg); g != "" {
 		body.WriteString(g)
 		if !strings.HasSuffix(g, "\n") {
 			body.WriteString("\n")

@@ -1,6 +1,6 @@
 # Target: Claude Code
 
-调研日期: 2026-05-07，2026-07-10 复核更新
+调研日期: 2026-05-07，2026-07-10 复核更新，2026-08-15 复核更新
 官方文档: https://code.claude.com/docs/
 
 ## 1. 摘要
@@ -17,6 +17,13 @@ frontmatter"），当前 transformer（`protocol/claude_md.go`）已用同一个
 `renderClaudeSkillFrontmatter` helper 渲染两者，command 也能用上 `when_to_use` /
 `disable-model-invocation` / `paths` / `context` / `agent` / `effort` 等字段。
 来源：https://code.claude.com/docs/en/skills
+
+2026-08-15 复核：官方仍写明 Claude Code 读 `CLAUDE.md` 不自动读 `AGENTS.md`，推荐
+`@AGENTS.md` import。`CLAUDE.md` 块级 HTML 注释在注入前被剥离。skill 在
+`context: fork` 时新增 `background`（默认 true）。subagent 官方字段
+`isolation` / `memory` / `permissionMode` / `maxTurns` / `skills` / `effort`
+已由源 schema `isolation` / `memory` / `permission_mode` / `max_turns` /
+`preload_skills` / `effort` 映射写出。changelog 见 https://code.claude.com/docs/en/changelog.md
 
 ## 2. CLAUDE.md 加载层级
 
@@ -65,18 +72,16 @@ frontmatter"），当前 transformer（`protocol/claude_md.go`）已用同一个
 | `model` | 可选 | 可选 | 可选 |
 | `tools`（agents 专属字段名） | 不适用 | 可选（白名单，对应 transformer 内部的 `AllowedTools`） | 不适用 |
 | `argument-hint` | 不适用 | 不适用 | 可选（提示参数填写） |
-| `memory` | 不适用 | 官方存在，transformer 暂无对应 std 字段承载 | 不适用 |
-| `isolation` | 不适用 | 官方存在（如 `worktree`），transformer 暂无对应 std 字段承载 | 不适用 |
-| `skills` | 不适用 | 官方存在（预加载 skills 列表），transformer 暂无对应 std 字段承载 | 不适用 |
-| `permissionMode` | 不适用 | 官方存在，transformer 暂无对应 std 字段承载 | 不适用 |
-| `background` | 不适用 | 可选，bool | 不适用 |
-| `maxTurns` | 不适用 | 官方存在，transformer 暂无对应 std 字段承载 | 不适用 |
+| `memory` | 不适用 | 源 `memory` -> `memory`（user / project / local） | 不适用 |
+| `isolation` | 不适用 | 源 `isolation` -> `isolation`（如 `worktree`） | 不适用 |
+| `skills` | 不适用 | 源 `preload_skills` -> `skills` | 不适用 |
+| `permissionMode` | 不适用 | 源 `permission_mode` -> `permissionMode` | 不适用 |
+| `background` | `context: fork` 时可选 | 可选，bool | 不适用 |
+| `maxTurns` | 不适用 | 源 `max_turns` -> `maxTurns` | 不适用 |
 
-agents 一行的 `isolation` / `skills` / `memory` / `permissionMode` / `maxTurns` 是
-2026-07 调研新确认的官方字段（P1），源 `parser.Document` schema 目前没有承载这些概念
-的字段，`buildClaudeSubagentFile`（`protocol/claude_md.go:251`）只渲染
-`name` / `description` / `model` / `tools` / `disallowedTools` / `background`，
-其余留作未来扩展位。
+agents 一行的 `isolation` / `skills` / `memory` / `permissionMode` / `maxTurns` /
+`effort` 已在 2026-08-15 接入源 schema 与 `buildClaudeSubagentFile`。`mcpServers` /
+`hooks` / `color` / `initialPrompt` 仍无对应 std 字段，保持不写出。
 
 ## 5. Slash command 参数变量
 
@@ -212,4 +217,4 @@ session 启动时生效，运行中切换需开新会话。
 剩余 UNKNOWN（2026-07 复核仍未证实）：
 - Claude Code 对未知 frontmatter 字段是严格报错还是静默忽略（`license` / `compatibility` / `metadata` 三字段命运未证实）
 - `permissions.ask` 与 `deny` 的合并语义在多层 settings 中的具体细节
-- agents 新增字段 `isolation` / `skills` / `memory` / `permissionMode` / `maxTurns` 的精确取值范围与默认行为（官方字段已确认存在，取值细节未逐一验证）
+- `mcpServers` / `hooks` / `color` / `initialPrompt` 是否纳入 std schema（2026-08 仍未承接）

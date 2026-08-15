@@ -126,7 +126,7 @@ func buildCopilotRoot(general, pathSpecific []*parser.Document, adapter Adapter,
 
 	roots, nonRoot := transformerutil.PartitionRoot(general)
 	var body strings.Builder
-	body.WriteString(RenderGlossaryFor(adapter))
+	body.WriteString(RenderGlossaryFor(adapter, cfg))
 	switch {
 	case len(roots) > 0:
 		body.WriteString(transformerutil.RenderRootBody(roots))

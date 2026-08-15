@@ -23,3 +23,22 @@ func TestClinePriorityPrefix(t *testing.T) {
 		}
 	}
 }
+
+func TestClineNativeSkillsDir(t *testing.T) {
+	tr := &Cline{}
+	cfg := &config.Config{Inject: false}
+	docs := []*parser.Document{
+		{Type: parser.TypeSkills, Name: "code-review", Description: "review code", Body: "skill body"},
+	}
+	plan, err := tr.Plan(docs, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	paths := pathSet(plan)
+	if !paths[".cline/skills/code-review/SKILL.md"] {
+		t.Errorf("expected official .cline/skills path, got %v", paths)
+	}
+	if paths[".clinerules/skills/code-review/SKILL.md"] {
+		t.Errorf("legacy fallback skill path must not be written, got %v", paths)
+	}
+}

@@ -1,6 +1,6 @@
 # Target: GitHub Copilot
 
-调研日期: 2026-05-07，2026-07-10 复核更新
+调研日期: 2026-05-07，2026-07-10 复核更新，2026-08-15 复核更新
 官方文档:
 - https://docs.github.com/en/copilot/customizing-copilot/
 - https://code.visualstudio.com/docs/copilot/customization/
@@ -18,6 +18,12 @@ Coding Agent 兼容 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`（最近邻 wins 语
 
 Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支持
 `.github/skills/<name>/SKILL.md`，旧文档把 skills 标"不支持"已过时（P0 修复，见 # 10）。
+
+2026-08-15 复核：
+- Copilot code review 从 PR **head** 分支读取 `copilot-instructions.md`、`*.instructions.md`、agent skills 和 `AGENTS.md`（https://github.blog/changelog/2026-07-17-copilot-code-review-customization-and-configurability-improvements/）。
+- Code Review 额外读取 `REVIEW.md`、`GEMINI.md`、`CLAUDE.md`。stdagent 不单独生成 `REVIEW.md`。
+- Code Review 的 Agent Skills 与 MCP 已 GA（https://github.blog/changelog/2026-07-29-copilot-code-review-agent-skills-and-mcp-now-generally-available/）。
+- 官方 skills 扫描还包含 `.claude/skills` 与 `.agents/skills`；stdagent 仍写 `.github/skills/`。
 
 ## 2. 配置文件路径
 
@@ -114,7 +120,7 @@ Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支�
 3. `.prompt.md` frontmatter：`argument-hint` 直传，`AllowedTools` -> `tools`
 4. `.agent.md`：**已实现**（原生落点 + CLI 委派 body，见 # 7），旧文档"v1.0 不主动生成"过时
 5. skills：**已实现原生落点** `.github/skills/<name>/SKILL.md`，旧文档"降级为 `.github/agents/<name>.agent.md`"过时（P0 修复）
-6. `AGENTS.md`：copilot transformer 自身不写，复用 codex / claude-code 等 transformer 的产出
+6. `AGENTS.md`：copilot transformer 自身不写，复用启用 producer 经 runner canonicalize 的共享产出
 7. `.vscode/mcp.json` **已实现**（`buildCopilotMCP`，顶层键 `servers`），旧文档"v1.0 不写"过时
 
 ## 9. 信息来源

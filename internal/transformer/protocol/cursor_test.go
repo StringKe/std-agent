@@ -163,7 +163,9 @@ func TestCursor_MCPJSON_McpServersTopKey(t *testing.T) {
 func TestCursor_Glossary_FallsTo_RulesDir_NoPrefix(t *testing.T) {
 	adapter := cursorTestAdapter()
 	adapter.InjectTypeGlossary = true
-	plan, _ := Cursor{}.Plan(nil, adapter, cursorCfg())
+	cfg := cursorCfg()
+	cfg.InjectTypeGlossary = true
+	plan, _ := Cursor{}.Plan(nil, adapter, cfg)
 	want := ".cursor/rules/glossary.md"
 	op := cursorFindFile(plan.Files, want)
 	if op == nil {
@@ -288,6 +290,7 @@ func TestCursor_FullFixture_AllTypesPresent(t *testing.T) {
 	adapter := cursorTestAdapter()
 	adapter.InjectTypeGlossary = true
 	cfg := cursorCfg()
+	cfg.InjectTypeGlossary = true
 	cfg.MCP = &config.MCPConfig{Servers: map[string]config.MCPServer{
 		"x": {Command: "y"},
 	}}

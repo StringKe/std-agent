@@ -236,7 +236,7 @@ func (p WindsurfStyle) buildGlossary(adapter Adapter, cfg *config.Config) *write
 	if adapter.RulesDir == "" {
 		return nil
 	}
-	body := RenderGlossaryFor(adapter)
+	body := RenderGlossaryFor(adapter, cfg)
 	if body == "" {
 		return nil
 	}

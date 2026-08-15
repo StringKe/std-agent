@@ -3,7 +3,6 @@ package cli
 import (
 	_ "embed"
 	"encoding/json"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -58,5 +57,3 @@ func writeIntroJSON(cmd *cobra.Command, copyOnly bool) error {
 func IntroPrompt() string {
 	return introPrompt
 }
-
-var _ = fmt.Sprintf // 占位避免 fmt 未来使用时漏 import

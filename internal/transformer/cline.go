@@ -36,10 +36,15 @@ func clinePriorityPrefix(d *parser.Document) string {
 	return "500-"
 }
 
-// clineAdapter 注入 Clinerules 协议族（spec v3 §2.8）
+// clineAdapter 注入 Clinerules 协议族。
+//
+// 官方 2026-08 仍推荐项目 skills 写到 `.cline/skills/`，同时保留
+// `.clinerules/skills/` 与 `.claude/skills/` 作为扫描兼容路径。
 var clineAdapter = protocol.Adapter{
 	Name:                 "cline",
 	RulesDir:             ".clinerules",
+	SkillsDir:            ".cline/skills",
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandsDir:          ".clinerules/workflows",
 	SingleFileFallback:   ".clinerules", // 向后兼容（v0.0.4 默认走子目录）
 	FallbackDir:          ".clinerules",

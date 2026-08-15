@@ -181,7 +181,7 @@ func (c Cursor) buildGlossary(adapter Adapter, cfg *config.Config) *writer.FileO
 	if !adapter.InjectTypeGlossary {
 		return nil
 	}
-	body := RenderGlossaryFor(adapter)
+	body := RenderGlossaryFor(adapter, cfg)
 	if body == "" {
 		return nil
 	}

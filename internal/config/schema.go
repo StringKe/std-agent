@@ -75,7 +75,7 @@ func Default() *Config {
 		Version:            "1.0",
 		Inject:             true,
 		InjectWhatIs:       true,
-		InjectTypeGlossary: true,
+		InjectTypeGlossary: false,
 		Backup:             true,
 		BackupKeep:         5,
 		AutoPull:           true,

@@ -226,6 +226,45 @@ body
 	}
 }
 
+func TestParseSubagentOfficialFields(t *testing.T) {
+	src := `---
+type: subagents
+name: code-reviewer
+description: Reviews code
+isolation: worktree
+memory: project
+permission_mode: plan
+max_turns: 8
+preload_skills:
+  - api-conventions
+background: true
+---
+body
+`
+	doc, err := Parse("subagents/code-reviewer.md", []byte(src))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if doc.Isolation != "worktree" {
+		t.Errorf("Isolation = %s", doc.Isolation)
+	}
+	if doc.Memory != "project" {
+		t.Errorf("Memory = %s", doc.Memory)
+	}
+	if doc.PermissionMode != "plan" {
+		t.Errorf("PermissionMode = %s", doc.PermissionMode)
+	}
+	if doc.MaxTurns != 8 {
+		t.Errorf("MaxTurns = %d", doc.MaxTurns)
+	}
+	if len(doc.PreloadSkills) != 1 || doc.PreloadSkills[0] != "api-conventions" {
+		t.Errorf("PreloadSkills = %v", doc.PreloadSkills)
+	}
+	if !doc.Background {
+		t.Error("Background should be true")
+	}
+}
+
 func TestParseEmptyV12FieldsDefault(t *testing.T) {
 	src := `---
 type: skills

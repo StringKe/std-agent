@@ -1,6 +1,6 @@
 # Target: Cursor
 
-调研日期: 2026-05-07，2026-07-10 复核更新
+调研日期: 2026-05-07，2026-07-10 复核更新，2026-08-15 复核更新
 官方文档: https://cursor.com/docs/
 
 ## 1. 摘要
@@ -17,6 +17,12 @@ Cursor 已正式推出独立于 rules 的 Agent Skills 概念，目录为 `.curs
 2026-07 复核新增：Cursor 已原生支持 subagents `.cursor/agents/<name>.md`
 （https://cursor.com/docs/subagents.md），transformer 已从降级到 `.cursor/rules/subagents/`
 迁移为原生落点（见 # 8）。
+
+2026-08-15 复核（https://cursor.com/docs/context/rules 、https://cursor.com/docs/context/skills）：
+- `.cursor/rules` 仍只认 `.mdc`；官方 `globs` 文档示例仍是逗号分隔字符串。
+- 嵌套 `AGENTS.md` 仍支持，且被当作 Always 规则加载。
+- skills 仍写 `.cursor/skills/<name>/SKILL.md`。Cursor 额外扫描 `.agents/skills/`、`.claude/skills/`、`.codex/skills/`，以及仓库内嵌套 `.cursor/skills/`（按目录自动收窄范围）。stdagent 只写仓库根 `.cursor/skills/`。
+- 官方新增 `paths` 作为 skill 作用域字段，旧 `globs` 仍兼容。transformer 已输出 `paths`。
 
 ## 2. 配置文件路径
 
@@ -132,7 +138,7 @@ User Rules 是否独立适用此上限：INSUFFICIENT-EVIDENCE。**std-agent 默
    - `description: ...` -> `description: ...`
 2. 输出文件名：`<name>.mdc`（保留 std 的 kebab-case `name`）
 3. 不生成 `.cursorrules`（legacy）
-4. `AGENTS.md` 不写（复用 codex / claude-code transformer 的产出）
+4. `AGENTS.md` 不写，复用启用 producer 经 runner canonicalize 的共享产出
 5. commands 输出到 `.cursor/commands/<name>.md`，不带 frontmatter，正文取
    std `description` + `Body`
 6. skills 输出 `.cursor/skills/<name>/SKILL.md`：

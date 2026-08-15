@@ -121,8 +121,8 @@ transformer 写 `<repo>/CRUSH.md`，二者文件名不冲突，且 crush 在 `co
 - 配置文件 `crush.json` / `.crush.json`，含 `mcp_servers` 字段（v0.0.4 起本
   transformer 不接管）
 - 5k+ stars，2026-Q1 增长快
-- 与 codex（AGENTS.md）共消费：codex transformer 写 AGENTS.md，
-  crush transformer 写 CRUSH.md，二者并存且 crush 同时读取
+- crush transformer 写 CRUSH.md；若启用其他 AGENTS.md producer，runner 另写
+  canonical shared AGENTS.md，Crush 会同时读取两者
 
 ## 8. UNKNOWN
 

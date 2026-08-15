@@ -11,7 +11,7 @@ stdagent <command> [flags]
   fix            重新 sync 修复 drift（sync 的语义别名）
   status         显示 targets 状态与 drift
   clean          清空根目录与平台目录的生成文件
-  budget         检查 rule / skill / command body 字符与 token 估算
+  budget         检查 source 与 rendered target 的上下文体积
   upgrade        自我升级到最新版本
   version        版本与构建信息
   help           帮助
@@ -138,32 +138,17 @@ stdagent clean [--target <name>...] [--keep-backups] [-y, --yes]
 ## `stdagent budget`
 
 ```
-stdagent budget [--json]
+stdagent budget [--rendered] [--target <name>...] [--json]
 ```
 
-估算 std 源文件的 LLM 上下文消耗与限额检查。读取 `.stdai/standards/` 下所有
-`.md` 文件，按字节数 + 估算 tokens 排序输出，并触发 `internal/budget` 包的
-SOFT / HARD WARN。
+默认估算 `.stdai/standards/` source 文档。`--rendered` 额外运行 target plan，
+报告 source layers、每个 target 的实际 root 常驻体积和 sidecar 体积。
 
 | flag | 说明 |
 |---|---|
 | `--json` | 结构化 JSON 输出（含每文档 path / type / bytes / estimated_tokens / warnings） |
-
-输出（文本）：
-
-```
-总文档数 5   总 rules 字节 18000   估算总 tokens 5234
-
-PATH                                          TYPE             BYTES    ~TOKENS
---------------------------------------------------------------------------------------
-skills/code-review/SKILL.md                   skills           25000        6250
-    SOFT skills/code-review/SKILL.md [*] 25000 > 20000 (...)
-rules/coding-style.md                         rules             9000        2250
-    SOFT rules/coding-style.md [*] 9000 > 8000 (...)
-...
-
-[total] HARD AGENTS.md [codex] total rules 35000 > 32768 (...)
-```
+| `--rendered` | 包含启用 target 的实际 plan 体积 |
+| `--target <name>` | 限定 rendered target，可重复；隐式开启 `--rendered` |
 
 token 估算用基于字符规则的近似（ASCII ~ 4 chars/token，中文 ~ 1.5 chars/token），
 误差约 ±30%。如需精确估算可后续接 `tiktoken-go`。

@@ -20,7 +20,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 
 - **Single source** — write `rules` / `skills` / `commands` / `references` / `subagents` once in YAML frontmatter + Markdown.
 - **Twenty-three targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
-- **Spec-accurate** — every output path, frontmatter dialect, and size limit is verified against the tools' official docs (last full audit: 2026-07); native Agent Skills directories everywhere they exist.
+- **Spec-accurate** — every output path, frontmatter dialect, and size limit is verified against the tools' official docs (last full audit: 2026-08); native Agent Skills directories everywhere they exist.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
 - **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.
 - **MCP** — single `.stdai/standards/mcp.json` fans out to `.mcp.json` / `.cursor/mcp.json` / `.vscode/mcp.json`
@@ -46,7 +46,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills registration |
 | Amp (Sourcegraph) | `AGENTS.md` (inline) + `.agents/skills/` |
 | Warp | `AGENTS.md` (inline + nested) + `.agents/skills/` |
-| Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
+| Factory (Factory.ai) | shared `AGENTS.md` + `.factory/{rules,skills,commands,droids}/` |
 
 ### Tier 2 (9)
 
@@ -55,7 +55,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Continue.dev | `.continue/{rules,skills,prompts}/` + nested `rules.md` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
-| Pi | `.pi/skills/` + `.pi/prompts/` |
+| Pi | shared `AGENTS.md` + `.pi/skills/` + `.pi/prompts/` |
 | Kilo Code (kilo.ai) | `.kilo/{rules,skills,command}/` + `kilo.jsonc` instructions registration |
 | Augment Code | `.augment/{rules,skills}/` |
 | Jules (Google) | `AGENTS.md` |
@@ -90,38 +90,18 @@ stdagent fix
 Project already littered with `CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.clinerules/` / `.github/copilot-instructions.md`? Paste the prompt below into Claude Code / Codex / Cursor / Gemini CLI and it will reorganize everything into `.stdai/standards/` for you.
 
 ````text
-Help me migrate this project from scattered AI configuration to std-agent. Please do:
+Migrate this repository to std-agent with `.stdai/standards/` as the single source of truth.
 
-1. Use Glob / Read to scan every existing AI rule file:
-   - Root: CLAUDE.md AGENTS.md GEMINI.md .cursorrules .windsurfrules .clinerules
-   - Subdirs: .claude/rules/ .claude/skills/ .claude/commands/ .claude/agents/
-              .cursor/rules/ .windsurf/rules/ .clinerules/ .continue/rules/
-              .github/copilot-instructions.md .github/instructions/
-              .rulesync/rules/ .codex/AGENTS.md
-   - In-repo nested CLAUDE.md (find . -name CLAUDE.md -not -path './.stdai/*')
+Done means:
+- All existing root, nested, hidden, skill, command, agent, and target-specific AI configuration has been read and inventoried.
+- Project facts, safety constraints, executable commands, protocol fields, paths, endpoints, and error strings are preserved.
+- Repeated role text, process narration, redundant rules, and inferable guidance are removed.
+- Content is classified by consumption semantics into root, rules, skills, commands, references, subagents, and nested roots.
+- `stdagent sync --strict`, `stdagent status`, and `stdagent budget --rendered` pass.
 
-2. Report an inventory: X rules / Y skills / Z commands / N nested CLAUDE.md,
-   and flag which files contain "project overview" content.
+Before writing, report source ownership, conflicts, unique information, and the proposed boundaries for any high-impact split. Keep root.md limited to the project entry point and high-value global constraints. Use focused source files for details. Do not edit generated outputs directly. Clean legacy artifacts only after proving the new source covers them and the deletion is recoverable.
 
-3. Propose a split plan, wait for my approval, then write files:
-   - Project overview (definition / stack / iron rules / maintenance flow)
-     -> .stdai/standards/root.md
-   - Each focused rule -> .stdai/standards/rules/<kebab-name>.md
-   - Skill package -> .stdai/standards/skills/<name>/SKILL.md (with scripts/ references/ subdirs)
-   - Slash commands -> .stdai/standards/commands/<name>.md
-   - Nested CLAUDE.md -> .stdai/standards/nested/<relative-path>/root.md
-   - Every file gets a frontmatter: type / name / description / priority / applyTo
-
-4. No "refactoring" of original content. Keep every executable command, API endpoint,
-   error string, file path, line number. Allowed "optimizations": drop filler words,
-   merge duplicates, split oversized files, rename outdated tool names.
-
-5. When done, tell me to run `stdagent sync` and remove legacy artifacts
-   (.rulesync/, .cursorrules single-file, etc.). DO NOT delete the files stdagent
-   itself produces (CLAUDE.md / AGENTS.md / .claude/rules/).
-
-Full spec (frontmatter field table, root.md template, nested layout, rulesync mapping)
-is in the `stdagent intro` command output.
+Use `stdagent intro` for the complete source schema and migration contract.
 ````
 
 Pipe straight into an LLM CLI as well:
@@ -141,7 +121,7 @@ stdagent intro --json              # for agent / automation integrations
 | `stdagent fix` | Re-sync to repair drift (alias of `sync`) |
 | `stdagent status` | Per-target drift + last sync time |
 | `stdagent clean` | Remove generated files (preserves `.stdai/`) |
-| `stdagent budget` | LLM context budget check (chars + token estimate) |
+| `stdagent budget --rendered` | Source plus exact per-target root and sidecar context estimate |
 | `stdagent which <path>` | List rules / references applicable to a file (on-demand context routing for AI) |
 | `stdagent explain` | Print std-agent 5 type semantics (rules/skills/commands/references/subagents) for AI |
 | `stdagent intro` | Print a migration prompt for an LLM to convert your existing config |
@@ -156,13 +136,15 @@ v0.0.4 introduced a three-layer transformer architecture: each target's `Plan()`
 
 Graceful degradation: when a target doesn't natively support a std-agent type (e.g. references everywhere, subagents in amp / windsurf), stdagent falls back to subdirectory-isolated paths (`<FallbackDir>/references/<name>.md`) with frontmatter `std-agent-type: <type>` + HTML comment explainer, no std-agent-private prefixes.
 
+Targets that write `AGENTS.md` share one canonical rules document. Target-specific commands, skills, references, and subagents stay in native sidecars; incompatible same-path outputs fail before any write.
+
 ## Source format
 
 A complete schema lives in [docs/spec.md](docs/spec.md) Part 1. The minimal shape:
 
 ```markdown
 ---
-type: rules                       # rules | skills | commands | references
+type: rules                       # rules | skills | commands | references | subagents
 name: coding-style
 description: General coding style
 priority: high                    # high | normal | low
@@ -196,6 +178,7 @@ MCP servers (`.stdai/standards/mcp.json`):
 version = "1.0"
 inject = true            # inject "Generated by stdagent" footer in outputs
 inject_whatis = true     # add a one-line origin note inside skills
+inject_type_glossary = false # opt-in type glossary in rendered rules
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5

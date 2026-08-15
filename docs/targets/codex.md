@@ -1,7 +1,7 @@
 # Target: Codex (OpenAI)
 
-调研日期: 2026-05-07（2026-06-11 复核 memories / Team Config，废弃 .codex/memories 输出），2026-07-10 复核更新
-官方文档: https://developers.openai.com/codex/
+调研日期: 2026-05-07（2026-06-11 复核 memories / Team Config，废弃 .codex/memories 输出），2026-07-10 复核更新，2026-08-15 复核更新
+官方文档: https://developers.openai.com/codex/ 与 https://learn.chatgpt.com/codex/agent-configuration/agents-md
 
 ## 1. 摘要
 
@@ -18,6 +18,13 @@ Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fall
 2026-07 复核新增：Codex 官方已支持项目级 subagents `.codex/agents/<name>.toml`
 （TOML 格式，https://developers.openai.com/codex/subagents，feature flag
 `multi_agent` 默认启用）。transformer 现已实现该落点（见 # 6 / # 7）。
+
+2026-08-15 复核：
+- GitHub 上的 Codex Code Review 读取最接近改动的 `AGENTS.md` 中 `## Code Review Rules` 段（https://learn.chatgpt.com/codex/agent-configuration/agents-md）。stdagent 不自动生成该标题，由源正文自行书写。
+- 仓库 skills 从 CWD 向上扫描每一级 `.agents/skills`。stdagent 仍写仓库根 `.agents/skills/`。
+- 启动技能清单最多约占 context 2%（未知窗口时按 8000 字符），超限先缩短 description。
+- `allow_implicit_invocation` 现位于可选 `agents/openai.yaml`，不再作为 SKILL.md 核心字段。
+- `/codex/agent-configuration/rules` 是实验性 execpolicy `.rules`（Starlark `prefix_rule`），不是项目 coding rules，stdagent 不生成。
 
 ## 2. 配置文件路径
 
@@ -93,7 +100,7 @@ closest wins：越靠近 cwd 的优先级越高，向 root 拼接（链上完整
 |---|---|
 | rules | 项目 `AGENTS.md`（RulesDir 留空，所有 nonRoot rules 全文 inline 到一个文件）；子目录 rules 写入 `<sub>/AGENTS.md`（nested root，无 manifest） |
 | skills | `<repo>/.agents/skills/<name>/SKILL.md` + 同目录辅助文件；frontmatter 白名单 `name` / `description` / `license` / `compatibility` / `metadata` |
-| commands | 降级为 skill 写到 `.agents/skills/commands/<n>/SKILL.md`（v3 子目录隔离，无私有前缀），description 含 slash 调用 hint；**同时** inject 到 `AGENTS.md` 的 `## Slash Commands` 段（`InjectCommandsToRoot=true`），两个落点并存 |
+| commands | 降级为 skill 写到 `.agents/skills/commands/<n>/SKILL.md`（v3 子目录隔离，无私有前缀），description 含 slash 调用 hint；不进入 shared `AGENTS.md` |
 | references | `.agents/references/<n>.md`（降级，AI 按 frontmatter `std-agent-type` 识别） |
 | subagents | **双写**：`.agents/subagents/<n>.md`（降级 markdown，人读文档）+ `.codex/agents/<n>.toml`（官方原生格式，`name` / `description` / `developer_instructions` / 可选 `model`） |
 

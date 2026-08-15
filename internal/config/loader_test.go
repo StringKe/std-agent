@@ -132,8 +132,8 @@ func TestDefault(t *testing.T) {
 	if cfg.Targets["cursor"].Enabled {
 		t.Error("cursor should default disabled")
 	}
-	if !cfg.InjectTypeGlossary {
-		t.Error("InjectTypeGlossary should default true")
+	if cfg.InjectTypeGlossary {
+		t.Error("InjectTypeGlossary should default false")
 	}
 }
 

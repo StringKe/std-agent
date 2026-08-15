@@ -4,7 +4,7 @@
 
 - 极简：核心字段不超过 20 个
 - 默认即可用：MVP 默认 enable Claude Code + Codex
-- 显式优于隐式：每个 target 单独 enabled 与 convert 开关
+- 显式优于隐式：每个 target 单独配置
 - 可读：toml 格式 + 注释友好
 
 ## 完整示例
@@ -16,6 +16,7 @@ name = "my-ai-standards"
 # 注入控制
 inject = true              # 是否在生成文件末尾追加 stdagent footer
 inject_whatis = true       # footer 是否包含详细说明（来源、命令、文件作用）
+inject_type_glossary = false # 是否在支持的 rendered rules 中注入类型速查
 
 # 全局开关
 dry_run = false            # true 时只 diff 不写盘
@@ -24,7 +25,7 @@ backup_keep = 5            # 备份目录保留数量
 auto_pull = true           # sync 自动 pull 远端
 verbose = false            # 详细日志
 
-# 目标平台开关。enabled=false 完全跳过；convert=false 走 raw copy
+# 目标平台开关。enabled=false 完全跳过
 [targets]
 claude-code = { enabled = true,  convert = true }
 codex       = { enabled = true,  convert = true }
@@ -71,6 +72,7 @@ auth = "ssh"               # ssh | https-token | none；none 仅 public
 | `name` | string | 项目目录名 | 标识用，写入备份/日志 |
 | `inject` | bool | true | 全局 footer 注入开关 |
 | `inject_whatis` | bool | true | footer 包含详细说明 |
+| `inject_type_glossary` | bool | false | 在支持的 rendered rules 中注入类型速查 |
 | `dry_run` | bool | false | 全局 dry-run |
 | `backup` | bool | true | sync 前备份 |
 | `backup_keep` | int | 5 | 备份保留份数 |
@@ -84,13 +86,9 @@ auth = "ssh"               # ssh | https-token | none；none 仅 public
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `enabled` | bool | varies | true 时参与 sync |
-| `convert` | bool | true | true 走平台特定转换；false 走 raw copy |
+| `convert` | bool | true | schema 兼容字段；当前 sync 始终执行 target transformer，应保持 true |
 
-合法 target 名（与 frontmatter `targets` 字段对齐）:
-
-```
-claude-code  codex  cursor  copilot  windsurf  gemini  aider  cline  opencode
-```
+合法 target 名与 frontmatter `targets` 对齐，以 `internal/config/schema.go` 的 `ValidTargets` 为准。
 
 ### `[sources.<name>]`
 

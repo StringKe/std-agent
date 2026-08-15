@@ -93,6 +93,6 @@ var codexAdapter = protocol.Adapter{
 	SkillSupportedFields:  []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandFormat:         protocol.CommandSkillPrefix,
 	CommandsAsSkillSubdir: "commands", // v3：子目录隔离（避免 cmd- 私有前缀污染 skill 命名空间）
-	InjectCommandsToRoot:  true,
+	InjectCommandsToRoot:  false,
 	InjectTypeGlossary:    true,
 }

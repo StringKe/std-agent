@@ -1,6 +1,6 @@
 # Target: Gemini CLI (Google)
 
-调研日期: 2026-05-07，2026-07-10 复核更新
+调研日期: 2026-05-07，2026-07-10 复核更新，2026-08-15 复核更新
 官方文档:
 - https://github.com/google-gemini/gemini-cli/blob/main/docs/
 - https://geminicli.com/docs/
@@ -10,6 +10,10 @@
 Gemini CLI 是 Google 开源的终端 AI agent。配置围绕 `~/.gemini/` 与项目根
 `.gemini/` 双层展开，上下文文件用 `GEMINI.md` 三级层级加载（global -> workspace
 祖先链 -> JIT 子目录）。
+
+2026-08-15 复核：`GEMINI.md`、`.gemini/skills/`、`.gemini/commands/*.toml` 路径未变。
+官方文档提示 unpaid / Google One 用户的 Gemini CLI 将过渡到 Antigravity CLI；
+stdagent 仍同时支持 `gemini` 与 `antigravity` 两个 target。
 
 通过 `settings.json` 的 `context.fileName` 可显式声明同时读 `AGENTS.md`，
 是在 Gemini 侧实现 "读 AGENTS.md" 的官方做法；社区 issue #28227 反映该

@@ -111,11 +111,13 @@ stdagent parse 阶段强制校验，违反整体 sync 中止：
 6. targets / exclude_targets 内值必须是合法 target 名（23 个）
 7. priority 在 enum 内
 
-合法 target 名（v1.1）：
+合法 target 名（23 个）：
 
 ```
 claude-code  codex  cursor  copilot  windsurf  gemini  aider  cline  opencode
-continue-dev  antigravity
+roo-code  crush  amp  warp  factory
+continue-dev  antigravity  qwen-code  pi  kilo-code  augment-code
+jules  grok-build  kimi-code
 ```
 
 ### 1.7 SKILL Package（目录形式）
@@ -399,7 +401,7 @@ stdagent 的 `commands/` 类型按各 target 路径与格式输出。
 | 文件 | 写入者 | 消费方 |
 |---|---|---|
 | `CLAUDE.md` | claude-code | Claude Code |
-| `AGENTS.md` | codex（主） | Codex / Cursor (fallback) / Copilot Coding Agent / OpenCode / Aider (经 read:) / Windsurf / Antigravity |
+| `AGENTS.md` | enabled producer plans + runner canonicalization | Codex / Cursor (fallback) / Copilot Coding Agent / OpenCode / Aider (经 read:) / Windsurf / Antigravity 等 |
 | `GEMINI.md` | gemini | Gemini CLI |
 | `.clinerules/` 多文件 | cline | Cline |
 | `.continue/rules/` 多文件 | continue-dev | Continue.dev |
@@ -408,7 +410,7 @@ stdagent 的 `commands/` 类型按各 target 路径与格式输出。
 | `.github/copilot-instructions.md` | copilot | Copilot 全家桶 |
 | `.windsurf/rules/*.md` | windsurf | Windsurf |
 
-`AGENTS.md` 被 7 个工具消费（最近邻 wins / fallback / read 引用），是事实上的"AI 配置标准"。
+`AGENTS.md` 被多个工具消费。所有 producer plan 在写入前由 runner 统一为 target-neutral rules 内容。
 
 ## Part 4: 转换实现策略
 
@@ -419,7 +421,8 @@ stdagent 的 `commands/` 类型按各 target 路径与格式输出。
     -> parser.Parse(file)
     -> Document{Type, Name, frontmatter, Body}
     -> transformer.FilterDocs(target) 仅适用本 target 的子集
-    -> transformer.Plan(docs, cfg)
+    -> all transformer.Plan(docs, cfg)
+    -> shared-path canonicalization + collision validation
     -> Plan{Files: [FileOp...]}
     -> writer.Apply(plan) 原子写盘 / dry-run / drift 跳过
 ```
@@ -441,14 +444,15 @@ type Transformer interface {
 
 | 目标 | 上限 | 处理 |
 |---|---|---|
-| Codex AGENTS.md | 32768 字节 | 拆分到 `.codex/rules/<n>.md` + 主文件追加 Rules Reference 链接菜单 |
+| Codex AGENTS.md | project_doc_max_bytes 默认 32768 字节 | WARN；精简 rules 或调整 target filter |
 | Cursor 通用 rule | 100000 字符 | WARN |
 | Windsurf 单 rule | 12000 字符 | WARN |
 | Antigravity 单 rule / workflow | 12000 字符 | WARN |
 
 ### 4.4 不写主入口
 
-aider / opencode / antigravity 复用 codex 写的 AGENTS.md，**不重复写**根 AGENTS.md。
+aider / opencode / antigravity 等不生成根 AGENTS.md；它们复用其他启用 producer
+生成并由 runner canonicalize 的共享文件。
 
 ### 4.5 降级处理
 
@@ -475,7 +479,7 @@ references:
 | 目标 | 降级类 | 策略 |
 |---|---|---|
 | codex | commands | 降级为 skill 写到 `.agents/skills/cmd-<n>/SKILL.md`（description 含 slash 调用 hint） |
-| aider | skills / commands | noop（不输出，aider 不支持任何扩展）；commands 内容由 codex transformer 拼到 `AGENTS.md ## Slash Commands` 段，aider 通过 `read: AGENTS.md` 间接可见 |
+| aider | skills / commands | noop；aider 不支持项目级扩展，AGENTS.md 只承载 shared rules |
 | continue-dev | skills | 写到 `.continue/rules/skill-<n>.md`（model_decision rule） |
 | antigravity | skills | 写到 `.agents/rules/skill-<n>.md`（model_decision rule） |
 | gemini | skills | 跳过（无原生 skill） |
@@ -539,8 +543,8 @@ stderr。
 |---|---|---|---|
 | rule（任意 target） | 8000 字符 | - | 超过会显著消耗 LLM context；建议拆分或转 skill |
 | skill（任意 target） | 20000 字符 | - | 超 agentskills 5000 tokens 软上限；建议拆到 references/ |
-| command（任意 target） | 4000 字符 | - | Copilot Code Review 仅读前 4000 字符 |
-| codex AGENTS.md 总字节 | - | 32768 | 自动 spill 到 .codex/rules/，仍提示拆分 |
+| command（任意 target） | 4000 字符 | - | 通用 context 软建议 |
+| codex AGENTS.md 总字节 | - | 32768 | WARN，不自动 spill |
 | cursor rule | 80000 | 100000 | 硬上限触发截断 |
 | windsurf rule | - | 12000 | 单文件硬上限 |
 | antigravity rule | - | 12000 | 单文件硬上限 |
@@ -556,8 +560,8 @@ stderr。
 `Document.BodyBytes` 字段在 parser.Parse 时填充；budget 包优先用此值，
 否则 fallback 到 `len([]byte(d.Body))`。
 
-字符 vs token 选择：本系统统计字节数，不做 tokenizer 估算。LLM
-tokenization 经验值约 2-4 字节/token，超 8000 字符约 2000-4000 tokens，
+字符与 token：限额检查使用最终字节数；`stdagent budget` 另提供基于字符规则的
+token 近似，`--rendered` 报告实际 root 与 sidecar 体积。
 已足够触发"context 较大"提醒。后续如需更精确估算可接 OpenAI tiktoken
 等 tokenizer。
 

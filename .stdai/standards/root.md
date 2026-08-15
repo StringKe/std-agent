@@ -1,56 +1,29 @@
 # std-agent
 
-`stdagent` 是一个轻量纯 Go CLI 工具：把项目的 AI 配置维护在单一 `.stdai/` 目录里，再扩散到 23 个 AI CLI 工具的原生格式（`CLAUDE.md` / `AGENTS.md` / `.cursor/rules/` / `.windsurf/rules/` 等）。本仓库是它的源码仓，同时用 stdagent 管理自己的 AI 助手规则（自举）。
+`stdagent` 是纯 Go CLI，以 `.stdai/` 为单一真相源，将 rules、skills、commands、references 和 subagents 转换为 23 个 AI CLI target 的原生配置。本仓库是其源码并用自身规则自举。
 
-## 模块结构
+## 结构
 
-```
-cmd/stdagent/                程序入口
-internal/
-├── cli/                     cobra 命令注册（init / pull / sync / status / clean / budget / intro / upgrade / version / fix）
-├── config/                  config.toml 加载
-├── parser/                  .md 源文件 + frontmatter 解析
-├── source/                  本地 + git 源采集 + .stdaiignore
-├── transformer/             23 个 target 各自的转换实现
-├── writer/                  原子写盘 + plan + backup
-├── runner/                  Sync 编排器
-├── state/                   state.json 持久化
-├── budget/                  字符/字节预算检查
-└── util/                    通用工具
-docs/                        spec / architecture / 各 target 调研
-```
+- `cmd/stdagent/`：程序入口。
+- `internal/cli/`、`config/`、`parser/`、`source/`：命令、配置与源文档读取。
+- `internal/transformer/`：协议层和 target adapter。
+- `internal/runner/`、`writer/`、`state/`、`budget/`：同步、原子写入、状态和上下文预算。
+- `docs/`：格式、架构及各 target 的官方证据。
 
-## 技术栈
+技术栈：Go 1.26、Cobra、BurntSushi/toml、goccy/go-yaml、doublestar、GoReleaser；工具链由 `mise` 管理。
 
-- Go 1.26（mise + go + golangci-lint + gofumpt + git-cliff）
-- spf13/cobra（CLI 框架）
-- BurntSushi/toml（config 解析）
-- goccy/go-yaml（frontmatter 解析）
-- bmatcuk/doublestar（glob 匹配）
-- goreleaser（发版）
+## 关键约束
 
-## 铁律
+- `.stdai/standards/` 是 AI 配置源。生成的 `CLAUDE.md`、`AGENTS.md` 和 target 目录只通过 `go run ./cmd/stdagent sync` 更新。
+- frontmatter、协议或 target 映射属于跨 23 个 target 的兼容性变更，必须对照 `docs/format-spec.md`、`docs/conversion-rules.md` 和对应 `docs/targets/` 证据。
+- 多 target 共享同一路径时，内容必须字节一致；`AGENTS.md` 是 target-neutral 的共享 rules 层，target 专属能力写入各自 sidecar。
 
-1. **已推送分支禁止改写历史**。所有 amend / rebase / reset --hard + force-push 行为只允许在本人独占的 WIP 分支。修补已推送的 commit 用追加新 commit + fast-forward push。
-2. **改 transformer / runner / writer 必带 `_test.go`**。新增 target 至少要有 plan + 关键 fanout 测试，破坏性变更要补充防回归用例。
-3. **frontmatter / target 字段不要乱删改**，参考 `docs/conversion-rules.md` 和 `docs/format-spec.md` 的字段映射矩阵，每条改动都可能影响 23 个 target。
-4. **AI 配置维护流程**：所有规则源在 `.stdai/standards/`。改了规则一定要跑 `stdagent sync` 让产物刷新（CLAUDE.md / AGENTS.md / .claude/rules/ 等），sync 默认会 prune 上次写过但本次不再产出的孤儿文件。
-5. **不要手改 stdagent 生成的根文件**（`CLAUDE.md` / `AGENTS.md` 等）；改源 `.stdai/standards/root.md` 或具体 rule 后跑 sync。
+## Done means
 
-## 维护流程
+相关回归测试已覆盖，且以下命令通过：
 
 ```bash
-# 修改 AI 规则（项目说明 / 铁律 / 开发流程）
-$EDITOR .stdai/standards/root.md
-$EDITOR .stdai/standards/rules/<rule-name>.md
-go run ./cmd/stdagent sync           # 用 in-tree 版本验证
-go run ./cmd/stdagent status         # 查 drift
-
-# 日常开发
-mise run check                       # fmt + lint + test 一键
-mise run build                       # 产 bin/stdagent
-
-# 发版（patch / minor）
-git tag v0.0.X
-git push --tags                      # 触发 goreleaser
+mise run check
+go run ./cmd/stdagent sync --no-pull --strict
+go run ./cmd/stdagent status
 ```

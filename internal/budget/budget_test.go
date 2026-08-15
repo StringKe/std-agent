@@ -123,6 +123,26 @@ func TestCheckTotalRulesOverCodexLimit(t *testing.T) {
 	}
 }
 
+func TestCheckTotalSkillsCodexListingSoft(t *testing.T) {
+	docs := []*parser.Document{
+		{Type: parser.TypeSkills, Name: "a", Description: strings.Repeat("d", 5000)},
+		{Type: parser.TypeSkills, Name: "b", Description: strings.Repeat("e", 4000)},
+	}
+	out := CheckTotalSkills(docs)
+	if len(out) == 0 {
+		t.Fatal("expected SOFT warn for Codex skill listing total")
+	}
+	found := false
+	for _, msg := range out {
+		if strings.Contains(msg, "SOFT") && strings.Contains(msg, "codex") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected SOFT [codex] skill listing, got %v", out)
+	}
+}
+
 func TestCheckTotalRulesUnderLimit(t *testing.T) {
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Body: "small"},

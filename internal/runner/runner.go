@@ -183,6 +183,9 @@ func Sync(opts Options) (*Result, error) {
 	for _, msg := range budget.CheckTotalRules(docs) {
 		res.Warnings = append(res.Warnings, "[budget] "+msg)
 	}
+	for _, msg := range budget.CheckTotalSkills(docs) {
+		res.Warnings = append(res.Warnings, "[budget] "+msg)
+	}
 
 	// 3.5. load mcp.json (optional)
 	mcpPath := filepath.Join(opts.ProjectRoot, ".stdai/standards/mcp.json")
@@ -215,19 +218,8 @@ func Sync(opts Options) (*Result, error) {
 		sort.Strings(enabledTargets)
 	}
 
-	st, _ := state.Load(filepath.Join(opts.ProjectRoot, state.StateFile))
-	if st.Targets == nil {
-		st.Targets = map[string]state.Target{}
-	}
-
-	// 防 race / 误写：列出 git submodule 路径，sync 拒绝写入跨 submodule 边界。
-	// 用户可能用 nested/<submodule>/root.md 误把 submodule 顶级 CLAUDE.md 当本仓嵌套；
-	// runner 检测后 skip 这些 op + 报 warning。
-	submodulePaths := listSubmodulePaths(opts.ProjectRoot)
-
-	w := writer.NewWriter(opts.ProjectRoot, cfg.DryRun)
-	bk := writer.NewBackup(filepath.Join(opts.ProjectRoot, ".stdai/backups"), cfg.BackupKeep)
-
+	// 所有 target 先完成 plan，再执行任何写入。这样可以统一共享文件并在写盘前
+	// 拒绝不同 target 对同一路径产生的不兼容内容，避免输出取决于 target 顺序。
 	for _, name := range enabledTargets {
 		tr, ok := transformer.Get(name)
 		if !ok {
@@ -246,7 +238,17 @@ func Sync(opts Options) (*Result, error) {
 			continue
 		}
 		res.Plans = append(res.Plans, plan)
+	}
 
+	if err := transformer.CanonicalizeSharedAGENTS(res.Plans, docs, cfg); err != nil {
+		return nil, fmt.Errorf("canonicalize shared AGENTS.md: %w", err)
+	}
+
+	// 防 race / 误写：列出 git submodule 路径，sync 拒绝写入跨 submodule 边界。
+	// 用户可能用 nested/<submodule>/root.md 误把 submodule 顶级 CLAUDE.md 当本仓嵌套；
+	// runner 检测后 skip 这些 op + 报 warning。
+	submodulePaths := listSubmodulePaths(opts.ProjectRoot)
+	for _, plan := range res.Plans {
 		// submodule 边界保护：拒绝写入到 submodule 内（防止误把 submodule 顶级 CLAUDE.md
 		// 当作本仓嵌套从而覆盖 submodule 内容）。
 		for i := range plan.Files {
@@ -259,6 +261,22 @@ func Sync(opts Options) (*Result, error) {
 				op.Reason = fmt.Sprintf("WARN: refused write into submodule %q (run stdagent inside that submodule instead)", sp)
 			}
 		}
+	}
+
+	if err := validatePlanCollisions(res.Plans); err != nil {
+		return nil, err
+	}
+
+	st, _ := state.Load(filepath.Join(opts.ProjectRoot, state.StateFile))
+	if st.Targets == nil {
+		st.Targets = map[string]state.Target{}
+	}
+
+	w := writer.NewWriter(opts.ProjectRoot, cfg.DryRun)
+	bk := writer.NewBackup(filepath.Join(opts.ProjectRoot, ".stdai/backups"), cfg.BackupKeep)
+
+	for _, plan := range res.Plans {
+		name := plan.Target
 
 		// 根文件体积检查（CLAUDE.md / AGENTS.md / GEMINI.md / 等）
 		for _, f := range plan.Files {
@@ -592,6 +610,40 @@ func prefixed(target string, paths []string) []string {
 		out[i] = fmt.Sprintf("%s/%s", target, p)
 	}
 	return out
+}
+
+func validatePlanCollisions(plans []*writer.Plan) error {
+	type plannedOutput struct {
+		target    string
+		content   []byte
+		jsonMerge bool
+	}
+	seen := map[string]plannedOutput{}
+	for _, plan := range plans {
+		for _, op := range plan.Files {
+			if op.Skip {
+				continue
+			}
+			key := filepath.Clean(filepath.FromSlash(op.Path))
+			prev, ok := seen[key]
+			if !ok {
+				seen[key] = plannedOutput{
+					target:    plan.Target,
+					content:   op.Content,
+					jsonMerge: op.JSONMerge,
+				}
+				continue
+			}
+			if prev.jsonMerge == op.JSONMerge && bytes.Equal(prev.content, op.Content) {
+				continue
+			}
+			return fmt.Errorf(
+				"output collision at %q: targets %q and %q produce incompatible content",
+				op.Path, prev.target, plan.Target,
+			)
+		}
+	}
+	return nil
 }
 
 func sortedKeys[V any](m map[string]V) []string {

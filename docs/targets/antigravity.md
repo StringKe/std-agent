@@ -41,7 +41,7 @@ model_decision rule"已过时，transformer 已实现原生落点（见 # 5 / # 
 | 全局 Skills | `~/.gemini/antigravity/skills/` | 全局 skill 目录（与 workspace 路径的关系存在文档矛盾，见 # 9） |
 | MCP OAuth tokens | `~/.gemini/antigravity/mcp_oauth_tokens.json` | 自动管理，勿编辑 |
 | 项目级 GEMINI.md | `<repo>/GEMINI.md` | 项目 Antigravity 专属 |
-| 项目级 AGENTS.md | `<repo>/AGENTS.md` | 项目跨工具规则；stdagent 由 codex transformer 写入，antigravity 复用不重复写 |
+| 项目级 AGENTS.md | `<repo>/AGENTS.md` | 项目跨工具规则；启用 producer 的计划由 runner canonicalize，antigravity 复用不重复写 |
 | 嵌套 AGENTS.md | `<repo>/<subdir>/AGENTS.md` | 子目录限定（**需 Settings 手动启用，默认关闭**；stdagent 侧 `NestedSupported=false`，与该默认关闭状态一致） |
 | 工作区 Rules | `<repo>/.agents/rules/*.md` | 当前默认目录 |
 | 工作区 Rules（旧） | `<repo>/.agent/rules/*.md` | v1.20.3 前默认，向后兼容 |
@@ -112,7 +112,7 @@ Rules 内可用 `@filename` 或 `@/abs/path/file.md` 引用其他文件作为
 
 ## 6. 转换器实现要点（对照 `internal/transformer/antigravity.go`）
 
-1. `RootFileName=""`：不重复写根 `AGENTS.md`（由 codex transformer 写入，antigravity 复用，官方自 v1.20.3 起原生消费）
+1. `RootFileName=""`：不重复写根 `AGENTS.md`，复用其他启用 producer 经 runner canonicalize 的共享文件
 2. 细粒度 rules -> `<repo>/.agents/rules/<name>.md`，frontmatter `trigger` 按
    std-agent 元数据决定：
    - 始终激活 -> `trigger: always_on`

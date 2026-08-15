@@ -80,6 +80,76 @@ func TestBudgetCommandJSON(t *testing.T) {
 	if r.TotalTokens <= 0 {
 		t.Errorf("TotalTokens should be > 0")
 	}
+	if strings.Contains(out.String(), "rendered_targets") {
+		t.Errorf("default JSON should not include rendered targets:\n%s", out.String())
+	}
+}
+
+func TestBudgetCommandRenderedTargets(t *testing.T) {
+	old := flagConfig
+	defer func() { flagConfig = old }()
+	flagConfig = ".stdai/config.toml"
+
+	tmp := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tmp, ".stdai/standards/rules"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(tmp, ".stdai/standards/commands"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	configBody := `version = "1.0"
+inject = false
+inject_type_glossary = false
+
+[targets]
+codex = { enabled = true, convert = true }
+factory = { enabled = true, convert = true }
+`
+	if err := os.WriteFile(filepath.Join(tmp, ".stdai/config.toml"), []byte(configBody), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, ".stdai/standards/root.md"),
+		[]byte("# Project\n\nProject overview."), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, ".stdai/standards/rules/style.md"),
+		[]byte("---\ntype: rules\nname: style\n---\nUse clear names."), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, ".stdai/standards/commands/review.md"),
+		[]byte("---\ntype: commands\nname: review\n---\nReview the diff."), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(tmp)
+
+	cmd := newBudgetCmd()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(new(bytes.Buffer))
+	cmd.SetArgs([]string{"--rendered", "--json"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+
+	var r budgetReport
+	if err := json.Unmarshal(out.Bytes(), &r); err != nil {
+		t.Fatalf("not valid JSON: %v\n%s", err, out.String())
+	}
+	if len(r.SourceLayers) != 2 {
+		t.Fatalf("source layers = %d, want 2", len(r.SourceLayers))
+	}
+	if len(r.RenderedTargets) != 2 {
+		t.Fatalf("rendered targets = %d, want 2", len(r.RenderedTargets))
+	}
+	if r.RenderedTargets[0].RootBytes == 0 ||
+		r.RenderedTargets[0].RootBytes != r.RenderedTargets[1].RootBytes {
+		t.Errorf("shared root bytes should be equal and nonzero: %+v", r.RenderedTargets)
+	}
+	for _, target := range r.RenderedTargets {
+		if len(target.RootFiles) != 1 || target.RootFiles[0].Path != "AGENTS.md" {
+			t.Errorf("%s root files = %+v, want shared AGENTS.md", target.Target, target.RootFiles)
+		}
+	}
 }
 
 func TestBudgetCommandNoStandards(t *testing.T) {

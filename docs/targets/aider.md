@@ -78,7 +78,7 @@ test-cmd: "pytest -q"
 
 ## 8. 转换器实现要点
 
-1. v1.0 默认行为：仅生成 / 维护项目根 `AGENTS.md`（已由 codex transformer 写）
+1. aider transformer 不写文件；通过配置读取其他启用 producer 经 runner canonicalize 的共享 `AGENTS.md`
 2. 可选写入 `<git-root>/.aider.conf.yml`：在 `read:` 字段添加 `AGENTS.md`、
    `CONVENTIONS.md`（如存在）。如该文件已被用户手写，需检测 marker 避免覆盖；
    v1.0 默认不主动改写 `.aider.conf.yml`，只在 `init --aider` 显式开关时写

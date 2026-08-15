@@ -10,7 +10,7 @@ import (
 
 func TestJulesOutputs(t *testing.T) {
 	tr := &Jules{}
-	cfg := &config.Config{Inject: true, InjectWhatIs: false}
+	cfg := &config.Config{Inject: true, InjectWhatIs: false, InjectTypeGlossary: true}
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "root", Root: true, Body: "# Project AGENTS"},
 		{Type: parser.TypeRules, Name: "naming", Description: "命名规范", Body: "naming body"},

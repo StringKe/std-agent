@@ -34,7 +34,7 @@ func claudeTestAdapter() Adapter {
 
 // claudeTestCfg 构造禁用 marker 注入的最小 Config，便于断言原始 body。
 func claudeTestCfg() *config.Config {
-	return &config.Config{Inject: false, InjectWhatIs: false}
+	return &config.Config{Inject: false, InjectWhatIs: false, InjectTypeGlossary: true}
 }
 
 // claudeFileByPath 在 plan.Files 中查特定路径，返回 (op, ok)。
@@ -333,12 +333,20 @@ func TestClaudeMD_SubagentFile(t *testing.T) {
 	adapter := claudeTestAdapter()
 	docs := []*parser.Document{
 		{
-			Type:         parser.TypeSubagents,
-			Name:         "code-reviewer",
-			Description:  "Reviews code",
-			Model:        "claude-sonnet-4-5",
-			AllowedTools: []string{"Read", "Grep"},
-			Body:         "You are a strict reviewer.",
+			Type:            parser.TypeSubagents,
+			Name:            "code-reviewer",
+			Description:     "Reviews code",
+			Model:           "claude-sonnet-4-5",
+			AllowedTools:    []string{"Read", "Grep"},
+			DisallowedTools: []string{"Write"},
+			Background:      true,
+			Effort:          "high",
+			Isolation:       "worktree",
+			Memory:          "project",
+			PermissionMode:  "plan",
+			MaxTurns:        8,
+			PreloadSkills:   []string{"api-conventions"},
+			Body:            "You are a strict reviewer.",
 		},
 	}
 	plan, err := ClaudeMD{}.Plan(docs, adapter, claudeTestCfg())
@@ -357,6 +365,16 @@ func TestClaudeMD_SubagentFile(t *testing.T) {
 		"tools:",
 		"  - Read",
 		"  - Grep",
+		"disallowedTools:",
+		"  - Write",
+		"background: true",
+		"effort: high",
+		"isolation: worktree",
+		"memory: project",
+		"permissionMode: plan",
+		"maxTurns: 8",
+		"skills:",
+		"  - api-conventions",
 		"You are a strict reviewer.",
 	} {
 		if !strings.Contains(c, want) {

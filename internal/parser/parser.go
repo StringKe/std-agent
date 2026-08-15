@@ -33,6 +33,11 @@ type rawFrontmatter struct {
 	DisallowedTools        []string `yaml:"disallowed_tools"`
 	ReadOnly               bool     `yaml:"readonly"`
 	Background             bool     `yaml:"background"`
+	Isolation              string   `yaml:"isolation"`
+	Memory                 string   `yaml:"memory"`
+	PermissionMode         string   `yaml:"permission_mode"`
+	MaxTurns               int      `yaml:"max_turns"`
+	PreloadSkills          []string `yaml:"preload_skills"`
 
 	// SKILL package 扩展字段
 	WhenToUse     string                 `yaml:"when_to_use"`
@@ -263,6 +268,11 @@ func Parse(path string, raw []byte) (*Document, error) {
 	doc.DisallowedTools = fm.DisallowedTools
 	doc.ReadOnly = fm.ReadOnly
 	doc.Background = fm.Background
+	doc.Isolation = fm.Isolation
+	doc.Memory = fm.Memory
+	doc.PermissionMode = fm.PermissionMode
+	doc.MaxTurns = fm.MaxTurns
+	doc.PreloadSkills = fm.PreloadSkills
 
 	// SKILL package 扩展字段
 	doc.WhenToUse = fm.WhenToUse

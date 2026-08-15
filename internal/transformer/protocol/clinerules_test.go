@@ -249,7 +249,9 @@ func TestClinerules_GlossaryWhenEnabled(t *testing.T) {
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "a", Priority: parser.PriorityHigh, Body: "B"},
 	}
-	plan, err := Clinerules{}.Plan(docs, adapter, newTestCfg())
+	cfg := newTestCfg()
+	cfg.InjectTypeGlossary = true
+	plan, err := Clinerules{}.Plan(docs, adapter, cfg)
 	if err != nil {
 		t.Fatalf("Plan() error: %v", err)
 	}
@@ -280,13 +282,31 @@ func TestClinerules_GlossaryWhenEnabled(t *testing.T) {
 	}
 }
 
+func TestClinerules_GlossaryDisabledByConfig(t *testing.T) {
+	t.Parallel()
+
+	adapter := clineLikeAdapter()
+	adapter.InjectTypeGlossary = true
+	plan, err := Clinerules{}.Plan(nil, adapter, newTestCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, op := range plan.Files {
+		if strings.Contains(op.Path, "glossary") {
+			t.Fatalf("config-disabled glossary should not be emitted: %s", op.Path)
+		}
+	}
+}
+
 func TestClinerules_GlossarySkippedWhenDisabled(t *testing.T) {
 	adapter := clineLikeAdapter()
 	adapter.InjectTypeGlossary = false
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "a", Body: "B"},
 	}
-	plan, err := Clinerules{}.Plan(docs, adapter, newTestCfg())
+	cfg := newTestCfg()
+	cfg.InjectTypeGlossary = true
+	plan, err := Clinerules{}.Plan(docs, adapter, cfg)
 	if err != nil {
 		t.Fatalf("Plan() error: %v", err)
 	}
@@ -303,7 +323,9 @@ func TestClinerules_Disabled(t *testing.T) {
 	docs := []*parser.Document{
 		{Type: parser.TypeRules, Name: "a", Body: "B"},
 	}
-	plan, err := Clinerules{}.Plan(docs, adapter, newTestCfg())
+	cfg := newTestCfg()
+	cfg.InjectTypeGlossary = true
+	plan, err := Clinerules{}.Plan(docs, adapter, cfg)
 	if err != nil {
 		t.Fatalf("Plan() error: %v", err)
 	}
@@ -360,7 +382,9 @@ func TestClinerules_CombinedFanoutContainsAllTypes(t *testing.T) {
 		{Type: parser.TypeReferences, Name: "ref1", Description: "ref", Body: "REF"},
 		{Type: parser.TypeSubagents, Name: "sub1", Description: "sub", Body: "SUB"},
 	}
-	plan, err := Clinerules{}.Plan(docs, adapter, newTestCfg())
+	cfg := newTestCfg()
+	cfg.InjectTypeGlossary = true
+	plan, err := Clinerules{}.Plan(docs, adapter, cfg)
 	if err != nil {
 		t.Fatalf("Plan() error: %v", err)
 	}

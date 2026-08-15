@@ -72,7 +72,7 @@ func TestCopilot_RootFile_GlossaryAndManifest(t *testing.T) {
 		{Type: parser.TypeRules, Name: "general", Body: "general guideline"},
 		{Type: parser.TypeRules, Name: "go-only", ApplyTo: []string{"**/*.go"}, Description: "Go specific", Body: "go body"},
 	}
-	plan, err := Copilot{}.Plan(docs, a, &config.Config{Inject: false})
+	plan, err := Copilot{}.Plan(docs, a, &config.Config{Inject: false, InjectTypeGlossary: true})
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}

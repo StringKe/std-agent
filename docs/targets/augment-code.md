@@ -69,9 +69,8 @@ Augment 没有等同 Windsurf `glob` 的 `applyTo` 触发；带 glob 的 std rul
    不再走 `.augment/rules/skills/` fallback
 4. 老版 `.augment-guidelines` 单文件 fallback：保留 adapter 字段（SingleFileFallback）
    不主动产出，等用户实测后再决定是否启用
-5. AGENTS.md 与 CLAUDE.md 由 codex / claude-code transformer 写根目录，augment-code
-   自动消费，不重复写；注意两者是**全部叠加**而非互斥（见 §6.1），重复注入风险由
-   root.md 内容治理，不在本 transformer 范围内处理
+5. augment-code 不写 AGENTS.md 与 CLAUDE.md；前者复用启用 producer 经 runner
+   canonicalize 的共享文件，后者由 claude-code transformer 生成。两者会叠加消费
 6. MCP：暂未确认 Augment 的项目级 MCP 配置路径，不输出
 7. Code Review YAML：脱离 std-agent 四类语义，超出范围
 

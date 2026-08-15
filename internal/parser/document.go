@@ -75,7 +75,17 @@ type Document struct {
 	ReadOnly bool
 	// Background 让 subagent 后台运行（Cursor is_background / Claude Code background）
 	Background bool
-	Body       string
+	// Isolation 为 Claude Code subagent 隔离模式，官方值 worktree。
+	Isolation string
+	// Memory 为 Claude Code subagent 持久记忆范围，官方值 user / project / local。
+	Memory string
+	// PermissionMode 为 Claude Code subagent 权限模式。
+	PermissionMode string
+	// MaxTurns 限制 Claude Code subagent 最大轮次；0 表示不写出该字段。
+	MaxTurns int
+	// PreloadSkills 在 Claude Code subagent 启动时注入完整 skill 正文。
+	PreloadSkills []string
+	Body          string
 
 	// SKILL package 扩展字段（agentskills.io 标准 + Claude Code 私有扩展）
 	WhenToUse     string                 // Claude Code: 触发匹配补充
