@@ -41,6 +41,7 @@ var antigravityAdapter = protocol.Adapter{
 	SkillsDir:            ".agents/skills",
 	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandsDir:          ".agents/workflows",
+	SubagentsDir:         ".agents/agents",
 	FallbackDir:          ".agents/rules",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,

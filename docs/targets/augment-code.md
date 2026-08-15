@@ -57,7 +57,7 @@ Augment 没有等同 Windsurf `glob` 的 `applyTo` 触发；带 glob 的 std rul
 | rules（仅 description） | `.augment/rules/<name>.md` `trigger: model_decision` | 等同 Augment `agent_requested` |
 | rules（无任何条件） | `.augment/rules/<name>.md` `trigger: manual` | 等同 Augment `manual` |
 | skills | `.augment/skills/<name>/SKILL.md` | 原生 Agent Skills 标准包（`SkillsDir=".augment/skills"`，不再走 fallback） |
-| commands | `.augment/rules/workflows/<name>.md` | 子目录名借用 windsurf 风格，纯文档（Augment 无原生 commands） |
+| commands | `.augment/commands/<name>.md` | 官方 Custom Commands（https://docs.augmentcode.com/using-augment/custom-commands） |
 | references | `.augment/rules/references/<name>.md` | graceful degradation + `std-agent-type: references` |
 | subagents | `.augment/rules/subagents/<name>.md` | graceful degradation + `std-agent-type: subagents` |
 

@@ -65,9 +65,8 @@ func TestAugmentCodeFallback(t *testing.T) {
 	if !paths[".augment/rules/subagents/qa.md"] {
 		t.Errorf("missing subagents fallback, paths: %v", paths)
 	}
-	// commands 走 .augment/rules/workflows/<name>.md
-	if !paths[".augment/rules/workflows/deploy.md"] {
-		t.Errorf("missing workflow, paths: %v", paths)
+	if !paths[".augment/commands/deploy.md"] {
+		t.Errorf("missing command, paths: %v", paths)
 	}
 
 	// 验证 fallback 文件含 std-agent-type frontmatter

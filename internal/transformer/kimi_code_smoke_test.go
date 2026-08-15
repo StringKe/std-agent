@@ -53,8 +53,8 @@ func TestKimiCodeFallback(t *testing.T) {
 	if !paths[".kimi-code/rules/references/api.md"] {
 		t.Errorf("missing references fallback at .kimi-code/rules/references/api.md, paths: %v", paths)
 	}
-	if !paths[".kimi-code/rules/subagents/linter.md"] {
-		t.Errorf("missing subagents fallback at .kimi-code/rules/subagents/linter.md, paths: %v", paths)
+	if !paths[".kimi-code/agents/linter.md"] {
+		t.Errorf("missing native subagent at .kimi-code/agents/linter.md, paths: %v", paths)
 	}
 }
 

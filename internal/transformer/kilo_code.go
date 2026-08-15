@@ -21,7 +21,7 @@ func init() {
 //     （instructions 官方支持 glob）。kilo.jsonc 已存在且含注释（JSONC）时
 //     writer 跳过并 WARN，不破坏用户配置。
 //   - skills 原生 `.kilo/skills/<n>/SKILL.md`（https://kilo.ai/docs/customize/skills）
-//   - commands 原生 `.kilo/command/<n>.md`（新平台单数目录，opencode 底座）
+//   - commands 原生 `.kilo/commands/<n>.md`（官方文档复数；源码仍兼容单数）
 //   - mode-specific `.kilo/rules-{mode}/` 不产出
 type KiloCode struct{}
 
@@ -59,14 +59,14 @@ func (k *KiloCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 // 与 cline / roo-code 的关键差异：
 //   - RulesDir `.kilo/rules`（cline `.clinerules` / roo `.roo/rules`）
 //   - SkillsDir `.kilo/skills`（原生 Agent Skills）
-//   - CommandsDir `.kilo/command`（新平台单数目录）
+//   - CommandsDir `.kilo/commands`（官方文档复数）
 //   - SingleFileFallback ""（cline `.clinerules` / roo `.roorules`；kilo 无单文件 fallback）
 //   - RulePrefix=nil：与 roo 一致，走子目录组织，无 100/500/900 数字前缀
 var kiloCodeAdapter = protocol.Adapter{
 	Name:                 "kilo-code",
 	RulesDir:             ".kilo/rules",
 	SkillsDir:            ".kilo/skills",
-	CommandsDir:          ".kilo/command",
+	CommandsDir:          ".kilo/commands",
 	SingleFileFallback:   "", // kilo 无单文件 fallback
 	FallbackDir:          ".kilo/rules",
 	InjectExplainer:      true,

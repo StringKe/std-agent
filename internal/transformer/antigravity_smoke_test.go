@@ -56,6 +56,17 @@ func TestAntigravityWorkflowAndSkill(t *testing.T) {
 	}
 }
 
+func TestAntigravityNativeSubagent(t *testing.T) {
+	tr := &Antigravity{}
+	cfg := &config.Config{Inject: false}
+	plan, _ := tr.Plan([]*parser.Document{
+		{Type: parser.TypeSubagents, Name: "reviewer", Description: "Review", Body: "body"},
+	}, cfg)
+	if !pathSet(plan)[".agents/agents/reviewer.md"] {
+		t.Errorf("missing native subagent, paths: %v", pathSet(plan))
+	}
+}
+
 // TestAntigravityCodexSkillByteIdentical 保证 antigravity 与 codex 对同一 skill
 // 产出字节一致（共享 .agents/skills/ 落点，writer unchanged 去重）。
 func TestAntigravityCodexSkillByteIdentical(t *testing.T) {

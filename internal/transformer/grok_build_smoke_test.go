@@ -45,14 +45,13 @@ func TestGrokBuildFallbackPaths(t *testing.T) {
 		t.Fatalf("Plan: %v", err)
 	}
 	paths := pathSet(plan)
-	// skills 原生 .grok/skills；commands 降级为 user-invocable skill；
-	// references / subagents 落 .grok/docs（不能进 .grok/rules——那是 Grok
-	// 每 session 全量加载的原生 rules 目录，放低频参考资料会永久污染 context）
+	// skills 原生 .grok/skills；commands 原生 .grok/commands；
+	// subagents 原生 .grok/agents；references 仍落 .grok/docs
 	for _, want := range []string{
 		".grok/skills/code-review/SKILL.md",
-		".grok/skills/commands/deploy/SKILL.md",
+		".grok/commands/deploy.md",
 		".grok/docs/references/api-spec.md",
-		".grok/docs/subagents/reviewer.md",
+		".grok/agents/reviewer.md",
 	} {
 		if !paths[want] {
 			t.Errorf("missing path %s, paths: %v", want, paths)

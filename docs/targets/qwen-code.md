@@ -63,7 +63,7 @@ gemini-cli 的 `GEMINI.md` 模板）。2026-07 复核修正：`AGENTS.md` **不�
 | skills | `.qwen/skills/<name>/SKILL.md`（原生 Agent Skills 标准包，2026-07 修正为原生非降级） | AI 按 description 触发 |
 | commands | `.qwen/commands/<name>.md`，frontmatter 描述参数 | `/` 触发 |
 | references | fallback `.qwen/rules/references/<name>.md` | std-agent 降级 |
-| subagents | fallback `.qwen/rules/subagents/<name>.md` | std-agent 降级 |
+| subagents | `.qwen/agents/<name>.md` | 官方原生（https://qwenlm.github.io/qwen-code-docs/en/users/features/sub-agents/） |
 
 嵌套 root（源文档带 `NestedPath`）写到对应子目录的 `QWEN.md`，不带 manifest
 （与 codex / gemini-cli 一致）；但 Qwen Code 本身只做 cwd 向上链发现，写入的

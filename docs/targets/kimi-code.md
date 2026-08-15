@@ -50,7 +50,7 @@ legacy `~/.kimi/` 布局仅作兼容参考，target 命名用 `kimi-code`。
 | skills | `.agents/skills/<name>/SKILL.md`（与 codex / amp / warp / antigravity 共享落点） | 官方 Project 层扫描路径，AI 按 description 触发或 `/skill:<name>` |
 | commands | `.agents/skills/commands/<name>/SKILL.md`（降级 skill，与 codex / amp 同模式） | `/skill:<name>` 触发 |
 | references | fallback `.kimi-code/rules/references/<name>.md` | std-agent 降级 |
-| subagents | fallback `.kimi-code/rules/subagents/<name>.md` | std-agent 降级 |
+| subagents | `.kimi-code/agents/<name>.md` | 官方自动发现目录 |
 
 嵌套 root（源文档带 `NestedPath`）写到对应子目录的 `AGENTS.md`（kimi-code
 层级发现原生消费），不带 manifest，与 codex / amp / warp 一致。

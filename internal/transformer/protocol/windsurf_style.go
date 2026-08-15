@@ -68,6 +68,10 @@ func (p WindsurfStyle) Plan(docs []*parser.Document, adapter Adapter, cfg *confi
 		plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
 	}
 	for _, d := range subs {
+		if adapter.SubagentsDir != "" {
+			plan.Files = append(plan.Files, p.buildSubagent(d, adapter, cfg))
+			continue
+		}
 		plan.Files = append(plan.Files, BuildDegradedFileOp(d, adapter, cfg))
 	}
 
@@ -223,6 +227,20 @@ func (p WindsurfStyle) buildCommand(d *parser.Document, adapter Adapter, cfg *co
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(adapter.CommandsDir, d.Name, suffix),
 		fm.String(), body, opts,
+	)
+}
+
+func (p WindsurfStyle) buildSubagent(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
+	var fm transformerutil.FmBuilder
+	fm.Add("name", d.Name)
+	fm.Add("description", d.Description)
+	fm.Add("model", d.Model)
+	fm.AddList("tools", d.AllowedTools)
+	fm.AddList("disallowedTools", d.DisallowedTools)
+	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
+	return transformerutil.BuildMarkdownFile(
+		transformerutil.FilePath(adapter.SubagentsDir, d.Name, ".md"),
+		fm.String(), d.Body, opts,
 	)
 }
 

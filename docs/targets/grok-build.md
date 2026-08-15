@@ -63,7 +63,7 @@ grok-build 会把它们全部叠加进 context，不做去重。stdagent 目前�
 |---|---|---|
 | rules | 原生（AGENTS.md / .claude/rules/） | `AGENTS.md`（推荐，全部 nonRoot rule inline，无独立 RulesDir） |
 | skills | 原生 | `.grok/skills/<name>/SKILL.md`（大写）|
-| commands | 部分原生 | 降级为 skill，写到 `.grok/skills/commands/<n>/SKILL.md`（`CommandFormat=CommandSkillPrefix`），`user-invocable` skill 自动暴露为 `/<name>` slash |
+| commands | 原生 `.grok/commands/<name>.md` | 官方 user-guide 扁平 slash markdown |
 | subagents | plugins 内 `agents/` | 项目级无独立路径；降级到 `.grok/docs/subagents/<n>.md`（2026-07 修正落点，见下） |
 | references | 无原生概念 | `.grok/docs/references/<n>.md`（2026-07 修正落点，见下） |
 

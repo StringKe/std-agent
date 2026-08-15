@@ -382,6 +382,7 @@ func (p AgentsMD) buildSubagentFile(d *parser.Document, a Adapter, cfg *config.C
 	fm.Add("description", d.Description)
 	fm.Add("model", d.Model)
 	fm.AddList("tools", d.AllowedTools)
+	fm.AddList("disallowedTools", d.DisallowedTools)
 	opts := transformerutil.MakeOpts(cfg, a.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(a.SubagentsDir, d.Name, ".md"),

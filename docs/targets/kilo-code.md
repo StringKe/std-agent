@@ -34,7 +34,7 @@ adapter 字段差异表见 §7。
 | 项目级 rules（兼容） | `<repo>/.kilocode/rules/` 目录 | 向后兼容老（VS Code 插件线）路径 |
 | mode-specific rules | `<repo>/.kilocode/rules-{mode}/` 目录 | 角色切换时加载（architect / code / debug 等） |
 | skills | `<repo>/.kilo/skills/<name>/SKILL.md` | 原生 Agent Skills 标准包 |
-| commands | `<repo>/.kilo/command/<name>.md` | 原生 slash commands，**单数**目录（新平台/opencode 底座特征） |
+| commands | `<repo>/.kilo/commands/<name>.md` | 官方文档复数目录；源码仍兼容单数 `.kilo/command/` |
 | kilo.jsonc | `<repo>/kilo.jsonc` | 项目级配置，`instructions[]` 引用 rules 路径（支持 glob） |
 | 全局配置 | `~/.config/kilo/kilo.jsonc` | 用户级配置 |
 | 根文件（消费） | `<repo>/AGENTS.md` | 恒加载，不受 `instructions[]` 限制 |
@@ -52,7 +52,7 @@ adapter 字段差异表见 §7。
 | std-agent 类型 | Kilo Code 原生 | std-agent 落点 |
 |---|---|---|
 | rules | YES（核心，需 kilo.jsonc `instructions[]` 引用） | `.kilo/rules/<name>.md` |
-| commands | YES（原生，2026-07-10 确认） | `.kilo/command/<name>.md`（单数目录） |
+| commands | YES | `.kilo/commands/<name>.md`（2026-08-15 对齐官方文档复数） |
 | skills | YES（原生 Agent Skills，2026-07-10 确认） | `.kilo/skills/<n>/SKILL.md` |
 | references | NO | `.kilo/rules/references/<n>.md`（fallback） |
 | subagents | mode-switching 间接实现，非 stdagent 形态 | `.kilo/rules/subagents/<n>.md`（fallback） |

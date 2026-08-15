@@ -76,8 +76,7 @@ func TestQwenCodeFallback(t *testing.T) {
 	if !paths[".qwen/rules/references/api.md"] {
 		t.Errorf("missing references fallback at .qwen/rules/references/api.md, paths: %v", paths)
 	}
-	// subagents fallback to .qwen/rules/subagents/<name>.md
-	if !paths[".qwen/rules/subagents/linter.md"] {
-		t.Errorf("missing subagents fallback at .qwen/rules/subagents/linter.md, paths: %v", paths)
+	if !paths[".qwen/agents/linter.md"] {
+		t.Errorf("missing native subagent at .qwen/agents/linter.md, paths: %v", paths)
 	}
 }

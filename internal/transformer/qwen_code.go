@@ -36,7 +36,7 @@ func (q *QwenCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pl
 // `.qwen/rules/` 是原生 RulesDir（源码 loadRules，支持 frontmatter paths
 // 条件规则，https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/memory.md），
 // nonRoot rules 落独立文件而非全量 inline QWEN.md；skills 原生
-// `.qwen/skills/<n>/SKILL.md`。references / subagents 走 fallback。
+// `.qwen/skills/<n>/SKILL.md`；subagents 原生 `.qwen/agents/`。references 走 fallback。
 var qwenCodeAdapter = protocol.Adapter{
 	Name:                 "qwen-code",
 	RootFileName:         "QWEN.md",
@@ -48,8 +48,8 @@ var qwenCodeAdapter = protocol.Adapter{
 	SupportsDescription:  true,
 	CommandsDir:          ".qwen/commands",
 	SkillsDir:            ".qwen/skills",
+	SubagentsDir:         ".qwen/agents",
 	ReferencesDir:        "",
-	SubagentsDir:         "",
 	FallbackDir:          ".qwen/rules",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,

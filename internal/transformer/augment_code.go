@@ -23,7 +23,7 @@ func init() {
 //   - rules -> .augment/rules/<name>.md（trigger frontmatter）
 //   - skills / references / subagents -> .augment/rules/{skills,references,subagents}/<name>.md
 //     （走 graceful degradation）
-//   - commands -> .augment/rules/workflows/<name>.md
+//   - commands -> .augment/commands/<name>.md
 //
 // 老版兼容：SingleFileFallback 配 ".augment-guidelines"（v0.0.4 不主动产出，
 // 字段保留供未来 fallback 逻辑使用）。
@@ -45,7 +45,7 @@ var augmentCodeAdapter = protocol.Adapter{
 	Name:                 "augment-code",
 	RulesDir:             ".augment/rules",
 	SkillsDir:            ".augment/skills",
-	CommandsDir:          ".augment/rules/workflows",
+	CommandsDir:          ".augment/commands",
 	CommandsFileSuffix:   ".md",
 	SingleFileFallback:   ".augment-guidelines", // 老版兼容（v0.0.4 不主动产出）
 	ReferencesDir:        "",

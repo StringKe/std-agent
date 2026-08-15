@@ -10,7 +10,7 @@ import (
 
 // TestKiloCodeOutputs 验证 kilo-code adapter 的落点：
 //   - rules    -> .kilo/rules/<name>.md（无数字前缀）+ kilo.jsonc instructions 注册
-//   - commands -> .kilo/command/<name>.md（新平台单数目录）
+//   - commands -> .kilo/commands/<name>.md（官方文档复数）
 //   - skills   -> .kilo/skills/<n>/SKILL.md（原生 Agent Skills）
 //   - references / subagents -> .kilo/rules/<sub>/<name>.md
 //
@@ -37,7 +37,7 @@ func TestKiloCodeOutputs(t *testing.T) {
 	wantPaths := []string{
 		".kilo/rules/style.md",
 		".kilo/rules/always.md",
-		".kilo/command/release.md",
+		".kilo/commands/release.md",
 		".kilo/skills/code-review/SKILL.md",
 		".kilo/rules/references/spec.md",
 		".kilo/rules/subagents/qa.md",

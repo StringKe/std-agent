@@ -127,7 +127,7 @@ func (p Clinerules) buildRuleFrontmatter(d *parser.Document, adapter Adapter) st
 
 // buildWorkflow 写 workflow / command 文件
 //
-//   - CommandsDir 非空（roo `.roo/commands/` / kilo `.kilo/command/` 原生 slash
+//   - CommandsDir 非空（roo `.roo/commands/` / kilo `.kilo/commands/` 原生 slash
 //     commands）：<CommandsDir>/<name>.md，frontmatter 写 description / argument-hint
 //   - CommandsDir 为空（cline 无原生 commands）：<RulesDir>/workflows/<name>.md，
 //     description 非空时 prepend 到 body 头

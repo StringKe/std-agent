@@ -56,7 +56,7 @@ var kimiCodeAdapter = protocol.Adapter{
 	CommandFormat:         protocol.CommandSkillPrefix,
 	CommandsAsSkillSubdir: "commands",
 	ReferencesDir:         "",
-	SubagentsDir:          "",
+	SubagentsDir:          ".kimi-code/agents",
 	FallbackDir:           ".kimi-code/rules",
 	InjectExplainer:       true,
 	InjectStdaiTypeField:  true,
