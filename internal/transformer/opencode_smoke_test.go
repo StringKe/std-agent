@@ -43,3 +43,18 @@ func TestOpenCodeSkillsAndCommands(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenCodeNativeSubagent(t *testing.T) {
+	tr := &OpenCode{}
+	cfg := &config.Config{Inject: false}
+	plan, _ := tr.Plan([]*parser.Document{
+		{Type: parser.TypeSubagents, Name: "reviewer", Description: "Review", Body: "body"},
+	}, cfg)
+	c, ok := contentOf(plan, ".opencode/agents/reviewer.md")
+	if !ok {
+		t.Fatalf("missing native subagent, paths: %v", pathSet(plan))
+	}
+	if !strings.Contains(c, "mode: subagent") {
+		t.Errorf("opencode subagent should set mode: subagent:\n%s", c)
+	}
+}

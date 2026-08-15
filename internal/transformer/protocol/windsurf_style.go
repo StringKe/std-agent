@@ -235,6 +235,7 @@ func (p WindsurfStyle) buildSubagent(d *parser.Document, adapter Adapter, cfg *c
 	fm.Add("name", d.Name)
 	fm.Add("description", d.Description)
 	fm.Add("model", d.Model)
+	fm.Add("mode", adapter.SubagentMode)
 	fm.AddList("tools", d.AllowedTools)
 	fm.AddList("disallowedTools", d.DisallowedTools)
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)

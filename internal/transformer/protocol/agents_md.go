@@ -381,6 +381,7 @@ func (p AgentsMD) buildSubagentFile(d *parser.Document, a Adapter, cfg *config.C
 	fm.Add("name", d.Name)
 	fm.Add("description", d.Description)
 	fm.Add("model", d.Model)
+	fm.Add("mode", a.SubagentMode)
 	fm.AddList("tools", d.AllowedTools)
 	fm.AddList("disallowedTools", d.DisallowedTools)
 	opts := transformerutil.MakeOpts(cfg, a.Name, d.Path, false)

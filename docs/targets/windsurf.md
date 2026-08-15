@@ -1,6 +1,6 @@
 # Target: Windsurf (Codeium / Cognition Devin Desktop)
 
-调研日期: 2026-05-07（2026-07-10 补充调研；2026-08-15 复核 `.windsurf/{rules,skills,workflows}` 仍为官方主路径）
+调研日期: 2026-05-07（2026-07-10 补充调研；2026-08-15 复核 rules/skills/workflows，subagents 写 `.devin/agents/`）
 官方文档: https://docs.windsurf.com/ ; https://docs.devin.ai/desktop/devin-desktop-faq
 
 ## 1. 摘要
@@ -12,8 +12,8 @@ Cascade Memories 是会话级软记忆。`.windsurfrules` legacy 文件存在 `.
 2026-06-02 起 Windsurf 已并入 Cognition 的 Devin 产品线，以 "Devin Desktop" 名称发行
 下一代版本，构建在原 Windsurf IDE 基座上。规则目录首选顺序随之调整：新版本优先读取
 `.devin/rules/`，旧的 `.windsurfrules` 与 `.windsurf/rules/` 仍继续读取（不强制迁移，
-现有仓库无需改名即可继续工作）。workflows 与 skills 目录未受合并影响，仍是
-`.windsurf/workflows/` 与 `.windsurf/skills/`。
+现有仓库无需改名即可继续工作）。workflows 仍是 Cascade 的 `.windsurf/workflows/`。Devin Local 不消费 workflows。
+skills 仍写 `.windsurf/skills/`（Local 也会扫描）。subagents 写 `.devin/agents/`。
 
 transformer 已落地双写过渡：`.windsurf/rules/*.md` 产出的每个文件都原样镜像一份到
 `.devin/rules/`，两处字节内容一致，避免用户在新旧版本客户端间切换时丢规则

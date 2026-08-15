@@ -53,7 +53,7 @@ func (g *Gemini) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan
 //
 // 渲染 GEMINI.md + 原生 skills（.gemini/skills/<n>/SKILL.md，v0.38+ GA 默认启用，
 // https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md）。
-// references / subagents 走 FallbackDir `.gemini/rules` 兜底。commands 不归
+// subagents 原生 `.gemini/agents/`。references 走 FallbackDir `.gemini/rules`。commands 不归
 // protocol 处理（在 Plan 里提前剥离 TOML 渲染），所以这里 CommandsDir 留空、
 // InjectCommandsToRoot 也保持 false。
 var geminiAdapter = protocol.Adapter{
@@ -61,6 +61,7 @@ var geminiAdapter = protocol.Adapter{
 	RootFileName:         "GEMINI.md",
 	NestedSupported:      true,
 	SkillsDir:            ".gemini/skills",
+	SubagentsDir:         ".gemini/agents",
 	FallbackDir:          ".gemini/rules",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,

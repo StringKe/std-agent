@@ -51,6 +51,7 @@ var windsurfAdapter = protocol.Adapter{
 	SkillsDir:            ".windsurf/skills",
 	CommandsDir:          ".windsurf/workflows",
 	CommandsFileSuffix:   ".md",
+	SubagentsDir:         ".devin/agents",
 	FallbackDir:          ".windsurf/rules",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,

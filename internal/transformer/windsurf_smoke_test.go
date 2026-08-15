@@ -64,3 +64,14 @@ func TestWindsurfDevinMirror(t *testing.T) {
 		t.Errorf("skills should not be mirrored to .devin, paths: %v", pathSet(plan))
 	}
 }
+
+func TestWindsurfNativeSubagent(t *testing.T) {
+	tr := &Windsurf{}
+	cfg := &config.Config{Inject: false}
+	plan, _ := tr.Plan([]*parser.Document{
+		{Type: parser.TypeSubagents, Name: "reviewer", Description: "Review", Body: "body"},
+	}, cfg)
+	if !pathSet(plan)[".devin/agents/reviewer.md"] {
+		t.Errorf("missing Devin Local native subagent, paths: %v", pathSet(plan))
+	}
+}

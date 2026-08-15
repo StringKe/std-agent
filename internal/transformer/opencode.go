@@ -38,7 +38,9 @@ var opencodeAdapter = protocol.Adapter{
 	RulesDir:             "",
 	SkillsDir:            ".opencode/skills",
 	CommandsDir:          ".opencode/commands",
-	FallbackDir:          ".opencode", // references / subagents fallback 子目录隔离
+	SubagentsDir:         ".opencode/agents",
+	SubagentMode:         "subagent",
+	FallbackDir:          ".opencode", // references fallback 子目录隔离
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,
 }

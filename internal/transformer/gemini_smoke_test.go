@@ -26,3 +26,14 @@ func TestGeminiCommandToml(t *testing.T) {
 		t.Errorf("missing prompt body: %s", c)
 	}
 }
+
+func TestGeminiNativeSubagent(t *testing.T) {
+	tr := &Gemini{}
+	cfg := &config.Config{Inject: false}
+	plan, _ := tr.Plan([]*parser.Document{
+		{Type: parser.TypeSubagents, Name: "reviewer", Description: "Review", Body: "body"},
+	}, cfg)
+	if !pathSet(plan)[".gemini/agents/reviewer.md"] {
+		t.Errorf("missing native subagent, paths: %v", pathSet(plan))
+	}
+}

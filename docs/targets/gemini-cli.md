@@ -11,7 +11,7 @@ Gemini CLI 是 Google 开源的终端 AI agent。配置围绕 `~/.gemini/` 与�
 `.gemini/` 双层展开，上下文文件用 `GEMINI.md` 三级层级加载（global -> workspace
 祖先链 -> JIT 子目录）。
 
-2026-08-15 复核：`GEMINI.md`、`.gemini/skills/`、`.gemini/commands/*.toml` 路径未变。
+2026-08-15 复核：`GEMINI.md`、`.gemini/skills/`、`.gemini/commands/*.toml` 路径未变；subagents 现写 `.gemini/agents/`（https://geminicli.com/docs/core/subagents/）。
 官方文档提示 unpaid / Google One 用户的 Gemini CLI 将过渡到 Antigravity CLI；
 stdagent 仍同时支持 `gemini` 与 `antigravity` 两个 target。
 

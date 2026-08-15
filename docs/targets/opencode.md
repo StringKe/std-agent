@@ -1,6 +1,6 @@
 # Target: OpenCode
 
-调研日期: 2026-05-07（2026-07-10 更新：skills 原生 GA、目录复数/单数兼容、嵌套 AGENTS.md 动态注入回填；2026-08-15 复核路径未变）
+调研日期: 2026-05-07（2026-07-10 更新：skills 原生 GA；2026-08-15 复核并把 subagents 升到 `.opencode/agents/`）
 官方文档: https://opencode.ai/docs/
 
 ## 1. 摘要
