@@ -27,8 +27,8 @@ func BuildNativeSkillPackage(d *parser.Document, a Adapter, cfg *config.Config) 
 //
 // 空白名单 -> 默认 Agent Skills 标准字段集（name / description / license /
 // compatibility / metadata）。白名单非空时仅渲染白名单字段。
-// 可选扩展字段（工具声明支持才渲染）：when_to_use / allowed-tools / paths /
-// disable-model-invocation / user-invocable。
+// 可选扩展字段（工具声明支持才渲染）：when_to_use / argument-hint /
+// allowed-tools / paths / disable-model-invocation / user-invocable。
 func buildSkillFrontmatter(d *parser.Document, a Adapter) string {
 	allowed := a.SkillSupportedFields
 	if len(allowed) == 0 {
@@ -50,6 +50,9 @@ func buildSkillFrontmatter(d *parser.Document, a Adapter) string {
 	if in("when_to_use") {
 		fm.Add("when_to_use", d.WhenToUse)
 	}
+	if in("argument-hint") {
+		fm.Add("argument-hint", d.ArgumentHint)
+	}
 	if in("allowed-tools") {
 		fm.AddList("allowed-tools", d.AllowedTools)
 	}
@@ -58,6 +61,9 @@ func buildSkillFrontmatter(d *parser.Document, a Adapter) string {
 	}
 	if in("disable-model-invocation") && d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
+	}
+	if in("user-invocable") && d.UserInvocable != nil && !*d.UserInvocable {
+		fm.AddBool("user-invocable", false)
 	}
 	if in("license") {
 		fm.Add("license", d.License)

@@ -33,6 +33,7 @@ Cursor 已正式推出独立于 rules 的 Agent Skills 概念，目录为 `.curs
 | 项目 commands | `.cursor/commands/<name>.md` | 文件名即 slash command 名 |
 | 项目 subagents | `.cursor/agents/<name>.md` | 原生支持，frontmatter `name` / `description` / `model` / `readonly` / `is_background` |
 | 项目 MCP | `.cursor/mcp.json` | 项目级 MCP server 列表 |
+| 项目 hooks | `.cursor/hooks.json` | 官方 hooks；stdagent 无 hooks 源类型，不生成 |
 | 用户 rules | Cursor Settings UI -> Rules（GUI 存储） | Agent/Chat 全局生效，**不影响 Cmd/Ctrl+K Inline Edit** |
 | 用户 skills | `~/.cursor/skills/<name>/SKILL.md` 或 `~/.agents/skills/<name>/SKILL.md` | 全局个人 skills |
 | 用户 commands | `~/.cursor/commands/<name>.md` | 全局个人 slash |
@@ -73,6 +74,7 @@ Cursor 已正式推出独立于 rules 的 Agent Skills 概念，目录为 `.curs
 | `compatibility` | 否 | 兼容性声明 |
 | `metadata` | 否 | 自定义元数据 |
 | `disable-model-invocation` | 否 | bool；true 时仅响应 `/skill-name` slash 调用 |
+| `user-invocable` | 否 | bool；显式 false 时从 slash 菜单隐藏 |
 
 加载方式：双模式
 
@@ -170,10 +172,12 @@ User Rules 是否独立适用此上限：INSUFFICIENT-EVIDENCE。**std-agent 默
 - Subagents 原生 schema（见 # 6），已落地实现
 - MCP（`.cursor/mcp.json`）已实现，非 v1.1 待办
 - `.md` 后缀在 `.cursor/rules/` 下被忽略，仅认 `.mdc`
+- Hooks 官方路径为 `.cursor/hooks.json`；stdagent 无 hooks 源类型，不生成
+- Skill `user-invocable: false` 会写入 SKILL.md
 
 剩余 UNKNOWN（2026-07 复核仍未证实）：
 - User Rules 是否独立适用 100k 上限（按通用值默认）
 - Team Rules 分发的 API / 协议
 - Cursor 子目录 `.cursor/rules/<sub>/` 的官方现状（文档不再明确宣传，按历史行为保留）
 - 嵌套 `CLAUDE.md` 是否被 Cursor 读取（仅确认嵌套 `AGENTS.md` 官方支持）
-- Cursor 是否有 hooks 机制（记录为未来候选，非本轮实现范围）
+- Agent 规则 100k 硬上限是否仍在服务端生效（主 Rules 页已不再写该数字）

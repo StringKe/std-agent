@@ -315,7 +315,7 @@ transformer 输出层
 **定义**：用户显式触发的提示模板，通常映射为 `/<name>`。
 
 - 不自动注入，由用户输入触发
-- 接受参数（`$1` `$ARGUMENTS`）
+- 接受参数（`$ARGUMENTS`；Claude Code 另用 0-based `$0` 表示第一参数）
 - 可限制可用工具
 
 **std-agent 落地**：`.stdai/standards/commands/<name>.md`

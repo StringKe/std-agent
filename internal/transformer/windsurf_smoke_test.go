@@ -59,9 +59,14 @@ func TestWindsurfDevinMirror(t *testing.T) {
 	if ws != dv {
 		t.Errorf("devin mirror must be byte-identical:\nwindsurf:\n%s\ndevin:\n%s", ws, dv)
 	}
-	// skills 不镜像（devin 迁移只涉及 rules 目录）
-	if pathSet(plan)[".devin/skills/review/SKILL.md"] {
-		t.Errorf("skills should not be mirrored to .devin, paths: %v", pathSet(plan))
+	// Devin Local 默认 harness 首选 .devin/skills/，同时仍读 .windsurf/skills/
+	wsSkill, wsOK := contentOf(plan, ".windsurf/skills/review/SKILL.md")
+	dvSkill, dvOK := contentOf(plan, ".devin/skills/review/SKILL.md")
+	if !wsOK || !dvOK {
+		t.Fatalf("expected skill in both .windsurf and .devin, paths: %v", pathSet(plan))
+	}
+	if wsSkill != dvSkill {
+		t.Errorf("devin skill mirror must be byte-identical")
 	}
 }
 

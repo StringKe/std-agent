@@ -21,6 +21,7 @@ func claudeTestAdapter() Adapter {
 		SkillsDir:            ".claude/skills",
 		CommandsDir:          ".claude/commands",
 		SubagentsDir:         ".claude/agents",
+		FallbackDir:          ".claude",
 		GlobsFieldName:       "paths",
 		GlobsFieldFormat:     GlobsList,
 		SupportsDescription:  true,
@@ -302,6 +303,7 @@ func TestClaudeMD_CommandFile(t *testing.T) {
 			Description:  "Cut a release",
 			ArgumentHint: "[version]",
 			AllowedTools: []string{"Bash"},
+			ApplyTo:      []string{"**/*.go"},
 			Model:        "claude-opus-4-1",
 			Body:         "Run the release flow.",
 		},
@@ -326,6 +328,14 @@ func TestClaudeMD_CommandFile(t *testing.T) {
 		if !strings.Contains(c, want) {
 			t.Errorf("expected %q in command file, got:\n%s", want, c)
 		}
+	}
+	// 官方：command 文件忽略 name 与 paths，写出也无效。
+	// https://code.claude.com/docs/en/skills
+	if strings.Contains(c, "name:") {
+		t.Errorf("command frontmatter must not emit name, got:\n%s", c)
+	}
+	if strings.Contains(c, "paths:") {
+		t.Errorf("command frontmatter must not emit paths, got:\n%s", c)
 	}
 }
 
@@ -400,9 +410,9 @@ func TestClaudeMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	op, ok := claudeFileByPath(plan, ".claude/rules/references/transformer-design.md")
+	op, ok := claudeFileByPath(plan, ".claude/references/transformer-design.md")
 	if !ok {
-		t.Fatalf("references must go to subdir (not SkillsDir), got files: %v", claudePlanPaths(plan))
+		t.Fatalf("references must go to .claude/references/ (not rules/), got files: %v", claudePlanPaths(plan))
 	}
 	c := string(op.Content)
 	if !strings.Contains(c, "std-agent-type: references") {
@@ -414,11 +424,39 @@ func TestClaudeMD_ReferencesGoToSubdirNotSkills(t *testing.T) {
 	if !strings.Contains(c, "Reference body content.") {
 		t.Errorf("expected original body, got:\n%s", c)
 	}
-	// 反向：references 必须不出现在 .claude/skills/ 路径下（旧设计错误，会被 Claude 当 skill 加载）
+	// 反向：不得落在 .claude/rules/（会被 Claude Code 当 rule 全量加载）
+	// 也不得落在 .claude/skills/（会被当 skill 触发）。
 	for _, p := range claudePlanPaths(plan) {
-		if strings.HasPrefix(p, ".claude/skills/transformer-design") {
+		if strings.HasPrefix(p, ".claude/rules/") {
+			t.Errorf("references must NOT go under .claude/rules/ (always-on load), got %q", p)
+		}
+		if strings.HasPrefix(p, ".claude/skills/") {
 			t.Errorf("references must NOT go to skills path (would be auto-loaded as skill), got %q", p)
 		}
+	}
+}
+
+func TestClaudeMD_ReferencesIgnoreApplyToAsRules(t *testing.T) {
+	adapter := claudeTestAdapter()
+	docs := []*parser.Document{{
+		Type:        parser.TypeReferences,
+		Name:        "transformer-design",
+		Description: "design notes",
+		ApplyTo:     []string{"internal/transformer/**/*.go"},
+		Body:        "ref",
+	}}
+	plan, err := ClaudeMD{}.Plan(docs, adapter, claudeTestCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := claudeFileByPath(plan, ".claude/references/transformer-design.md"); !ok {
+		t.Fatalf("applyTo must not reroute references into rules, files: %v", claudePlanPaths(plan))
+	}
+	if _, ok := claudeFileByPath(plan, ".claude/rules/references/transformer-design.md"); ok {
+		t.Fatal("applyTo on references must not emit a .claude/rules/ file")
+	}
+	if _, ok := claudeFileByPath(plan, ".claude/rules/transformer-design.md"); ok {
+		t.Fatal("applyTo on references must not emit a rule file")
 	}
 }
 

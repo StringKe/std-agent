@@ -151,6 +151,9 @@ func (c Cursor) buildSkill(d *parser.Document, adapter Adapter, cfg *config.Conf
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
 	}
+	if d.UserInvocable != nil && !*d.UserInvocable {
+		fm.AddBool("user-invocable", false)
+	}
 	fm.Add("license", d.License)
 	fm.Add("compatibility", d.Compatibility)
 	fm.AddMap("metadata", d.Metadata)

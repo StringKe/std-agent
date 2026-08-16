@@ -13,11 +13,11 @@ Cascade Memories 是会话级软记忆。`.windsurfrules` legacy 文件存在 `.
 下一代版本，构建在原 Windsurf IDE 基座上。规则目录首选顺序随之调整：新版本优先读取
 `.devin/rules/`，旧的 `.windsurfrules` 与 `.windsurf/rules/` 仍继续读取（不强制迁移，
 现有仓库无需改名即可继续工作）。workflows 仍是 Cascade 的 `.windsurf/workflows/`。Devin Local 不消费 workflows。
-skills 仍写 `.windsurf/skills/`（Local 也会扫描）。subagents 写 `.devin/agents/`。
+skills 双写 `.windsurf/skills/` 与 `.devin/skills/`。subagents 写 `.devin/agents/`。
 
-transformer 已落地双写过渡：`.windsurf/rules/*.md` 产出的每个文件都原样镜像一份到
-`.devin/rules/`，两处字节内容一致，避免用户在新旧版本客户端间切换时丢规则
-（`internal/transformer/windsurf.go`）。
+transformer 已落地双写过渡：`.windsurf/rules/` 与 `.windsurf/skills/` 各自镜像到
+`.devin/rules/` 与 `.devin/skills/`，两处字节内容一致。workflows 仍只写
+`.windsurf/workflows/`（Devin Local 不消费）。
 
 `AGENTS.md` 由同一 Rules 引擎处理：根级当 always-on rule，子目录中的 AGENTS.md
 自动当作针对该目录的 glob rule。
@@ -32,7 +32,8 @@ transformer 已落地双写过渡：`.windsurf/rules/*.md` 产出的每个文件
 | 系统 rules（Enterprise） | macOS `/Library/Application Support/Windsurf/rules/`、Linux/WSL `/etc/windsurf/rules/`、Windows `C:\ProgramData\Windsurf\rules\` | IT 部署，read-only |
 | 工作区 workflows | `.windsurf/workflows/*.md` | 子目录 + 父目录至 git root 全部发现，Devin 合并未影响该目录 |
 | 全局 workflows | `~/.codeium/windsurf/global_workflows/*.md` | 不入仓 |
-| 工作区 skills | `.windsurf/skills/<name>/SKILL.md` + 附属文件 | 每 skill 一个目录，Devin 合并未影响该目录 |
+| 工作区 skills（Cascade） | `.windsurf/skills/<name>/SKILL.md` + 附属文件 | 每 skill 一个目录 |
+| 工作区 skills（Devin Local 首选） | `.devin/skills/<name>/SKILL.md` | 与 `.windsurf/skills/` 双写，字节一致 |
 | 全局 skills | `~/.codeium/windsurf/skills/<name>/SKILL.md` | 用户级 |
 | 用户 MCP | `~/.codeium/windsurf/mcp_config.json` | 顶层键 `mcpServers` |
 | Memories（自动） | `~/.codeium/windsurf/memories/` 下 workspace-specific 子结构 | 仅本机本工作区，不可分享 |

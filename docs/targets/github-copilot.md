@@ -14,7 +14,7 @@ Code Completion）产品族。自定义在仓库、用户、组织三级叠加�
 
 Coding Agent 兼容 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`（最近邻 wins 语义）；
 2026-07 复核新增：VS Code Copilot Chat 也已消费根 `AGENTS.md`
-（`chat.useAgentsMdFile` 默认 true，仍标 experimental，是否转正 UNKNOWN 见 # 10）。
+（`chat.useAgentsMdFile` 默认 true，现已转正）。
 
 Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支持
 `.github/skills/<name>/SKILL.md`，旧文档把 skills 标"不支持"已过时（P0 修复，见 # 10）。
@@ -47,7 +47,7 @@ Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支�
 | `*.instructions.md` | `.instructions.md` | `applyTo`（必填，glob，逗号分隔多模式）；`excludeAgent`（可选，值 `code-review` 或 `cloud-agent`） |
 | `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | `.md` | 无 |
 | `*.prompt.md` | `.prompt.md` | `description`、`name`、`argument-hint`、`agent`（`ask`/`agent`/`plan`/自定义）、`model`、`tools` |
-| `SKILL.md` | `.md` | `name`（必填，须等于目录名，≤64）、`description`（必填，≤1024）、`license`（可选）、`compatibility`（可选，≤500）、`metadata`（可选）、`allowed-tools`（可选，experimental，空格分隔） |
+| `SKILL.md` | `.md` | `name`（必填，须等于目录名，≤64）、`description`（必填，≤1024）、`license`（可选）、`compatibility`（可选，≤500）、`metadata`（可选）、`allowed-tools`（可选，experimental）、`argument-hint` / `user-invocable` / `disable-model-invocation`（VS Code / CLI） |
 | `*.agent.md` | `.agent.md` | `description`、`tools`、`model`、`disable-model-invocation`（取代已废弃的 `infer`）、`user-invocable`（默认 true）；官方另有 `target` / `agents` / `mcp-servers` / `handoffs` 字段，transformer 暂未渲染（见 # 10 P1） |
 
 ## 4. 客户端支持矩阵
@@ -56,7 +56,7 @@ Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支�
 |---|---|---|---|---|
 | `copilot-instructions.md` | 是 | 是 | 是 | 是 |
 | `*.instructions.md` | 部分 | 是 | 是 | 是 |
-| `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | 是（experimental，`chat.useAgentsMdFile`） | 否 | 是 | 否 |
+| `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | 是（`chat.useAgentsMdFile` 默认 true） | 是（VS Code 现也读 CLAUDE.md） | 是 | 是（读 head 分支） |
 | `*.prompt.md` | 否 | 是 | 否 | 否 |
 | `*.agent.md` | 否 | 是 | 否 | 否 |
 | `SKILL.md` | 是 | 是 | 是 | 是（Agent Skills 全客户端 GA） |
@@ -69,7 +69,7 @@ Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支�
 - `.instructions.md`：按 `applyTo` glob 匹配自动启用；多文件合并 "no specific order guaranteed"
 - `AGENTS.md`：最近邻 wins（仓库目录树就近匹配）
 - **Code Review 截前 4000 字符的规则已于 2026-06-12 官方移除**（旧文档"仅读前 4000 字符"过时，来源 https://github.blog/changelog/2026-06-12-copilot-code-review-new-configurations-and-controls/）
-- PR 上下文读 base branch 的 instructions，不读 feature branch
+- PR 上下文读 **head** 分支的 instructions / skills / `AGENTS.md`，不读 base 分支
 
 ## 6. VS Code settings 关键字段
 
@@ -160,9 +160,10 @@ Agent Skills 已 GA：cloud agent / Code Review / CLI / VS Code 客户端均支�
 - Code Review 4000 字符截断规则已于 2026-06-12 官方移除
 - `.agent.md` frontmatter 扩展字段 `disable-model-invocation` / `user-invocable` 已实现；
   `target` / `agents` / `mcp-servers` / `handoffs` 官方确认存在但 transformer 暂未渲染
+- `chat.useAgentsMdFile` 已转正，默认 true
+- Skill 额外渲染 `argument-hint` / `user-invocable` / `disable-model-invocation`
 
 剩余 UNKNOWN（2026-07 复核仍未证实）：
-- `chat.useAgentsMdFile` 是否已从 experimental 转正
 - `.instructions.md` 的 on-demand 加载模式是否扩散到 GitHub.com 侧（目前仅 VS Code 确认）
 - `.agent.md` 的 `handoffs` / `agents` / `mcp-servers` 完整 schema
 - Coding Agent MCP `mcpServers` schema 全部字段（`type` 已知 `local`/`stdio`/`http`/`sse`）

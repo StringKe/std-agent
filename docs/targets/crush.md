@@ -17,12 +17,9 @@ TUI 体系，社区采纳速度快，2026-Q1 已突破 5k stars。
 的文件，全部命中按序拼接，让单仓库无须重复书写即可被 crush / codex /
 claude-code / gemini 同时识别。
 
-**Skills 闭环需显式声明**：crush 二进制默认只扫描两个全局路径
-`~/.config/crush/skills/` 与 `~/.config/agents/skills/`；项目级 skills 目录
-（如 `.crush/skills/`）**不在默认扫描范围**，必须在项目 `crush.json` 的
-`options.skills_paths` 数组里显式声明才会被加载
-（https://charmbracelet-crush.mintlify.app/configuration/skills）。这与此前
-调研认为"四目录 hardcoded 自动扫描"不符，已修正。
+**Skills 默认扫描项目目录**：当前源码默认扫描 `.crush/skills`、`.agents/skills`、
+`.claude/skills`、`.cursor/skills`（cwd 与 git root）。`options.skills_paths`
+仍可用于额外路径。stdagent 继续 JSONMerge 注册 `.crush/skills`，对新版本是冗余声明。
 
 **无父目录 / 子目录发现**：crush 源码按 cwd 解析 `context_paths`，不做父目录
 上溯、不做子树自动发现（https://github.com/charmbracelet/crush/blob/main/internal/agent/prompt/prompt.go）。
@@ -42,8 +39,7 @@ claude-code / gemini 同时识别。
 | 配置文件 | `<repo>/crush.json` 或 `.crush.json` | model / provider / `context_paths` /
   `options.skills_paths` 等 |
 | 全局 Skills（默认扫描） | `~/.config/crush/skills/`、`~/.config/agents/skills/` | 唯二默认生效的全局路径 |
-| 项目 Skills（需声明） | `<repo>/.crush/skills/<name>/SKILL.md` | 必须在 `crush.json` 的
-  `options.skills_paths` 里显式列出该路径才会被扫描 |
+| 项目 Skills | `<repo>/.crush/skills/<name>/SKILL.md` | 默认自动扫描；`skills_paths` 可追加额外目录 |
 
 `context_paths` 在 `crush.json` 内可配置，默认包含上述多个 markdown 文件名，
 全部命中即按顺序拼接注入，不做单选。

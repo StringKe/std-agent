@@ -55,3 +55,33 @@ func TestFactoryNoGlobsFrontmatter(t *testing.T) {
 		}
 	}
 }
+
+func TestFactorySkillInvocationFields(t *testing.T) {
+	falseVal := false
+	plan, err := (&Factory{}).Plan([]*parser.Document{{
+		Type:                   parser.TypeSkills,
+		Name:                   "review",
+		Description:            "Review",
+		AllowedTools:           []string{"Read"},
+		DisableModelInvocation: true,
+		UserInvocable:          &falseVal,
+		Body:                   "body",
+	}}, &config.Config{Inject: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, ok := contentOf(plan, ".factory/skills/review/SKILL.md")
+	if !ok {
+		t.Fatalf("missing factory skill, paths: %v", pathSet(plan))
+	}
+	for _, want := range []string{
+		"allowed-tools:",
+		"- Read",
+		"disable-model-invocation: true",
+		"user-invocable: false",
+	} {
+		if !strings.Contains(c, want) {
+			t.Errorf("missing %q in:\n%s", want, c)
+		}
+	}
+}

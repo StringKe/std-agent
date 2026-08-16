@@ -41,8 +41,9 @@ var copilotAdapter = protocol.Adapter{
 	SubagentsDir:    ".github/agents",
 	SkillsDir:       ".github/skills",
 	// 官方 SKILL.md 字段：name（必填=目录名，≤64）/ description（必填，≤1024）/
-	// license / compatibility（≤500）/ metadata / allowed-tools（experimental）
-	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools"},
+	// license / compatibility（≤500）/ metadata / allowed-tools（experimental）/
+	// argument-hint / user-invocable / disable-model-invocation（VS Code / CLI）
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools", "argument-hint", "user-invocable", "disable-model-invocation"},
 	ReferencesDir:        "", // fallback 到 instructions/references/
 	FallbackDir:          ".github/instructions",
 	InjectExplainer:      true,

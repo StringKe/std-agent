@@ -66,6 +66,7 @@ var Limits = []Limit{
 	{"kimi-code", "root-file", 8000, 32768, "AGENTS.md 由 Kimi Code 层级发现加载，全链 32KiB 预算（leaf-first），kimi-code rules 全文 inline 到 AGENTS.md，> 8k（~2k tokens）建议精简规则或对低优先级 rule 关闭 kimi-code target"},
 	{"gemini", "root-file", 8000, 0, "GEMINI.md 由 Gemini CLI 启动加载到 system prompt，官方无字节上限文档；> 8k 字符建议精简根文件，把详细规则拆到非 root rule"},
 	{"copilot", "root-file", 8000, 0, "copilot-instructions.md 无硬性字符上限（历史截断规则已于 2026-06-12 移除）；官方软指导不超过约 2 页，> 8k 建议精简"},
+	{"factory", "root-file", 8000, 80000, "Factory 初始 AGENTS 类指南上限 80,000 字符（动态 Read 路径发现另有 40,000 字符）；> 8k 建议精简根文件"},
 }
 
 // CheckDocument 对单个 Document 做 budget 检查（body 字节 + skill 字段长度），

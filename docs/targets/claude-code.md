@@ -87,8 +87,11 @@ agents 一行的 `isolation` / `skills` / `memory` / `permissionMode` / `maxTurn
 
 | 变量 | 含义 |
 |---|---|
-| `$1` `$2` ... | 位置参数 |
 | `$ARGUMENTS` | 全部参数原样字符串 |
+| `$ARGUMENTS[N]` / `$N` | 0-based 位置参数；`$0` 是第一参数，`$1` 是第二参数 |
+| `$name` | `arguments` frontmatter 声明的命名参数 |
+
+command 文件支持与 skill 相同的 frontmatter，但官方忽略 `name` 与 `paths`。同名时 skill 覆盖 command。
 
 ## 6. Hook 事件
 
@@ -138,16 +141,16 @@ user（`~/.claude/settings.json`）。数组合并不覆盖。
 | skills | `.claude/skills/<name>/SKILL.md` + 同目录 `SkillFiles` 辅助文件 |
 | commands | `.claude/commands/<name>.md`，frontmatter 复用 skill 全字段集 |
 | subagents | `.claude/agents/<name>.md`（Claude Code 原生支持，非 v1.0 遗留的"不生成"，见 # 12 修正） |
-| references | **原生无 references 类型**；fallback 到 `.claude/rules/references/<name>.md`（rule-equivalent 形式，非 SKILL.md；frontmatter 注入 `std-agent-type: references`） |
+| references | **原生无 references 类型**；fallback 到 `.claude/references/<name>.md`（不进 `.claude/rules/`，避免被全量自动加载） |
 
 ## 9. 转换器实现要点（对照 `internal/transformer/claude_code.go` + `internal/transformer/protocol/claude_md.go`）
 
 1. `CLAUDE.md` 主入口：type glossary（`InjectTypeGlossary=true`）+ root rule body + `Imported Rules` manifest（nonRoot rule 索引）+ stdagent header/footer marker
 2. `.claude/rules/<name>.md`：frontmatter 仅 `paths`（GlobsList 格式）+ `description`；Claude Code 官方仅认 `paths`，不支持 `alwaysApply` / `applyTo` / `globs`
 3. `.claude/skills/<name>/SKILL.md`：`renderClaudeSkillFrontmatter` 渲染 Agent Skills 标准字段（`name` / `description` / `license` / `compatibility` / `metadata`）+ Anthropic 私有字段集（`when_to_use` / `model` / `argument-hint` / `arguments` / `effort` / `context` / `agent` / `shell` / `allowed-tools` / `disallowed-tools` / `paths` / `disable-model-invocation` / `user-invocable` / `hooks`）
-4. `.claude/commands/<name>.md`：直接复用第 3 点同一渲染函数（官方 commands/skills frontmatter 已合并），不再是旧版的 `argument_hint -> argument-hint` 单字段映射
+4. `.claude/commands/<name>.md`：复用 skill 字段集，但不写 `name` / `paths`（官方忽略这两项）
 5. `.claude/agents/<name>.md`：**已实现**（`buildClaudeSubagentFile`），frontmatter `name` / `description` / `model` / `tools`（来自 `AllowedTools`）/ `disallowedTools` / `background`；旧文档"v1.0 不直接生成"已过时
-6. references：无原生类型，统一走 `BuildDegradedFileOp` fallback 到 `.claude/rules/references/<name>.md`
+6. references：无原生类型，统一走 `BuildDegradedFileOp` fallback 到 `.claude/references/<name>.md`。`applyTo` 不会把它变成 rule；`.claude/rules/` 会被 Claude Code 全量加载，不能当 references 落点。
 7. `settings.json` / `.mcp.json`：`.mcp.json` 已实现（`buildClaudeMCPJSON`，顶级键 `mcpServers`）；`settings.json`（hooks/权限等）仍未实现，保留扩展位
 8. 备份：sync 前对 `CLAUDE.md` `.claude/rules/` `.claude/skills/` `.claude/commands/` `.claude/agents/` 做快照
 

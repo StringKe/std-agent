@@ -6,9 +6,9 @@
 
 ## 1. 摘要
 
-Roo Code 是 VS Code AI 编码扩展，源自 Cline 的 fork（早期名为 Roo Cline），
-2026 年第一季度独立品牌运营，GitHub stars 18k+。功能上接近 Cline 的超集，
-增加了 mode-specific rules（架构师 / 工程师 / 测试等多角色切换）与 workflows。
+Roo Code 是 VS Code AI 编码扩展，源自 Cline 的 fork（早期名为 Roo Cline）。
+官方仓库已于 2026-05-15 归档，扩展停更；冻结文档仍可用于兼容存量项目。
+功能上接近 Cline 的超集，增加了 mode-specific rules 与 workflows。
 
 协议归属：协议族 D（Clinerules）。与 cline / kilo-code 共用 `Clinerules` Protocol，
 仅 `RulesDir` / `SingleFileFallback` 等 adapter 字段不同。

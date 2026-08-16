@@ -118,6 +118,26 @@ func TestCursor_SkillFile_SKILLmdStandard(t *testing.T) {
 	}
 }
 
+func TestCursor_SkillFile_UserInvocableFalse(t *testing.T) {
+	falseVal := false
+	doc := &parser.Document{
+		Type:          parser.TypeSkills,
+		Name:          "hidden",
+		Description:   "Hidden skill",
+		UserInvocable: &falseVal,
+		Body:          "body",
+	}
+	plan, _ := Cursor{}.Plan([]*parser.Document{doc}, cursorTestAdapter(), cursorCfg())
+	op := cursorFindFile(plan.Files, ".cursor/skills/hidden/SKILL.md")
+	if op == nil {
+		t.Fatalf("missing skill, files:%s", cursorPlanPaths(plan.Files))
+	}
+	s := string(op.Content)
+	if !strings.Contains(s, "user-invocable: false") {
+		t.Errorf("expected user-invocable: false, got:\n%s", s)
+	}
+}
+
 func TestCursor_CommandFile_MdSuffix(t *testing.T) {
 	doc := &parser.Document{
 		Type:        parser.TypeCommands,

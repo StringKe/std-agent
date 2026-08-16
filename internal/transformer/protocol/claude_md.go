@@ -197,8 +197,14 @@ func buildClaudeSkillFile(d *parser.Document, adapter Adapter, cfg *config.Confi
 // 这些私有字段不下放到通用 Adapter.SkillSupportedFields，统一在本协议内部
 // 处理，让其他 protocol 不必感知 Anthropic 方言。
 func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
+	return renderClaudeSkillFrontmatterOpts(d, adapter, true)
+}
+
+func renderClaudeSkillFrontmatterOpts(d *parser.Document, adapter Adapter, includeNameAndPaths bool) string {
 	var fm transformerutil.FmBuilder
-	fm.Add("name", d.Name)
+	if includeNameAndPaths {
+		fm.Add("name", d.Name)
+	}
 	fm.Add("description", d.Description)
 	// Claude Code 私有字段
 	fm.Add("when_to_use", d.WhenToUse)
@@ -213,7 +219,9 @@ func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
 	// 写错字段名会被 Claude Code 静默忽略。
 	fm.AddList("allowed-tools", d.AllowedTools)
 	fm.AddList("disallowed-tools", d.DisallowedTools)
-	fm.AddList("paths", transformerutil.EffectiveApplyTo(d, adapter.Name))
+	if includeNameAndPaths {
+		fm.AddList("paths", transformerutil.EffectiveApplyTo(d, adapter.Name))
+	}
 	if d.DisableModelInvocation {
 		fm.AddBool("disable-model-invocation", true)
 	}
@@ -236,14 +244,14 @@ func renderClaudeSkillFrontmatter(d *parser.Document, adapter Adapter) string {
 
 // buildClaudeCommandFile 输出 .claude/commands/<name>.md
 //
-// 官方已把 commands 与 skills 的 frontmatter 合并（"support the same
-// frontmatter"），直接复用 skill 全字段集渲染，command 才能用上
-// when_to_use / disable-model-invocation / paths / context / agent / effort 等能力。
+// 官方已把 commands 与 skills 的 frontmatter 合并，但 command 文件忽略
+// name 与 paths。其余字段（when_to_use / disable-model-invocation /
+// context / agent / effort）仍复用 skill 渲染。
 func buildClaudeCommandFile(d *parser.Document, adapter Adapter, cfg *config.Config) writer.FileOp {
 	opts := transformerutil.MakeOpts(cfg, adapter.Name, d.Path, false)
 	return transformerutil.BuildMarkdownFile(
 		transformerutil.FilePath(claudeCommandsDir(adapter), d.Name, ".md"),
-		renderClaudeSkillFrontmatter(d, adapter), d.Body, opts,
+		renderClaudeSkillFrontmatterOpts(d, adapter, false), d.Body, opts,
 	)
 }
 

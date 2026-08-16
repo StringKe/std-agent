@@ -198,3 +198,89 @@ func TestCodexSubagentTOML(t *testing.T) {
 		t.Errorf("transition markdown output should be kept, paths: %v", pathSet(plan))
 	}
 }
+
+// TestCodexImplicitInvocationSidecar 验证 disable_model_invocation 写到
+// agents/openai.yaml，而不是污染共享 SKILL.md。
+// 来源：https://learn.chatgpt.com/codex/build-skills
+func TestCodexImplicitInvocationSidecar(t *testing.T) {
+	docs := []*parser.Document{{
+		Type:                   parser.TypeSkills,
+		Name:                   "review",
+		Description:            "Review code",
+		DisableModelInvocation: true,
+		Body:                   "body",
+	}}
+	cfg := &config.Config{Inject: false}
+	codexPlan, err := (&Codex{}).Plan(docs, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ampPlan, err := (&Amp{}).Plan(docs, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	yamlPath := ".agents/skills/review/agents/openai.yaml"
+	c, ok := contentOf(codexPlan, yamlPath)
+	if !ok {
+		t.Fatalf("codex must emit %s when disable_model_invocation, paths: %v", yamlPath, pathSet(codexPlan))
+	}
+	for _, want := range []string{
+		"policy:",
+		"allow_implicit_invocation: false",
+	} {
+		if !strings.Contains(c, want) {
+			t.Errorf("missing %q in openai.yaml:\n%s", want, c)
+		}
+	}
+
+	skill, ok := contentOf(codexPlan, ".agents/skills/review/SKILL.md")
+	if !ok {
+		t.Fatal("missing SKILL.md")
+	}
+	if strings.Contains(skill, "allow_implicit_invocation") {
+		t.Errorf("SKILL.md must not carry allow_implicit_invocation:\n%s", skill)
+	}
+
+	ampSkill, ok := contentOf(ampPlan, ".agents/skills/review/SKILL.md")
+	if !ok {
+		t.Fatal("amp missing shared SKILL.md")
+	}
+	if skill != ampSkill {
+		t.Errorf("shared SKILL.md must stay byte-identical between codex and amp")
+	}
+	if pathSet(ampPlan)[yamlPath] {
+		t.Errorf("amp must not emit Codex-only sidecar %s", yamlPath)
+	}
+}
+
+func TestCodexImplicitInvocationSidecarAbsentByDefault(t *testing.T) {
+	plan, err := (&Codex{}).Plan([]*parser.Document{{
+		Type:        parser.TypeSkills,
+		Name:        "review",
+		Description: "Review code",
+		Body:        "body",
+	}}, &config.Config{Inject: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pathSet(plan)[".agents/skills/review/agents/openai.yaml"] {
+		t.Error("openai.yaml must not be written when disable_model_invocation is unset")
+	}
+}
+
+func TestCodexCommandSkillImplicitInvocationSidecar(t *testing.T) {
+	plan, err := (&Codex{}).Plan([]*parser.Document{{
+		Type:                   parser.TypeCommands,
+		Name:                   "ship",
+		Description:            "Ship it",
+		DisableModelInvocation: true,
+		Body:                   "ship",
+	}}, &config.Config{Inject: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !pathSet(plan)[".agents/skills/commands/ship/agents/openai.yaml"] {
+		t.Errorf("command-as-skill must also emit openai.yaml, paths: %v", pathSet(plan))
+	}
+}

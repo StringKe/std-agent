@@ -14,8 +14,9 @@ func init() { Register(&Amp{}) }
 // 协议族：AgentsMD。Amp 读 AGENTS.md（多文件 + 嵌套，~/.config/amp/AGENTS.md 全局），
 // 原生 Agent Skills 于 .agents/skills/（https://ampcode.com/manual/agent-skills.md）。
 // 自定义 commands 已被官方移除并入 skills（2026-01-29
-// https://ampcode.com/news/slashing-custom-commands），/name 直接调用同名 skill，
-// 因此 commands 与 codex 相同降级为 .agents/skills/commands/<n>/SKILL.md。
+// https://ampcode.com/news/slashing-custom-commands）。Neo 后不再提供
+// user-invokable slash；commands 仍与 Codex 相同降级为
+// .agents/skills/commands/<n>/SKILL.md，由模型按 description 选用。
 // subagents 仍是运行时动态 mini-Amp（Task tool），无文件化定义，走 fallback。
 type Amp struct{}
 

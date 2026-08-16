@@ -15,11 +15,9 @@ func init() { Register(&Crush{}) }
 // CLAUDE.md / GEMINI.md 等（全部命中按序拼接）。本 transformer 写 CRUSH.md
 // 作为 crush 私有根，skills 走 .crush/skills/，其余类型走 .crush/rules/ 子目录 fallback。
 //
-// skills 闭环：crush 默认只扫描 ~/.config/crush/skills/ 与 ~/.config/agents/skills/
-// 两个全局路径，项目级 skills 必须在 crush.json 的 options.skills_paths 显式声明
-// （https://charmbracelet-crush.mintlify.app/configuration/skills）。因此 Plan 在产出
-// skills 时追加 crush.json 的 JSONMerge op 注册 ".crush/skills"。用户已有 crush.json
-// 时深合并（数组并集、scalar 保留用户值），解析失败（注释等）跳过并 WARN。
+// skills：当前源码默认扫描 .crush/skills（以及 .agents/.claude/.cursor/skills）。
+// crush.json options.skills_paths 仍可用于额外路径；继续 JSONMerge 注册
+// ".crush/skills" 对旧版 Crush 无害，新版则是冗余声明。
 type Crush struct{}
 
 // Name 返回 "crush"

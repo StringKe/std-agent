@@ -35,8 +35,8 @@ var claudeCodeAdapter = protocol.Adapter{
 	SkillsDir:            ".claude/skills",
 	CommandsDir:          ".claude/commands",
 	SubagentsDir:         ".claude/agents",
-	ReferencesDir:        "", // fallback 到 SkillsDir，Agent Skills 标准
-	FallbackDir:          ".claude/rules",
+	ReferencesDir:        "",        // 无原生 references
+	FallbackDir:          ".claude", // 不能用 .claude/rules：该目录会被全量自动加载
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,
 	GlobsFieldName:       "paths", // Anthropic 私有方言

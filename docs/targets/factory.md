@@ -54,7 +54,7 @@ schema 未承载 reasoningEffort/mcpServers，暂不产出，见 UNKNOWN）。�
 |---|---|---|
 | `AGENTS.md` | Markdown | 无（纯指令文本） |
 | `.factory/rules/*.md` | Markdown | 可选 `description`，**无 globs / paths / applyTo** |
-| `.factory/skills/<n>/SKILL.md` | Markdown | Agent Skills 标准：`name` / `description` / `license` / `compatibility` / `metadata` |
+| `.factory/skills/<n>/SKILL.md` | Markdown | Agent Skills 标准 + `allowed-tools` / `user-invocable` / `disable-model-invocation` |
 | `.factory/commands/<n>.md` | Markdown | 可选 frontmatter（legacy 兼容路径） |
 | `.factory/droids/<n>.md` | Markdown | `name`（必填）/ `description`（≤500 字符）/ `model` / `tools` / `reasoningEffort` / `mcpServers` |
 | `.factory/settings.json` | JSON | 不适用 |
@@ -82,7 +82,8 @@ project guidance"，激活由 droid 自行决定（基于 description 内容
    **不**渲染 `globs` / `paths` / `applyTo`（`adapter.GlobsFieldName=""`）；
    description 写入 frontmatter
 3. skills 走 Agent Skills 标准 `<.factory/skills/<n>/SKILL.md>`，
-   `SkillSupportedFields = name / description / license / compatibility / metadata`
+   字段含 `name` / `description` / `license` / `compatibility` / `metadata` /
+   `allowed-tools` / `user-invocable` / `disable-model-invocation`
 4. subagents 走 `.factory/droids/<n>.md`（`SubagentsDir=".factory/droids"`），
    frontmatter 目前仅渲染 `name` / `description` / `model` / `tools`
    （协议层 subagent frontmatter 字段集固定，未扩展 `reasoningEffort` /
@@ -118,6 +119,7 @@ project guidance"，激活由 droid 自行决定（基于 description 内容
   / `model` / `tools` / `reasoningEffort` / `mcpServers`
 - droid 之间不能相互调用（无递归委派）
 - Factory 在企业付费市场可见度高，AGENTS.md 标准核心采纳方之一
+- 初始 AGENTS 类指南上限 80,000 字符；动态 Read 路径发现 40,000 字符
 
 ## 8. UNKNOWN
 

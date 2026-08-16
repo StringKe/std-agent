@@ -23,7 +23,7 @@ Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fall
 - GitHub 上的 Codex Code Review 读取最接近改动的 `AGENTS.md` 中 `## Code Review Rules` 段（https://learn.chatgpt.com/codex/agent-configuration/agents-md）。stdagent 不自动生成该标题，由源正文自行书写。
 - 仓库 skills 从 CWD 向上扫描每一级 `.agents/skills`。stdagent 仍写仓库根 `.agents/skills/`。
 - 启动技能清单最多约占 context 2%（未知窗口时按 8000 字符），超限先缩短 description。
-- `allow_implicit_invocation` 现位于可选 `agents/openai.yaml`，不再作为 SKILL.md 核心字段。
+- `allow_implicit_invocation` 位于可选 `agents/openai.yaml`，不再作为 SKILL.md 核心字段。源 `disable_model_invocation: true` 时写出该 sidecar。
 - `/codex/agent-configuration/rules` 是实验性 execpolicy `.rules`（Starlark `prefix_rule`），不是项目 coding rules，stdagent 不生成。
 
 ## 2. 配置文件路径
@@ -38,7 +38,7 @@ Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fall
 | Prompts（已移除） | `~/.codex/prompts/*.md` | **自 0.117.0 彻底移除（非 deprecated）**，改用 skills |
 | Subagents（项目） | `.codex/agents/<name>.toml` | 官方原生支持，字段 `name` / `description` / `developer_instructions`（必填）+ 可选 `model` / `sandbox_mode` 等 |
 | Skills (用户) | `$HOME/.agents/skills/<name>/SKILL.md` | 通用 agent skills 协议 |
-| Skills (项目) | `<repo>/.agents/skills/<name>/SKILL.md` | 与仓库一同提交；可选字段新增 `allow_implicit_invocation`（2026-07 新增） |
+| Skills (项目) | `<repo>/.agents/skills/<name>/SKILL.md` | 与仓库一同提交；调用策略见同目录 `agents/openai.yaml` |
 | Hooks | `~/.codex/hooks.json` 或 `[hooks]` inline；项目 `.codex/hooks.json` | 受 `[features].codex_hooks=true` 控制 |
 
 ## 3. 文件格式
@@ -47,7 +47,8 @@ Codex **不消费** `CLAUDE.md` 或 `GEMINI.md`，但可通过 `project_doc_fall
 |---|---|---|
 | `config.toml` | TOML | 无 |
 | `AGENTS.md` / `AGENTS.override.md` | Markdown | 无（全文即指令） |
-| `SKILL.md` | Markdown | 必填，字段见 OpenAI agents skills 规范（核心: `name`、`description`；可选 `allow_implicit_invocation`） |
+| `SKILL.md` | Markdown | 必填，字段见 OpenAI agents skills 规范（核心: `name`、`description`） |
+| `agents/openai.yaml` | YAML | 可选；`policy.allow_implicit_invocation`（默认 true） |
 | `.codex/agents/<name>.toml` | TOML | `name` / `description` / `developer_instructions` 必填，`model` 等可选 |
 | 自定义 prompt（已移除） | Markdown | 不再适用 |
 | `hooks.json` | JSON | 无 |
@@ -99,7 +100,7 @@ closest wins：越靠近 cwd 的优先级越高，向 root 拼接（链上完整
 | std-agent 类型 | Codex 落点 |
 |---|---|
 | rules | 项目 `AGENTS.md`（RulesDir 留空，所有 nonRoot rules 全文 inline 到一个文件）；子目录 rules 写入 `<sub>/AGENTS.md`（nested root，无 manifest） |
-| skills | `<repo>/.agents/skills/<name>/SKILL.md` + 同目录辅助文件；frontmatter 白名单 `name` / `description` / `license` / `compatibility` / `metadata` |
+| skills | `<repo>/.agents/skills/<name>/SKILL.md` + 同目录辅助文件；frontmatter 白名单 `name` / `description` / `license` / `compatibility` / `metadata`。`disable_model_invocation: true` 时另写 `agents/openai.yaml` |
 | commands | 降级为 skill 写到 `.agents/skills/commands/<n>/SKILL.md`（v3 子目录隔离，无私有前缀），description 含 slash 调用 hint；不进入 shared `AGENTS.md` |
 | references | `.agents/references/<n>.md`（降级，AI 按 frontmatter `std-agent-type` 识别） |
 | subagents | **双写**：`.agents/subagents/<n>.md`（降级 markdown，人读文档）+ `.codex/agents/<n>.toml`（官方原生格式，`name` / `description` / `developer_instructions` / 可选 `model`） |
@@ -158,7 +159,7 @@ closest wins：越靠近 cwd 的优先级越高，向 root 拼接（链上完整
 - `~/.codex/prompts` **自 0.117.0 彻底移除**（不是 deprecated，是已删除），commands
   降级为 skills 的方向正确，本次仅更新措辞
 - `.codex/agents/<name>.toml` 官方原生 subagent 格式已实现落地写入（见 # 6 / # 7）
-- SKILL.md 可选字段新增 `allow_implicit_invocation`（transformer 尚未渲染该字段，属未来扩展位）
+- `allow_implicit_invocation` 写在 `<skill>/agents/openai.yaml`，不写进 SKILL.md
 
 2026-06-11 复核确认（memories 落盘格式不再 UNKNOWN）：
 - Memories 是**用户级**自动记忆系统：单根 `~/.codex/memories/`

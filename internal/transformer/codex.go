@@ -2,6 +2,7 @@ package transformer
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/StringKe/std-agent/internal/config"
@@ -35,8 +36,35 @@ func (c *Codex) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Plan,
 		if d.Type == parser.TypeSubagents {
 			plan.Files = append(plan.Files, buildCodexAgentTOML(d, cfg))
 		}
+		if sidecar, ok := buildCodexOpenAIYAML(d); ok {
+			plan.Files = append(plan.Files, sidecar)
+		}
 	}
 	return plan, nil
+}
+
+// buildCodexOpenAIYAML 把 disable_model_invocation 写成官方 sidecar。
+//
+// 该字段不在 SKILL.md 核心 schema 中，写进共享 SKILL.md 会被忽略，还会破坏
+// 与 Amp / Warp / Kimi / Antigravity 的字节一致约束。
+// 来源：https://learn.chatgpt.com/codex/build-skills
+func buildCodexOpenAIYAML(d *parser.Document) (writer.FileOp, bool) {
+	if !d.DisableModelInvocation {
+		return writer.FileOp{}, false
+	}
+	var skillDir string
+	switch d.Type {
+	case parser.TypeSkills:
+		skillDir = transformerutil.SkillDir(".agents/skills", d.Name)
+	case parser.TypeCommands:
+		skillDir = transformerutil.SkillDir(".agents/skills/commands", d.Name)
+	default:
+		return writer.FileOp{}, false
+	}
+	return writer.FileOp{
+		Path:    path.Join(skillDir, "agents", "openai.yaml"),
+		Content: []byte("policy:\n  allow_implicit_invocation: false\n"),
+	}, true
 }
 
 // buildCodexAgentTOML 渲染单个 subagent 为 .codex/agents/<name>.toml

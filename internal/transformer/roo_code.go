@@ -11,13 +11,13 @@ func init() {
 	Register(&RooCode{})
 }
 
-// RooCode 是 Roo Code transformer（Cline fork，18k stars，github.com/RooCodeInc/Roo-Code）
+// RooCode 是 Roo Code transformer（Cline fork；官方扩展已于 2026-05-15 归档）。
 //
 // 协议族 D（Clinerules）：
-//   - 主目录 `.roo/rules/` 自动加载所有 .md
-//   - 单文件 `.roorules` 作为 v0.0.4 之前老项目的向后兼容 fallback
-//   - 与 cline 的差异：roo-code 用子目录组织（不需要数字前缀）；
-//     cline 用 100- / 500- / 900- 前缀决定加载顺序
+//   - 主目录 `.roo/rules/` 递归加载所有 .md
+//   - 单文件 `.roorules` 作为目录为空时的 fallback
+//   - 与 cline 的差异：roo-code 默认不用 100/500/900 优先级协议；
+//     官方示例可用 `01-` / `02-` 做字母序，cline 用数字前缀决定加载顺序
 type RooCode struct{}
 
 // Name 返回 "roo-code"
@@ -31,8 +31,9 @@ func (r *RooCode) Plan(docs []*parser.Document, cfg *config.Config) (*writer.Pla
 // rooCodeAdapter 注入 Clinerules 协议族（spec v3 §2.4）
 //
 // 与 cline 的差异：
-//   - RulesDir `.roo/rules` 而非 `.clinerules`。注意 roo 不递归扫描 rules 子目录
-//     （只读顶层 .md），skills / commands 必须走各自原生目录
+//   - RulesDir `.roo/rules` 而非 `.clinerules`。目录内部递归扫描；
+//     `enableSubfolderRules`（默认 false）管的是另一套子目录 `.roo/rules/`，
+//     不是本目录内部递归。skills / commands 走各自原生目录
 //   - SkillsDir `.roo/skills`（2026-05-15 GA，https://docs.roocode.com/features/skills）
 //   - CommandsDir `.roo/commands`（原生 slash commands，frontmatter
 //     description / argument-hint，https://roocodeinc.github.io/Roo-Code/features/slash-commands/）

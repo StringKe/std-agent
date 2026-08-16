@@ -46,7 +46,7 @@ var grokBuildAdapter = protocol.Adapter{
 	NestedSupported:      true,
 	RulesDir:             "",
 	SkillsDir:            ".grok/skills",
-	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools", "disable-model-invocation"},
+	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata", "allowed-tools", "disable-model-invocation", "user-invocable"},
 	CommandsDir:          ".grok/commands",
 	SubagentsDir:         ".grok/agents",
 	ReferencesDir:        "",

@@ -19,11 +19,8 @@ frontmatter 写 `globs` 字段限定仅在命中匹配文件时才注入，未�
 随引用生效（https://ampcode.com/manual）。
 
 Amp 已于 2026-01-29 官方移除自定义 slash commands 功能，原有能力并入
-Agent Skills：新建的 skill 若放在 `.agents/skills/<name>/SKILL.md` 即可同时
-用 `/<name>` 手动调用与被模型自动检索，不再需要独立 commands 机制
-（https://ampcode.com/news/slashing-custom-commands）。skills 本身走原生
-Agent Skills 标准目录 `.agents/skills/`（https://ampcode.com/manual/agent-skills.md），
-不再是此前调研认为的"无原生扩展机制"。
+Agent Skills。Neo（2026-05-06）后不再提供 user-invokable slash；skill 由模型
+按 description 决定是否加载。skills 走原生目录 `.agents/skills/`。
 
 Amp 不消费 rules frontmatter，AGENTS.md 是纯 Markdown 指令文本；也没有原生
 subagent 文件化定义机制，subagent 是运行时动态生成的 mini-Amp（Task tool），
@@ -37,7 +34,7 @@ subagent 文件化定义机制，subagent 是运行时动态生成的 mini-Amp�
 | 项目根 | `<repo>/AGENTS.md` | 主入口（原 `AGENT.md` 已迁移） |
 | 兼容旧名 | `<repo>/AGENT.md` | 向后兼容，仍读，不建议新建 |
 | 嵌套子目录 | `<repo>/<subdir>/AGENTS.md` | 进入子目录时自动叠加上下文 |
-| 项目 Skills | `<repo>/.agents/skills/<name>/SKILL.md` | 原生 Agent Skills 标准包，`/<name>` 可直接调用 |
+| 项目 Skills | `<repo>/.agents/skills/<name>/SKILL.md` | 原生 Agent Skills 标准包；由模型按 description 选用 |
 
 Amp 无独立 `.amp/` 或 `.sourcegraph/` 私有目录用于 rule fan-out；rules 仍集中
 写在 AGENTS.md，但 skills（含原 commands 语义）已有原生目录承载。
