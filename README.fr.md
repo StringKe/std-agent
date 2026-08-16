@@ -19,7 +19,7 @@ Arrêtez de maintenir à la main `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor
 ## Pourquoi std-agent ?
 
 - **Source unique** -- écrivez `rules` / `skills` / `commands` / `references` / `subagents` une seule fois en YAML frontmatter + Markdown.
-- **Vingt-trois cibles** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
+- **Vingt-cinq cibles** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
 - **Conformité aux spécifications** -- chaque chemin de sortie, chaque dialecte de frontmatter et chaque limite de taille est vérifié par rapport à la documentation officielle des outils (dernier audit complet : 2026-07) ; les répertoires natifs Agent Skills sont utilisés partout où ils existent.
 - **Zéro verrouillage** -- le writer ne touche qu'à une petite liste blanche de chemins ; sauvegarde avant chaque sync ; `clean` annule tout.
 - **Détection de drift** -- `status` affiche les fichiers modifiés hors de stdagent ; `fix` les réapplique depuis la source.
@@ -48,7 +48,7 @@ Arrêtez de maintenir à la main `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor
 | Warp | `AGENTS.md` (inline + imbriqué) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (9)
+### Tier 2 (11)
 
 | Cible | Sorties principales |
 |---|---|
@@ -61,6 +61,8 @@ Arrêtez de maintenir à la main `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 Chaque intégration est documentée dans [docs/targets/](docs/targets/).
 

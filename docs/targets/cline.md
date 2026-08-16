@@ -88,7 +88,7 @@ memory-bank/
 | rules | `.clinerules/<NN>-<name>.md`（数字前缀控制顺序）；frontmatter `paths:` 来自 std `applyTo` |
 | skills | `.cline/skills/<name>/SKILL.md`（官方推荐原生包） |
 | commands | `.clinerules/workflows/<name>.md` |
-| references | 推荐落到 `memory-bank/` 6 文件之一，由 std `name` 决定（如 `name=project-brief` -> `projectbrief.md`） |
+| references | `.cline/references/<name>.md`（不进 `.clinerules/`，避免被当 rule 全量加载） |
 
 ## 8. 转换器实现要点
 
@@ -101,7 +101,7 @@ memory-bank/
 4. AGENTS.md / CLAUDE.md 不由本 transformer 写；Cline 可消费启用 producer 经
    runner canonicalize 的共享 AGENTS.md
 5. 全局 rules（用户级）目录 v1.0 不主动写入；保留 v1.1
-6. Memory Bank：仅当 std reference 文件 `name` 命中 6 文件之一时映射；其他 reference 不写
+6. references 走私有 `.cline/references/`，不写进 `.clinerules/`
 
 ## 9. 信息来源
 

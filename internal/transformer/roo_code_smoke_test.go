@@ -12,10 +12,10 @@ import (
 //   - rules    -> .roo/rules/<name>.md（无数字前缀；ApplyTo 走 paths frontmatter list）
 //   - commands -> .roo/commands/<name>.md（原生 slash commands）
 //   - skills   -> .roo/skills/<name>/SKILL.md（原生 Agent Skills，2026-05 GA）
-//   - references / subagents -> .roo/rules/<sub>/<name>.md
+//   - references / subagents -> .roo/{references,subagents}/<name>.md
 //
-// 注意：roo 不递归扫描 .roo/rules/ 子目录，skills / commands 必须走原生目录
-// 才会被消费；references / subagents 降级物本就不该自动加载，留子目录无害。
+// skills / commands 走原生目录才会被消费；references / subagents 不进
+// `.roo/rules/`，避免被目录内递归扫描当 rule 加载。
 // 关键断言：路径无 std-agent 私有前缀；rule 文件名不含 100/500/900 等 cline 数字前缀。
 func TestRooCodeOutputs(t *testing.T) {
 	tr := &RooCode{}
@@ -42,8 +42,8 @@ func TestRooCodeOutputs(t *testing.T) {
 		".roo/rules/always.md",
 		".roo/commands/release.md",
 		".roo/skills/code-review/SKILL.md",
-		".roo/rules/references/spec.md",
-		".roo/rules/subagents/qa.md",
+		".roo/references/spec.md",
+		".roo/subagents/qa.md",
 		".roo/rules/glossary.md",
 	}
 	for _, p := range wantPaths {
@@ -111,8 +111,8 @@ func TestRooCodeFallbackSubdirs(t *testing.T) {
 	paths := pathSet(plan)
 	for _, want := range []string{
 		".roo/skills/foo/SKILL.md",
-		".roo/rules/references/foo.md",
-		".roo/rules/subagents/foo.md",
+		".roo/references/foo.md",
+		".roo/subagents/foo.md",
 	} {
 		if !paths[want] {
 			t.Errorf("missing %s, paths: %v", want, paths)

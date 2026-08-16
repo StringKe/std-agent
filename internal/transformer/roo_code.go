@@ -45,7 +45,7 @@ var rooCodeAdapter = protocol.Adapter{
 	SkillsDir:            ".roo/skills",
 	CommandsDir:          ".roo/commands",
 	SingleFileFallback:   ".roorules", // 向后兼容老 roo 项目
-	FallbackDir:          ".roo/rules",
+	FallbackDir:          ".roo",      // 不进 .roo/rules/，避免 references 被递归当 rule 加载
 	GlobsFieldName:       "paths",
 	GlobsFieldFormat:     protocol.GlobsList,
 	InjectExplainer:      true,

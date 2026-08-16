@@ -144,4 +144,6 @@ const (
 	TriggerTrigger
 	// TriggerApplyTo 写 applyTo: globs（copilot 系）
 	TriggerApplyTo
+	// TriggerInclusion 写 inclusion: always / fileMatch / auto / manual（Kiro steering）
+	TriggerInclusion
 )

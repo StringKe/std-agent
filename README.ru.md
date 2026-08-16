@@ -19,7 +19,7 @@
 ## Почему std-agent?
 
 - **Единый источник** -- пишите `rules` / `skills` / `commands` / `references` / `subagents` один раз в YAML frontmatter + Markdown.
-- **Двадцать три цели** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
+- **Двадцать пять целей** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
 - **Точное соответствие спецификациям** -- каждый выходной путь, диалект frontmatter и лимит размера проверяются по официальной документации инструментов (последний полный аудит: 2026-07); нативные директории Agent Skills используются везде, где они существуют.
 - **Без вендор-лока** -- writer трогает только небольшой белый список путей; перед каждой синхронизацией делается бэкап; `clean` откатывает всё.
 - **Обнаружение дрифта** -- `status` показывает файлы, изменённые вне stdagent; `fix` восстанавливает их из источника.
@@ -48,7 +48,7 @@
 | Warp | `AGENTS.md` (инлайн + вложенный) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (9)
+### Tier 2 (11)
 
 | Цель | Основные выходы |
 |---|---|
@@ -61,6 +61,8 @@
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 Каждая интеграция описана в [docs/targets/](docs/targets/).
 

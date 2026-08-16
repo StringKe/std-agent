@@ -156,6 +156,48 @@ func TestRenderTriggerFrontmatter_ApplyTo(t *testing.T) {
 	}
 }
 
+func TestRenderTriggerFrontmatter_Inclusion(t *testing.T) {
+	cases := []struct {
+		name string
+		doc  *parser.Document
+		want string
+	}{
+		{
+			name: "always",
+			doc:  &parser.Document{AlwaysApply: true},
+			want: "inclusion: always\n",
+		},
+		{
+			name: "fileMatch single",
+			doc:  &parser.Document{ApplyTo: []string{"**/*.go"}},
+			want: "inclusion: fileMatch\nfileMatchPattern: \"**/*.go\"\n",
+		},
+		{
+			name: "fileMatch multi",
+			doc:  &parser.Document{ApplyTo: []string{"**/*.ts", "**/*.tsx"}},
+			want: "inclusion: fileMatch\nfileMatchPattern:\n  - \"**/*.ts\"\n  - \"**/*.tsx\"\n",
+		},
+		{
+			name: "auto",
+			doc:  &parser.Document{Name: "api-design", Description: "REST API patterns"},
+			want: "inclusion: auto\nname: api-design\ndescription: REST API patterns\n",
+		},
+		{
+			name: "manual",
+			doc:  &parser.Document{},
+			want: "inclusion: manual\n",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := RenderTriggerFrontmatter(TriggerInclusion, tc.doc)
+			if got != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestRenderTriggerFrontmatter_NilDoc(t *testing.T) {
 	if got := RenderTriggerFrontmatter(TriggerTrigger, nil); got != "" {
 		t.Errorf("nil doc should return empty, got %q", got)

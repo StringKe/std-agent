@@ -38,6 +38,7 @@ func RenderGlobs(field string, format GlobsFormat, vals []string) string {
 //   - TriggerAlwaysApply：写 alwaysApply: true 当 d.AlwaysApply=true，否则空
 //   - TriggerTrigger（windsurf 系）：按 doc 推断 always_on / glob / model_decision / manual
 //   - TriggerApplyTo（copilot 系）：写 applyTo: <逗号分隔 globs>
+//   - TriggerInclusion（Kiro steering）：写 inclusion: always / fileMatch / auto / manual
 //
 // 返回的字符串以 "\n" 结尾（FmBuilder 风格），可直接拼到 frontmatter 文本中；
 // 空串表示该模式下未渲染任何内容。
@@ -68,6 +69,24 @@ func RenderTriggerFrontmatter(mode TriggerMode, doc *parser.Document) string {
 	case TriggerApplyTo:
 		if len(applyTo) > 0 {
 			fm.Add("applyTo", strings.Join(applyTo, ","))
+		}
+	case TriggerInclusion:
+		switch {
+		case doc.AlwaysApply:
+			fm.Add("inclusion", "always")
+		case len(applyTo) > 0:
+			fm.Add("inclusion", "fileMatch")
+			if len(applyTo) == 1 {
+				fm.Add("fileMatchPattern", applyTo[0])
+			} else {
+				fm.AddList("fileMatchPattern", applyTo)
+			}
+		case doc.Description != "":
+			fm.Add("inclusion", "auto")
+			fm.Add("name", doc.Name)
+			fm.Add("description", doc.Description)
+		default:
+			fm.Add("inclusion", "manual")
 		}
 	}
 	return fmBodyOnly(&fm)

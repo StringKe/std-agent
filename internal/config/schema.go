@@ -56,7 +56,7 @@ var ValidTargets = []string{
 	// Tier 2（新兴 / 小众 / 半实验）
 	"continue-dev", "antigravity",
 	"qwen-code", "pi", "kilo-code", "augment-code", "jules", "grok-build",
-	"kimi-code",
+	"kimi-code", "kiro", "goose",
 }
 
 // IsValidTarget 检查 target 名合法
@@ -105,6 +105,8 @@ func Default() *Config {
 			"jules":        {Enabled: false, Convert: true},
 			"grok-build":   {Enabled: false, Convert: true},
 			"kimi-code":    {Enabled: false, Convert: true},
+			"kiro":         {Enabled: false, Convert: true},
+			"goose":        {Enabled: false, Convert: true},
 		},
 	}
 }

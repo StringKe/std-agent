@@ -42,3 +42,21 @@ func TestClineNativeSkillsDir(t *testing.T) {
 		t.Errorf("legacy fallback skill path must not be written, got %v", paths)
 	}
 }
+
+func TestClineReferencesOutsideRules(t *testing.T) {
+	plan, err := (&Cline{}).Plan([]*parser.Document{{
+		Type:        parser.TypeReferences,
+		Name:        "design",
+		Description: "Design",
+		Body:        "ref",
+	}}, &config.Config{Inject: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !pathSet(plan)[".cline/references/design.md"] {
+		t.Errorf("missing isolated references, paths: %v", pathSet(plan))
+	}
+	if pathSet(plan)[".clinerules/references/design.md"] {
+		t.Error("references must not land under .clinerules/")
+	}
+}

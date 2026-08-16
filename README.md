@@ -19,7 +19,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 ## Why std-agent?
 
 - **Single source** — write `rules` / `skills` / `commands` / `references` / `subagents` once in YAML frontmatter + Markdown.
-- **Twenty-three targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
+- **Twenty-five targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
 - **Spec-accurate** — every output path, frontmatter dialect, and size limit is verified against the tools' official docs (last full audit: 2026-08); native Agent Skills directories everywhere they exist.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
 - **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.
@@ -48,7 +48,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Warp | `AGENTS.md` (inline + nested) + `.agents/skills/` |
 | Factory (Factory.ai) | shared `AGENTS.md` + `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (9)
+### Tier 2 (11)
 
 | Target | Primary outputs |
 |---|---|
@@ -61,6 +61,8 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 Each integration is documented under [docs/targets/](docs/targets/).
 

@@ -19,7 +19,7 @@ Hör auf, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/ru
 ## Warum std-agent?
 
 - **Eine Quelle** -- schreibe `rules` / `skills` / `commands` / `references` / `subagents` einmal in YAML-Frontmatter + Markdown.
-- **Dreiundzwanzig Ziele** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
+- **Funfundzwanzig Ziele** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
 - **Spezifikationsgenau** -- jeder Ausgabepfad, jeder Frontmatter-Dialekt und jedes Größenlimit wird gegen die offizielle Dokumentation der Tools verifiziert (letztes vollständiges Audit: 2026-07); native Agent-Skills-Verzeichnisse überall, wo sie existieren.
 - **Kein Lock-in** -- der Writer greift nur auf eine winzige Whitelist von Pfaden zu; Backups vor jedem Sync; `clean` macht alles rückgängig.
 - **Drift-Erkennung** -- `status` zeigt Dateien, die außerhalb von stdagent verändert wurden; `fix` wendet die Quelle erneut an.
@@ -48,7 +48,7 @@ Hör auf, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/ru
 | Warp | `AGENTS.md` (inline + verschachtelt) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (9)
+### Tier 2 (11)
 
 | Ziel | Primäre Ausgaben |
 |---|---|
@@ -61,6 +61,8 @@ Hör auf, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/ru
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 Jede Integration ist unter [docs/targets/](docs/targets/) dokumentiert.
 

@@ -71,7 +71,7 @@ project guidance"，激活由 droid 自行决定（基于 description 内容
 | rules | `.factory/rules/<n>.md`（frontmatter 仅 `description`），多条 nonRoot 由 AGENTS.md manifest 段 `## Reference Rules` 索引 | Factory 启动时全量扫描 |
 | skills | `.factory/skills/<n>/SKILL.md` + 同目录辅助文件 | Agent Skills 标准发现 |
 | commands | `.factory/commands/<n>.md`（legacy 原生目录，官方持续兼容） | Factory 启动时扫描，`/<n>` 调用 |
-| references | 无原生 references 落点，degradation 到 FallbackDir（`.factory/rules`） | 走 fallback rule |
+| references | `.factory/references/<n>.md`（不进 `.factory/rules/`） | 按需查阅 |
 | subagents | `.factory/droids/<n>.md`，frontmatter `name` / `description` / `model` / `tools` | Factory 显式调度，droid 之间不能互相调用 |
 
 ## 5. 转换器实现要点

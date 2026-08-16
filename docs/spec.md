@@ -108,16 +108,16 @@ stdagent parse 阶段强制校验，违反整体 sync 中止：
 3. name 满足 kebab-case 正则
 4. 同 type 下 name 唯一
 5. targets 与 exclude_targets 不能同时非空
-6. targets / exclude_targets 内值必须是合法 target 名（23 个）
+6. targets / exclude_targets 内值必须是合法 target 名（25 个）
 7. priority 在 enum 内
 
-合法 target 名（23 个）：
+合法 target 名（25 个）：
 
 ```
 claude-code  codex  cursor  copilot  windsurf  gemini  aider  cline  opencode
 roo-code  crush  amp  warp  factory
 continue-dev  antigravity  qwen-code  pi  kilo-code  augment-code
-jules  grok-build  kimi-code
+jules  grok-build  kimi-code  kiro  goose
 ```
 
 ### 1.7 SKILL Package（目录形式）

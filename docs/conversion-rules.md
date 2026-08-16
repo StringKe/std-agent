@@ -1,6 +1,6 @@
 # Conversion rules
 
-stdagent 将统一 source 转换为 23 个 AI CLI target 的原生配置。本文只定义跨 target 的稳定契约；具体路径、字段和限制以 [targets/](targets/) 的官方证据及对应 adapter 为准。
+stdagent 将统一 source 转换为 25 个 AI CLI target 的原生配置。本文只定义跨 target 的稳定契约；具体路径、字段和限制以 [targets/](targets/) 的官方证据及对应 adapter 为准。
 
 ## Core contract
 
@@ -15,7 +15,7 @@ stdagent 将统一 source 转换为 23 个 AI CLI target 的原生配置。本�
 
 | protocol | representative targets | primary shape |
 |---|---|---|
-| `AgentsMD` | codex, amp, warp, factory, jules, grok-build, kimi-code | `AGENTS.md` plus target sidecars |
+| `AgentsMD` | codex, amp, warp, factory, jules, grok-build, kimi-code, kiro, goose | `AGENTS.md` plus target sidecars |
 | `ClaudeMD` | claude-code, gemini, qwen-code | root document plus imports or native directories |
 | `Cursor` | cursor | `.cursor/rules/*.mdc` and native packages |
 | `Clinerules` | cline, roo-code, kilo-code | rules directory with target dialect |

@@ -47,7 +47,7 @@ var clineAdapter = protocol.Adapter{
 	SkillSupportedFields: []string{"name", "description", "license", "compatibility", "metadata"},
 	CommandsDir:          ".clinerules/workflows",
 	SingleFileFallback:   ".clinerules", // 向后兼容（v0.0.4 默认走子目录）
-	FallbackDir:          ".clinerules",
+	FallbackDir:          ".cline",      // 不进 .clinerules/，避免 references 被当 rule 全量加载
 	GlobsFieldName:       "paths",
 	GlobsFieldFormat:     protocol.GlobsList,
 	InjectExplainer:      true,

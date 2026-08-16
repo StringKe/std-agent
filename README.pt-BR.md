@@ -19,7 +19,7 @@ Pare de manter `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsu
 ## Por que o std-agent?
 
 - **Fonte única** -- escreva `rules` / `skills` / `commands` / `references` / `subagents` uma vez em frontmatter YAML + Markdown.
-- **Vinte e três destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
+- **Vinte e cinco destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
 - **Fiel à especificação** -- cada caminho de saída, dialeto de frontmatter e limite de tamanho é verificado com a documentação oficial das ferramentas (última auditoria completa: 2026-07); diretórios nativos de Agent Skills onde existirem.
 - **Zero lock-in** -- o writer só toca em uma pequena whitelist de caminhos; backups antes de cada sync; `clean` reverte tudo.
 - **Detecção de drift** -- `status` mostra arquivos modificados fora do stdagent; `fix` reaplica a fonte.
@@ -48,7 +48,7 @@ Pare de manter `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsu
 | Warp | `AGENTS.md` (inline + aninhado) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (9)
+### Tier 2 (11)
 
 | Destino | Saídas principais |
 |---|---|
@@ -61,6 +61,8 @@ Pare de manter `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsu
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 Cada integração está documentada em [docs/targets/](docs/targets/).
 

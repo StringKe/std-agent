@@ -37,6 +37,24 @@ func TestFactoryOutputs(t *testing.T) {
 	}
 }
 
+func TestFactoryReferencesOutsideRules(t *testing.T) {
+	plan, err := (&Factory{}).Plan([]*parser.Document{{
+		Type:        parser.TypeReferences,
+		Name:        "design",
+		Description: "Design",
+		Body:        "ref",
+	}}, &config.Config{Inject: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !pathSet(plan)[".factory/references/design.md"] {
+		t.Errorf("missing isolated references, paths: %v", pathSet(plan))
+	}
+	if pathSet(plan)[".factory/rules/references/design.md"] {
+		t.Error("references must not land under .factory/rules/")
+	}
+}
+
 func TestFactoryNoGlobsFrontmatter(t *testing.T) {
 	tr := &Factory{}
 	cfg := &config.Config{Inject: false}

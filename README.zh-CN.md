@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent：23 个 AI CLI 工具的唯一事实来源](docs/assets/hero.png)
+![std-agent：25 个 AI CLI 工具的唯一事实来源](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` 是一个轻量的纯 Go CLI 工具。它把项目的 AI 配置维护在单一的 `.stdai/` 目录中作为唯一事实来源，再扩散到 **23 个 AI CLI 工具**，各工具的原生文件格式、frontmatter 方言和各种限制都已经替你处理好。
+`stdagent` 是一个轻量的纯 Go CLI 工具。它把项目的 AI 配置维护在单一的 `.stdai/` 目录中作为唯一事实来源，再扩散到 **25 个 AI CLI 工具**，各工具的原生文件格式、frontmatter 方言和各种限制都已经替你处理好。
 
 不要再手动维护 `CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/`、`.windsurf/rules/`、`.clinerules/`、`.github/copilot-instructions.md` 等文件了。改一次，处处生效。
 
 ## 为什么选 std-agent
 
 - **单一来源**：用 YAML frontmatter + Markdown 一次性写好 `rules` / `skills` / `commands` / `references` / `subagents`。
-- **二十三个目标**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code。
+- **二十五个目标**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code、Kiro、Goose。
 - **规范精确**：每个输出路径、frontmatter 方言、体积上限都对照各工具的官方文档核实过（最近一次全面审查：2026-07）；凡是原生支持 Agent Skills 目录的工具，都直接落在原生目录下。
 - **零锁定**：writer 只触碰一小份路径白名单；每次 sync 前自动备份；`clean` 一键还原全部改动。
 - **drift 检测**：`status` 显示被外部修改过的文件，`fix` 重新应用源文件。
@@ -48,7 +48,7 @@
 | Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2（9 个）
+### Tier 2（11 个）
 
 | 目标 | 主要输出 |
 |---|---|
@@ -61,6 +61,8 @@
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 每个集成的详细说明都在 [docs/targets/](docs/targets/) 下。
 
@@ -268,7 +270,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## 文档
 
-- **[docs/spec.md](docs/spec.md)**：完整规范，std-agent 标准 + 23 个工具的差异 + 转换策略
+- **[docs/spec.md](docs/spec.md)**：完整规范，std-agent 标准 + 25 个工具的差异 + 转换策略
 - [docs/prd.md](docs/prd.md)：产品需求
 - [docs/architecture.md](docs/architecture.md)：模块布局与数据流
 - [docs/commands.md](docs/commands.md)：CLI 命令参考

@@ -42,7 +42,7 @@ var factoryAdapter = protocol.Adapter{
 	SubagentsDir:         ".factory/droids",
 	CommandsDir:          ".factory/commands",
 	ReferencesDir:        "",
-	FallbackDir:          ".factory/rules",
+	FallbackDir:          ".factory",
 	InjectExplainer:      true,
 	InjectStdaiTypeField: true,
 	GlobsFieldName:       "",

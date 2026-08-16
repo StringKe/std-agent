@@ -49,7 +49,7 @@ Roo Code 是 VS Code AI 编码扩展，源自 Cline 的 fork（早期名为 Roo 
 | rules | YES（核心） | `.roo/rules/<name>.md` |
 | commands | YES（原生 slash commands，2026-07-10 确认） | `.roo/commands/<name>.md`，frontmatter `description` / `argument-hint` / `mode` |
 | skills | YES（2026-05-15 GA，2026-07-10 确认） | `.roo/skills/<n>/SKILL.md`（Agent Skills 标准包） |
-| references | NO | `.roo/rules/references/<n>.md`（fallback） |
+| references | NO | `.roo/references/<n>.md`（不进 `.roo/rules/`） |
 | subagents | 通过 mode-switching 间接实现，但非 stdagent 形态 | `.roo/rules/subagents/<n>.md`（fallback） |
 
 transformer（`internal/transformer/roo_code.go` `rooCodeAdapter`）已迁移到原生落点：
@@ -66,7 +66,7 @@ transformer（`internal/transformer/roo_code.go` `rooCodeAdapter`）已迁移到
 - RulesDir：`.roo/rules`（不递归子目录，见 §3）
 - SkillsDir：`.roo/skills`（原生 Agent Skills 标准包，已迁移，不再走 `.roo/rules/skills/` fallback）
 - CommandsDir：`.roo/commands`（原生 slash commands，已迁移，不再走 `.roo/rules/workflows/`）
-- FallbackDir：`.roo/rules`（references / subagents 仍无原生落点，自动加 subdir 降级）
+- FallbackDir：`.roo`（references / subagents 不进 `.roo/rules/`，避免递归当 rule 加载）
 - SingleFileFallback：`.roorules`（`.roo/rules/` 目录存在时被忽略，见 §3）
 - 数字前缀：无（与 cline 区别）
 - glossary：`.roo/rules/glossary.md`（frontmatter `std-agent-type: glossary`）

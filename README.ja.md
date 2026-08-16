@@ -19,7 +19,7 @@
 ## なぜ std-agent なのか
 
 - **単一の情報源**：`rules` / `skills` / `commands` / `references` / `subagents` を YAML frontmatter + Markdown で一度だけ記述します。
-- **23 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code。
+- **25 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code、Kiro、Goose。
 - **仕様に忠実**：すべての出力パス、frontmatter 方言、サイズ上限は各ツールの公式ドキュメントと照合済みです（直近の全面調査：2026-07）。ネイティブの Agent Skills ディレクトリが存在する場合は、そちらを使用します。
 - **ロックインなし**：writer はごく小さなパスのホワイトリストにしか触れません。sync ごとに自動バックアップ、`clean` で全て元に戻せます。
 - **drift 検出**：`status` が外部から変更されたファイルを表示し、`fix` でソースを再適用します。
@@ -48,7 +48,7 @@
 | Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2（9 個）
+### Tier 2（11 個）
 
 | ターゲット | 主な出力 |
 |---|---|
@@ -61,6 +61,8 @@
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 各統合の詳細は [docs/targets/](docs/targets/) にあります。
 

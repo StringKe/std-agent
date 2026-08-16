@@ -19,7 +19,7 @@ Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 ## Por qué std-agent
 
 - **Fuente única** -- escribe `rules` / `skills` / `commands` / `references` / `subagents` una sola vez en frontmatter YAML + Markdown.
-- **Veintitrés destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code.
+- **Veinticinco destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
 - **Precisión de especificación** -- cada ruta de salida, dialecto de frontmatter y límite de tamaño se verifica contra la documentación oficial de las herramientas (última auditoría completa: 2026-07); directorios nativos de Agent Skills donde existen.
 - **Sin dependencia** -- el writer solo toca una pequeña whitelist de rutas; hace backup antes de cada sync; `clean` revierte todo.
 - **Detección de drift** -- `status` muestra archivos modificados fuera de stdagent; `fix` vuelve a aplicar la fuente.
@@ -48,7 +48,7 @@ Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Warp | `AGENTS.md` (inline + anidado) + `.agents/skills/` |
 | Factory (Factory.ai) | `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (9)
+### Tier 2 (11)
 
 | Destino | Salidas principales |
 |---|---|
@@ -61,6 +61,8 @@ Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Jules (Google) | `AGENTS.md` |
 | Grok Build (xAI) | `AGENTS.md` + `.grok/skills/` |
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
+| Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
+| Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
 Cada integración está documentada en [docs/targets/](docs/targets/).
 
