@@ -85,6 +85,30 @@ codex = { enabled = true, convert = true }
 	if _, err := os.Stat(filepath.Join(stdai, "state.json")); err != nil {
 		t.Errorf("expected state.json: %v", err)
 	}
+
+	if !res.GitignoreUpdated {
+		t.Error("first sync should write managed gitignore block")
+	}
+	gi, err := os.ReadFile(filepath.Join(tmp, ".gitignore"))
+	if err != nil {
+		t.Fatalf(".gitignore: %v", err)
+	}
+	for _, want := range []string{"# BEGIN stdagent", "CLAUDE.md", "AGENTS.md", ".agents/", ".claude/"} {
+		if !strings.Contains(string(gi), want) {
+			t.Errorf(".gitignore missing %q:\n%s", want, gi)
+		}
+	}
+	res2, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("repeat Sync: %v", err)
+	}
+	if res2.GitignoreUpdated {
+		t.Error("repeat sync should leave gitignore unchanged")
+	}
 }
 
 func TestSyncDryRunDoesNotWrite(t *testing.T) {
@@ -120,6 +144,99 @@ claude-code = { enabled = true, convert = true }
 	}
 	if _, err := os.Stat(filepath.Join(tmp, "CLAUDE.md")); err == nil {
 		t.Error("dry-run should not produce CLAUDE.md")
+	}
+	if !res.GitignoreUpdated {
+		t.Error("dry-run should report gitignore change")
+	}
+	if _, err := os.Stat(filepath.Join(tmp, ".gitignore")); !os.IsNotExist(err) {
+		t.Error("dry-run must not write .gitignore")
+	}
+}
+
+func TestSyncGitignoreOffLeavesFileUntouched(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/x.md"), `---
+type: rules
+name: x
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+gitignore = "off"
+
+[targets]
+claude-code = { enabled = true, convert = true }
+`)
+	gi := filepath.Join(tmp, ".gitignore")
+	mustWrite(t, gi, "bin/\n")
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+	if res.GitignoreUpdated {
+		t.Error("off must not update gitignore")
+	}
+	got, err := os.ReadFile(gi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "bin/\n" {
+		t.Fatalf("off must not touch .gitignore, got:\n%s", got)
+	}
+}
+
+func TestSyncGitignorePortableKeepsAgents(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/x.md"), `---
+type: rules
+name: x
+---
+body
+`)
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+gitignore = "portable"
+
+[targets]
+claude-code = { enabled = true, convert = true }
+codex = { enabled = true, convert = true }
+`)
+	res, err := Sync(Options{
+		ProjectRoot: tmp,
+		ConfigPath:  filepath.Join(stdai, "config.toml"),
+		Version:     "test",
+	})
+	if err != nil {
+		t.Fatalf("Sync: %v", err)
+	}
+	if !res.GitignoreUpdated {
+		t.Fatal("portable sync should write managed gitignore block")
+	}
+	gi, err := os.ReadFile(filepath.Join(tmp, ".gitignore"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(gi)
+	if hasGitignoreLine(s, "AGENTS.md") || hasGitignoreLine(s, ".agents/") {
+		t.Fatalf("portable must keep AGENTS.md and .agents/:\n%s", s)
+	}
+	for _, want := range []string{"# BEGIN stdagent", "CLAUDE.md", ".claude/"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("portable missing %q:\n%s", want, s)
+		}
 	}
 }
 
@@ -888,6 +1005,15 @@ codex = { enabled = true, convert = true }
 	if !strings.Contains(string(agents), "style body") {
 		t.Errorf("AGENTS.md should inline rule body, got:\n%s", agents)
 	}
+}
+
+func hasGitignoreLine(content, line string) bool {
+	for _, l := range strings.Split(content, "\n") {
+		if l == line {
+			return true
+		}
+	}
+	return false
 }
 
 func mustRemove(t *testing.T, p string) {

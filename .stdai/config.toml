@@ -5,6 +5,9 @@ inject_type_glossary = false
 auto_pull = false
 backup = true
 backup_keep = 5
+# 本仓库把 25 个 target 的生成物当作 demo 提交，因此关闭自动 gitignore。
+# 新项目默认 generated（忽略全部可重建产物）；要保留 AGENTS.md + .agents/ 时用 portable。
+gitignore = "off"
 
 # 仓库全开 25 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
 # 在你自己项目里通常只开 2~3 个用得到的 target，无关的留 false 即可。

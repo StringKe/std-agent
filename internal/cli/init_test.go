@@ -47,6 +47,18 @@ func TestInitCommandCreatesStdaiTree(t *testing.T) {
 	if !strings.Contains(string(gi), ".stdai/cache/") {
 		t.Error(".gitignore missing .stdai/cache/")
 	}
+	for _, want := range []string{"# BEGIN stdagent", "CLAUDE.md", "AGENTS.md", ".agents/"} {
+		if !strings.Contains(string(gi), want) {
+			t.Errorf(".gitignore missing %q", want)
+		}
+	}
+	cfgRaw, err := os.ReadFile(filepath.Join(tmp, ".stdai/config.toml"))
+	if err != nil {
+		t.Fatalf("config.toml: %v", err)
+	}
+	if !strings.Contains(string(cfgRaw), "generated") {
+		t.Errorf("config.toml should persist default gitignore generated:\n%s", cfgRaw)
+	}
 }
 
 func TestInitCommandFailsIfExistsWithoutForce(t *testing.T) {

@@ -33,6 +33,13 @@ func newSyncCmd() *cobra.Command {
 				cmd.Printf("[%s] %d files\n", p.Target, len(p.Files))
 			}
 			cmd.Printf("[done] %d written, %d skipped\n", res.Written, res.Skipped)
+			if res.GitignoreUpdated {
+				if flagDryRun {
+					cmd.Println("[gitignore] would update managed block")
+				} else {
+					cmd.Println("[gitignore] updated managed block")
+				}
+			}
 			if res.Pruned > 0 {
 				if flagDryRun {
 					cmd.Printf("[prune] %d orphans would be removed:\n", res.Pruned)

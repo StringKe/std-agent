@@ -121,13 +121,16 @@ sync 命令:
      -> 产出 []Document
 4. for each enabled target:
      -> transformer.Plan(docs, cfg)
+5. canonicalize shared AGENTS.md + collision check
+6. 若 gitignore != off：UpsertGitignore（dry-run 只比较）
+7. for each plan:
      -> backup.Snapshot(plan.Files)
      -> writer.Apply(plan, footer)
-5. state.Save(outputs, checksums, last_sync)
-6. report.Print(plans)
+8. state.Save(outputs, checksums, last_sync)
+9. report.Print(plans)
 ```
 
-dry-run 模式：步骤 4 只做 Plan + diff，不 Apply 也不 Snapshot。
+dry-run 模式：只做 Plan + gitignore 比较 + diff，不 Apply 也不 Snapshot。
 
 ## 5. 关键决策
 

@@ -39,7 +39,7 @@ stdagent init [--force] [--minimal] [--source <git-url>]
 2. 写 `config.toml`（默认模板）
 3. 创建 `.stdai/standards/{rules,skills,commands,references}/` + `.gitkeep`
 4. 写示例：`rules/example.md` + `skills/code-review/SKILL.md`
-5. 追加条目到根 `.gitignore`：`.stdai/cache/` `.stdai/backups/` `.stdai/logs/` `.stdai/state.json`
+5. 按 `gitignore` 模式（默认 `generated`）写入根 `.gitignore` 的 `# BEGIN stdagent` 块：运行时文件 + 默认启用 target 的可重建产物
 
 | flag | 说明 |
 |---|---|
@@ -74,13 +74,10 @@ stdagent sync [--target <name>...] [--dry-run] [--no-pull] [--no-backup] [--stri
 1. 如 `auto_pull=true` 且未传 `--no-pull`，先 `pull`
 2. 解析 `.stdai/standards/` + `cache/<source>/<paths>` 合并出最终 source set
 3. 加载 `.stdai/standards/mcp.json`（若存在）
-4. 对每个 enabled target（或 `--target` 限定的子集）：
-   - 调用对应 transformer
-   - 计算输出文件清单与 sha256 checksum
-   - 与现有文件 bytes.Equal 比对，未变更跳过
-   - backup 即将覆盖的旧文件（若 `backup=true`）
-   - 原子写入新文件（含 footer 注入）
-5. 更新 `.stdai/state.json` 的 `last_sync` `outputs[]` `checksums`
+4. 对每个 enabled target（或 `--target` 限定的子集）先完成 plan，再统一校验共享路径
+5. 若 `gitignore` 不是 `off`，更新根 `.gitignore` 的 `# BEGIN stdagent` 块（dry-run 只报告不写盘）
+6. 对每个 plan：与现有文件比对，backup 即将覆盖的旧文件，原子写入
+7. 更新 `.stdai/state.json` 的 `last_sync` `outputs[]` `checksums`
 
 | flag | 说明 |
 |---|---|

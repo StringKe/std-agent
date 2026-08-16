@@ -46,5 +46,12 @@ func Validate(cfg *Config) error {
 		cfg.BackupKeep = 1
 	}
 
+	cfg.Gitignore = NormalizeGitignore(cfg.Gitignore)
+	switch cfg.Gitignore {
+	case GitignoreOff, GitignoreGenerated, GitignorePortable:
+	default:
+		return fmt.Errorf("config: invalid gitignore %q (valid: off, generated, portable)", cfg.Gitignore)
+	}
+
 	return nil
 }

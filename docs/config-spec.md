@@ -24,6 +24,7 @@ backup = true              # sync 前备份将被覆盖的扩散文件
 backup_keep = 5            # 备份目录保留数量
 auto_pull = true           # sync 自动 pull 远端
 verbose = false            # 详细日志
+gitignore = "generated"    # off | generated | portable；缺省等同 generated
 
 # 目标平台开关。enabled=false 完全跳过
 [targets]
@@ -78,6 +79,7 @@ auth = "ssh"               # ssh | https-token | none；none 仅 public
 | `backup_keep` | int | 5 | 备份保留份数 |
 | `auto_pull` | bool | true | sync 自动 pull |
 | `verbose` | bool | false | 详细日志 |
+| `gitignore` | string | `"generated"` | 如何维护根 `.gitignore`：`off` / `generated` / `portable`；空值归一为 `generated` |
 
 ### `[targets]`
 
@@ -89,6 +91,20 @@ auth = "ssh"               # ssh | https-token | none；none 仅 public
 | `convert` | bool | true | schema 兼容字段；当前 sync 始终执行 target transformer，应保持 true |
 
 合法 target 名与 frontmatter `targets` 对齐，以 `internal/config/schema.go` 的 `ValidTargets` 为准。
+
+### `gitignore`
+
+`init` 与 `sync` 只改根 `.gitignore` 里 `# BEGIN stdagent` / `# END stdagent` 块，块外条目不动。已跟踪文件不会因为新增 pattern 被 untrack。`sync` 在 plan 校验之后、写扩散文件之前更新该块，因此同一次 sync 新建的产物就会被忽略。
+
+| 值 | 行为 |
+|---|---|
+| `generated`（默认） | 忽略运行时文件 + 当前启用 target 的全部可重建产物 |
+| `portable` | 同 `generated`，但保留公约集合 `AGENTS.md` 与 `.agents/` |
+| `off` | 不改 `.gitignore`；已有 managed 块也不会删除 |
+
+三种模式都会忽略（`off` 除外）：`.stdai/{cache,backups,logs}/`、`.stdai/state.json`，以及各家官方本机文件（`CLAUDE.local.md`、`AGENTS.local.md`、`AGENTS.override.md`、`.claude/settings.local.json`、`.kimi-code/local.toml`、`.qwen/QWEN.local.md`）。
+
+`crush.json` 与 `kilo.jsonc` 是用户配置合并目标，不会写入 gitignore。`.github/` 与 `.vscode/` 只忽略 stdagent 实际写出的子路径，不会整目录忽略。
 
 ### `[sources.<name>]`
 
@@ -127,6 +143,7 @@ stdagent 启动时执行：
 4. `[sources.X]` 的 `url` 必填，`paths` 至少一项
 5. `auth = "https-token"` 时 `token_env` 必填且对应环境变量必须存在
 6. `backup_keep ≥ 1`
+7. `gitignore` 只能是 `off` / `generated` / `portable`；缺省或空字符串视为 `generated`
 
 ## 与环境变量的交互
 

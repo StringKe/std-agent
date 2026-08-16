@@ -94,7 +94,7 @@ my-project/
   做快照到 `.stdai/backups/<RFC3339-utc>/`
 - 备份保留 N 份（默认 5），超过自动清理最老
 - `stdagent clean` 不删 backups
-- `.gitignore` 默认包含 `.stdai/backups/` `.stdai/cache/` `.stdai/logs/`
+- 根 `.gitignore` 由 `gitignore` 配置维护（默认 `generated`）；详见下文
 
 ## .stdaiignore
 
@@ -120,17 +120,15 @@ references/internal-*.md
 
 ## 与 .gitignore 的关系
 
-`stdagent init` 自动追加以下条目到项目 `.gitignore`：
+`init` 与 `sync` 维护根 `.gitignore` 中的 `# BEGIN stdagent` / `# END stdagent` 块，块外条目不改。这是对「只写内部管理区与已声明扩散区」的显式例外：只改该 managed 块。
 
-```
-.stdai/cache/
-.stdai/backups/
-.stdai/logs/
-.stdai/state.json
-```
+`gitignore` 三种模式：
 
-`.stdai/config.toml` 与 `.stdai/standards/` 应被提交到 git。
-扩散文件（`CLAUDE.md` 等）的提交策略由团队决定（推荐提交以保证团队一致）。
+- `generated`（默认）：忽略运行时文件 + 全部可重建产物
+- `portable`：同 `generated`，但保留公约集合 `AGENTS.md` 与 `.agents/`
+- `off`：不改 `.gitignore`
+
+`.stdai/config.toml` 与 `.stdai/standards/` 应被提交到 git。已跟踪的扩散文件不会因为新增 ignore pattern 自动从 index 消失。
 
 ## 反模式
 

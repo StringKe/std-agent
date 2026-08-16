@@ -184,6 +184,7 @@ inject_type_glossary = false # opt-in type glossary in rendered rules
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
+gitignore = "generated"  # off | generated | portable; empty means generated
 
 [targets]
 claude-code  = { enabled = true,  convert = true }

@@ -43,6 +43,9 @@ paths = ["standards/"]
 	if cfg.BackupKeep != 1 {
 		t.Errorf("BackupKeep = %d, want 1 (normalized)", cfg.BackupKeep)
 	}
+	if cfg.Gitignore != GitignoreGenerated {
+		t.Errorf("empty gitignore should normalize to generated, got %q", cfg.Gitignore)
+	}
 }
 
 func TestLoadEnvOverride(t *testing.T) {
@@ -135,6 +138,9 @@ func TestDefault(t *testing.T) {
 	if cfg.InjectTypeGlossary {
 		t.Error("InjectTypeGlossary should default false")
 	}
+	if cfg.Gitignore != GitignoreGenerated {
+		t.Errorf("Gitignore default = %q, want generated", cfg.Gitignore)
+	}
 }
 
 func TestLoadInjectTypeGlossaryOverride(t *testing.T) {
@@ -184,6 +190,26 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	}
 	if !loaded.Targets["claude-code"].Enabled {
 		t.Error("claude-code should be enabled after round-trip")
+	}
+	if loaded.Gitignore != GitignoreGenerated {
+		t.Errorf("Gitignore after round-trip = %q, want generated", loaded.Gitignore)
+	}
+}
+
+func TestValidateInvalidGitignore(t *testing.T) {
+	cfg := &Config{Version: "1.0", Gitignore: "all"}
+	if err := Validate(cfg); err == nil {
+		t.Error("expected error on invalid gitignore")
+	}
+}
+
+func TestValidateNormalizesEmptyGitignore(t *testing.T) {
+	cfg := &Config{Version: "1.0"}
+	if err := Validate(cfg); err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Gitignore != GitignoreGenerated {
+		t.Errorf("empty gitignore should become generated, got %q", cfg.Gitignore)
 	}
 }
 

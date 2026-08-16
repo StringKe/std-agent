@@ -7,12 +7,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/StringKe/std-agent/internal/config"
+	"github.com/StringKe/std-agent/internal/writer"
 )
 
 //go:embed init_assets/help/*.md init_assets/root.md
@@ -111,8 +111,8 @@ func runInit(cmd *cobra.Command, opts initOptions) error {
 		}
 	}
 
-	if err := appendGitignore(root); err != nil {
-		cmd.Printf("warn: failed to append .gitignore: %v\n", err)
+	if err := writeInitGitignore(root, cfg); err != nil {
+		cmd.Printf("warn: failed to update .gitignore: %v\n", err)
 	}
 
 	cmd.Printf("Initialized .stdai/ at %s\n", stdaiDir)
@@ -170,28 +170,20 @@ const stdaiIgnoreTemplate = `# .stdaiignore: gitignore 风格 glob，匹配的�
 # references/internal-*.md
 `
 
-func appendGitignore(root string) error {
-	gi := filepath.Join(root, ".gitignore")
-	want := []string{
-		".stdai/cache/",
-		".stdai/backups/",
-		".stdai/logs/",
-		".stdai/state.json",
-	}
-	existing, _ := os.ReadFile(gi) //nolint:gosec
-	content := string(existing)
-	if content != "" && !strings.HasSuffix(content, "\n") {
-		content += "\n"
-	}
-	added := false
-	for _, line := range want {
-		if !strings.Contains(content, line) {
-			content += line + "\n"
-			added = true
-		}
-	}
-	if !added {
+func writeInitGitignore(root string, cfg *config.Config) error {
+	if cfg == nil {
 		return nil
 	}
-	return os.WriteFile(gi, []byte(content), 0o600) //nolint:gosec // gi 由 filepath.Join(root, ".gitignore") 构造
+	mode := config.NormalizeGitignore(cfg.Gitignore)
+	if mode == config.GitignoreOff {
+		return nil
+	}
+	var enabled []string
+	for name, t := range cfg.Targets {
+		if t.Enabled {
+			enabled = append(enabled, name)
+		}
+	}
+	_, err := writer.UpsertGitignore(root, writer.GitignoreEntries(mode, enabled, nil), false)
+	return err
 }

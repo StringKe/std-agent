@@ -39,15 +39,16 @@ type Options struct {
 
 // Result 是 sync 报告
 type Result struct {
-	Plans       []*writer.Plan
-	Written     int
-	Skipped     int
-	Pruned      int
-	PrunedPaths []string
-	BackupDir   string
-	SourceFiles int
-	Docs        int
-	Warnings    []string
+	Plans            []*writer.Plan
+	Written          int
+	Skipped          int
+	Pruned           int
+	PrunedPaths      []string
+	BackupDir        string
+	SourceFiles      int
+	Docs             int
+	GitignoreUpdated bool
+	Warnings         []string
 }
 
 // Sync 执行完整同步流
@@ -265,6 +266,19 @@ func Sync(opts Options) (*Result, error) {
 
 	if err := validatePlanCollisions(res.Plans); err != nil {
 		return nil, err
+	}
+
+	if cfg.Gitignore != config.GitignoreOff {
+		entries := writer.GitignoreEntries(cfg.Gitignore, enabledTargets, res.Plans)
+		changed, gerr := writer.UpsertGitignore(opts.ProjectRoot, entries, cfg.DryRun)
+		if gerr != nil {
+			if opts.Strict {
+				return nil, fmt.Errorf("gitignore: %w", gerr)
+			}
+			res.Warnings = append(res.Warnings, "gitignore: "+gerr.Error())
+		} else {
+			res.GitignoreUpdated = changed
+		}
 	}
 
 	st, _ := state.Load(filepath.Join(opts.ProjectRoot, state.StateFile))

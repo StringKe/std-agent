@@ -201,6 +201,7 @@ inject_whatis = true     # add a one-line origin note inside skills
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
+gitignore = "generated"  # off | generated | portable；缺省等同 generated
 
 [targets]
 claude-code  = { enabled = true,  convert = true }

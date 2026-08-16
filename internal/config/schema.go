@@ -16,6 +16,9 @@ type Config struct {
 	BackupKeep         int    `toml:"backup_keep"`
 	AutoPull           bool   `toml:"auto_pull"`
 	Verbose            bool   `toml:"verbose"`
+	// Gitignore 控制 sync/init 如何维护根 .gitignore：
+	// off 不改生成物规则；generated 忽略全部可重建产物；portable 保留 AGENTS.md 与 .agents/。
+	Gitignore string `toml:"gitignore"`
 
 	Targets   map[string]TargetConfig `toml:"targets"`
 	Sources   map[string]SourceConfig `toml:"sources"`
@@ -59,6 +62,21 @@ var ValidTargets = []string{
 	"kimi-code", "kiro", "goose",
 }
 
+// gitignore 模式：off 不改文件；generated 忽略可重建产物；portable 额外保留 AGENTS.md 与 .agents/。
+const (
+	GitignoreOff       = "off"
+	GitignoreGenerated = "generated"
+	GitignorePortable  = "portable"
+)
+
+// NormalizeGitignore 把空值收成默认 generated。
+func NormalizeGitignore(mode string) string {
+	if mode == "" {
+		return GitignoreGenerated
+	}
+	return mode
+}
+
 // IsValidTarget 检查 target 名合法
 func IsValidTarget(name string) bool {
 	for _, t := range ValidTargets {
@@ -79,6 +97,7 @@ func Default() *Config {
 		Backup:             true,
 		BackupKeep:         5,
 		AutoPull:           true,
+		Gitignore:          GitignoreGenerated,
 		Targets: map[string]TargetConfig{
 			// Tier 1
 			"claude-code": {Enabled: true, Convert: true},
