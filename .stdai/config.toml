@@ -5,10 +5,8 @@ inject_type_glossary = false
 auto_pull = false
 backup = true
 backup_keep = 5
-# 只同步本仓库实际消费的工具，并提交这些生成物。gitignore 三种模式的完整展示见 examples/。
+# 本仓库只同步 Grok Build。gitignore 三种模式见 examples/。
 gitignore = "off"
 
 [targets]
-claude-code = { enabled = true, convert = true }
-codex       = { enabled = true, convert = true }
-grok-build  = { enabled = true, convert = true }
+grok-build = { enabled = true, convert = true }
