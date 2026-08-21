@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: 23 개 AI CLI 도구를 위한 단일 진실 공급원](docs/assets/hero.png)
+![std-agent: 25 개 AI CLI 도구를 위한 단일 진실 공급원](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` 는 가볍고 순수 Go 로 구현된 CLI 도구입니다. 프로젝트의 AI 설정을 위한 단일 진실 공급원으로 `.stdai/` 디렉터리 하나만 유지하고, 이를 **23 개 AI CLI 도구**로 확산시키면서 각 도구의 네이티브 파일 형식, frontmatter 방언, 세부적인 특이 사항까지 대신 처리해 줍니다.
+`stdagent` 는 가볍고 순수 Go 로 구현된 CLI 도구입니다. 프로젝트의 AI 설정을 위한 단일 진실 공급원으로 `.stdai/` 디렉터리 하나만 유지하고, 이를 **25 개 AI CLI 도구**로 확산시키면서 각 도구의 네이티브 파일 형식, frontmatter 방언, 세부적인 특이 사항까지 대신 처리해 줍니다.
 
 `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md` 같은 파일을 더 이상 손으로 관리하지 마세요. 한 번만 작성하고, 모든 곳에 동기화하세요.
 
 ## 왜 std-agent 인가?
 
 - **단일 공급원** -- `rules` / `skills` / `commands` / `references` / `subagents` 를 YAML frontmatter + Markdown 으로 한 번만 작성.
-- **25 개 타겟** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
+- **25 개 타겟** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Crush, Amp, Warp, Factory, Junie, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose, Zed.
 - **스펙 정확성** -- 모든 출력 경로, frontmatter 방언, 크기 제한을 각 도구의 공식 문서와 대조해 검증합니다 (최근 전체 감사: 2026-07). 네이티브 Agent Skills 디렉터리가 존재하는 곳에는 그대로 사용합니다.
 - **종속성 제로** -- writer 는 화이트리스트에 등록된 소수의 경로만 건드립니다. 매 sync 전에 백업하며, `clean` 으로 모든 변경을 되돌릴 수 있습니다.
 - **드리프트 감지** -- `status` 가 stdagent 밖에서 수정된 파일을 표시하고, `fix` 로 소스를 다시 적용합니다.
@@ -42,7 +42,7 @@
 | Aider | `AGENTS.md` 재사용 (noop) |
 | Cline | `.clinerules/` (100/500/900 숫자 프리픽스) |
 | OpenCode | `.opencode/{skills,commands}/` |
-| Roo Code | `.roo/{rules,skills,commands}/` |
+| Junie (JetBrains) | 공유 `AGENTS.md` + `.junie/{rules,skills}/` |
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills 등록 |
 | Amp (Sourcegraph) | `AGENTS.md` (인라인) + `.agents/skills/` |
 | Warp | `AGENTS.md` (인라인 + 중첩) + `.agents/skills/` |
@@ -52,7 +52,7 @@
 
 | 타겟 | 주요 출력 |
 |---|---|
-| Continue.dev | `.continue/{rules,skills,prompts}/` + 중첩 `rules.md` |
+| Zed | 공유 `AGENTS.md` + `.agents/skills/` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | `.pi/skills/` + `.pi/prompts/` |
@@ -64,7 +64,7 @@
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-각 통합 조사는 [docs/targets/](docs/targets/) 에 있습니다.
+각 연동에 대한 자세한 설명은 [docs/targets/](docs/targets/) 에 있습니다. 이 저장소는 Grok Build 만 켭니다. gitignore 세 가지 모드와 작은 fan-out 은 [examples/](examples/) 를 보세요.
 
 ## 빠른 시작
 
@@ -201,6 +201,7 @@ inject_whatis = true     # add a one-line origin note inside skills
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
+gitignore = "generated"  # off | generated | portable; empty means generated
 
 [targets]
 claude-code  = { enabled = true,  convert = true }
@@ -212,8 +213,9 @@ gemini       = { enabled = false, convert = true }
 aider        = { enabled = false, convert = true }
 cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
+junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
+zed          = { enabled = false, convert = true }
 
 [sources.default]
 url     = "https://github.com/your-org/ai-standards.git"
@@ -270,7 +272,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## 문서
 
-- **[docs/spec.md](docs/spec.md)** -- 전체 사양: std-agent 표준 + 23 개 도구 차이 + 변환 전략
+- **[docs/spec.md](docs/spec.md)** -- 전체 사양: std-agent 표준 + 25 개 도구 차이 + 변환 전략
 - [docs/prd.md](docs/prd.md) -- 제품 요구 사항
 - [docs/architecture.md](docs/architecture.md) -- 모듈 구성과 데이터 흐름
 - [docs/commands.md](docs/commands.md) -- CLI 명령 사양

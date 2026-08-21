@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: one source of truth for 23 AI CLI tools](docs/assets/hero.png)
+![std-agent: one source of truth for 25 AI CLI tools](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,7 +12,7 @@
 
 ---
 
-`stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **23 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
+`stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **25 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
 
 Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`, ... by hand. Edit once, sync everywhere.
 
@@ -64,7 +64,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-Each integration is documented under [docs/targets/](docs/targets/). This repository only enables the targets it uses; see [examples/](examples/) for gitignore modes and a small two-target fan-out.
+Each integration is documented under [docs/targets/](docs/targets/). This repository enables Grok Build only; see [examples/](examples/) for gitignore modes and a small two-target fan-out.
 
 ## Quick start
 

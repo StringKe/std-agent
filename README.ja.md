@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: 23 個の AI CLI ツールのための唯一の信頼できる情報源](docs/assets/hero.png)
+![std-agent: 25 個の AI CLI ツールのための唯一の信頼できる情報源](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` は軽量な純 Go 製 CLI ツールです。プロジェクトの AI 設定を単一の `.stdai/` ディレクトリに唯一の信頼できる情報源として集約し、**23 個の AI CLI ツール**へ展開します。各ツールのネイティブなファイル形式、frontmatter 方言、固有の制約はすべて代わりに処理します。
+`stdagent` は軽量な純 Go 製 CLI ツールです。プロジェクトの AI 設定を単一の `.stdai/` ディレクトリに唯一の信頼できる情報源として集約し、**25 個の AI CLI ツール**へ展開します。各ツールのネイティブなファイル形式、frontmatter 方言、固有の制約はすべて代わりに処理します。
 
 `CLAUDE.md`、`AGENTS.md`、`GEMINI.md`、`.cursor/rules/`、`.windsurf/rules/`、`.clinerules/`、`.github/copilot-instructions.md` などを手作業で維持するのはもうやめましょう。一度書けば、どこでも反映されます。
 
 ## なぜ std-agent なのか
 
 - **単一の情報源**：`rules` / `skills` / `commands` / `references` / `subagents` を YAML frontmatter + Markdown で一度だけ記述します。
-- **25 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code、Kiro、Goose。
+- **25 個のターゲット**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Crush、Amp、Warp、Factory、Junie、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code、Kiro、Goose、Zed。
 - **仕様に忠実**：すべての出力パス、frontmatter 方言、サイズ上限は各ツールの公式ドキュメントと照合済みです（直近の全面調査：2026-07）。ネイティブの Agent Skills ディレクトリが存在する場合は、そちらを使用します。
 - **ロックインなし**：writer はごく小さなパスのホワイトリストにしか触れません。sync ごとに自動バックアップ、`clean` で全て元に戻せます。
 - **drift 検出**：`status` が外部から変更されたファイルを表示し、`fix` でソースを再適用します。
@@ -42,7 +42,7 @@
 | Aider | `AGENTS.md` を再利用（noop） |
 | Cline | `.clinerules/`（100/500/900 の数値プレフィックス） |
 | OpenCode | `.opencode/{skills,commands}/` |
-| Roo Code | `.roo/{rules,skills,commands}/` |
+| Junie (JetBrains) | 共有 `AGENTS.md` + `.junie/{rules,skills}/` |
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills 登録 |
 | Amp (Sourcegraph) | `AGENTS.md`（inline） + `.agents/skills/` |
 | Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
@@ -52,7 +52,7 @@
 
 | ターゲット | 主な出力 |
 |---|---|
-| Continue.dev | `.continue/{rules,skills,prompts}/` + ネストされた `rules.md` |
+| Zed | 共有 `AGENTS.md` + `.agents/skills/` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | `.pi/skills/` + `.pi/prompts/` |
@@ -64,7 +64,7 @@
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-各統合の詳細は [docs/targets/](docs/targets/) にあります。
+各統合の詳細は [docs/targets/](docs/targets/) にあります。このリポジトリでは Grok Build のみを有効にしています。gitignore の 3 モードと小さな fan-out は [examples/](examples/) を参照してください。
 
 ## クイックスタート
 
@@ -201,6 +201,7 @@ inject_whatis = true     # add a one-line origin note inside skills
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
+gitignore = "generated"  # off | generated | portable; empty means generated
 
 [targets]
 claude-code  = { enabled = true,  convert = true }
@@ -212,8 +213,9 @@ gemini       = { enabled = false, convert = true }
 aider        = { enabled = false, convert = true }
 cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
+junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
+zed          = { enabled = false, convert = true }
 
 [sources.default]
 url     = "https://github.com/your-org/ai-standards.git"
@@ -270,7 +272,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## ドキュメント
 
-- **[docs/spec.md](docs/spec.md)**：完全な仕様、std-agent 標準 + 23 ツールの差異 + 変換戦略
+- **[docs/spec.md](docs/spec.md)**：完全な仕様、std-agent 標準 + 25 ツールの差異 + 変換戦略
 - [docs/prd.md](docs/prd.md)：製品要件
 - [docs/architecture.md](docs/architecture.md)：モジュール構成とデータフロー
 - [docs/commands.md](docs/commands.md)：CLI コマンドリファレンス

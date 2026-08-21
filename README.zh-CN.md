@@ -64,7 +64,7 @@
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-每个集成的详细说明都在 [docs/targets/](docs/targets/) 下。本仓库只启用自己用到的 target；gitignore 三种模式和小型 fan-out 见 [examples/](examples/)。
+每个集成的详细说明都在 [docs/targets/](docs/targets/) 下。本仓库只启用 Grok Build；gitignore 三种模式和小型 fan-out 见 [examples/](examples/)。
 
 ## 快速开始
 
@@ -215,6 +215,7 @@ cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
 junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
+zed          = { enabled = false, convert = true }
 
 [sources.default]
 url     = "https://github.com/your-org/ai-standards.git"

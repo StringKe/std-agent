@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: единый источник истины для 23 AI CLI инструментов](docs/assets/hero.png)
+![std-agent: единый источник истины для 25 AI CLI инструментов](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` -- это лёгкий CLI-инструмент на чистом Go. Он хранит одну директорию `.stdai/` как единый источник истины для AI-конфигурации проекта, а затем раскладывает её по **23 AI CLI инструментам**, беря на себя все нативные форматы файлов, диалекты frontmatter и особенности каждого инструмента.
+`stdagent` -- это лёгкий CLI-инструмент на чистом Go. Он хранит одну директорию `.stdai/` как единый источник истины для AI-конфигурации проекта, а затем раскладывает её по **25 AI CLI инструментам**, беря на себя все нативные форматы файлов, диалекты frontmatter и особенности каждого инструмента.
 
 Перестаньте вручную поддерживать `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md` и так далее. Пишите один раз -- синхронизируется везде.
 
 ## Почему std-agent?
 
 - **Единый источник** -- пишите `rules` / `skills` / `commands` / `references` / `subagents` один раз в YAML frontmatter + Markdown.
-- **Двадцать пять целей** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
+- **Двадцать пять целей** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Crush, Amp, Warp, Factory, Junie, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose, Zed.
 - **Точное соответствие спецификациям** -- каждый выходной путь, диалект frontmatter и лимит размера проверяются по официальной документации инструментов (последний полный аудит: 2026-07); нативные директории Agent Skills используются везде, где они существуют.
 - **Без вендор-лока** -- writer трогает только небольшой белый список путей; перед каждой синхронизацией делается бэкап; `clean` откатывает всё.
 - **Обнаружение дрифта** -- `status` показывает файлы, изменённые вне stdagent; `fix` восстанавливает их из источника.
@@ -42,7 +42,7 @@
 | Aider | переиспользует `AGENTS.md` (noop) |
 | Cline | `.clinerules/` (числовые префиксы 100/500/900) |
 | OpenCode | `.opencode/{skills,commands}/` |
-| Roo Code | `.roo/{rules,skills,commands}/` |
+| Junie (JetBrains) | общий `AGENTS.md` + `.junie/{rules,skills}/` |
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + регистрация skills в `crush.json` |
 | Amp (Sourcegraph) | `AGENTS.md` (инлайн) + `.agents/skills/` |
 | Warp | `AGENTS.md` (инлайн + вложенный) + `.agents/skills/` |
@@ -52,7 +52,7 @@
 
 | Цель | Основные выходы |
 |---|---|
-| Continue.dev | `.continue/{rules,skills,prompts}/` + вложенный `rules.md` |
+| Zed | общий `AGENTS.md` + `.agents/skills/` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | `.pi/skills/` + `.pi/prompts/` |
@@ -64,7 +64,7 @@
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-Каждая интеграция описана в [docs/targets/](docs/targets/).
+Каждая интеграция описана в [docs/targets/](docs/targets/). В этом репозитории включён только Grok Build; режимы gitignore и небольшой fan-out см. в [examples/](examples/).
 
 ## Быстрый старт
 
@@ -201,6 +201,7 @@ inject_whatis = true     # add a one-line origin note inside skills
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
+gitignore = "generated"  # off | generated | portable; empty means generated
 
 [targets]
 claude-code  = { enabled = true,  convert = true }
@@ -212,8 +213,9 @@ gemini       = { enabled = false, convert = true }
 aider        = { enabled = false, convert = true }
 cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
+junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
+zed          = { enabled = false, convert = true }
 
 [sources.default]
 url     = "https://github.com/your-org/ai-standards.git"
@@ -270,7 +272,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Документация
 
-- **[docs/spec.md](docs/spec.md)** -- полная спецификация: стандарт std-agent + различия 23 инструментов + стратегия конвертации
+- **[docs/spec.md](docs/spec.md)** -- полная спецификация: стандарт std-agent + различия 25 инструментов + стратегия конвертации
 - [docs/prd.md](docs/prd.md) -- требования к продукту
 - [docs/architecture.md](docs/architecture.md) -- модульная структура и потоки данных
 - [docs/commands.md](docs/commands.md) -- справочник CLI

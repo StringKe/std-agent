@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: una única fuente de verdad para 23 herramientas de CLI de IA](docs/assets/hero.png)
+![std-agent: una única fuente de verdad para 25 herramientas de CLI de IA](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` es una CLI ligera y escrita en Go puro que mantiene un único directorio `.stdai/` como fuente de verdad para la configuración de IA de tu proyecto, y luego la distribuye a **23 herramientas de CLI de IA** gestionando por ti sus formatos de archivo nativos, dialectos de frontmatter y particularidades.
+`stdagent` es una CLI ligera y escrita en Go puro que mantiene un único directorio `.stdai/` como fuente de verdad para la configuración de IA de tu proyecto, y luego la distribuye a **25 herramientas de CLI de IA** gestionando por ti sus formatos de archivo nativos, dialectos de frontmatter y particularidades.
 
 Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`, ... a mano. Edita una vez, sincroniza en todas partes.
 
 ## Por qué std-agent
 
 - **Fuente única** -- escribe `rules` / `skills` / `commands` / `references` / `subagents` una sola vez en frontmatter YAML + Markdown.
-- **Veinticinco destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
+- **Veinticinco destinos** -- Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Crush, Amp, Warp, Factory, Junie, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose, Zed.
 - **Precisión de especificación** -- cada ruta de salida, dialecto de frontmatter y límite de tamaño se verifica contra la documentación oficial de las herramientas (última auditoría completa: 2026-07); directorios nativos de Agent Skills donde existen.
 - **Sin dependencia** -- el writer solo toca una pequeña whitelist de rutas; hace backup antes de cada sync; `clean` revierte todo.
 - **Detección de drift** -- `status` muestra archivos modificados fuera de stdagent; `fix` vuelve a aplicar la fuente.
@@ -42,7 +42,7 @@ Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Aider | reutiliza `AGENTS.md` (noop) |
 | Cline | `.clinerules/` (prefijos numéricos 100/500/900) |
 | OpenCode | `.opencode/{skills,commands}/` |
-| Roo Code | `.roo/{rules,skills,commands}/` |
+| Junie (JetBrains) | `AGENTS.md` compartido + `.junie/{rules,skills}/` |
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + registro de skills en `crush.json` |
 | Amp (Sourcegraph) | `AGENTS.md` (inline) + `.agents/skills/` |
 | Warp | `AGENTS.md` (inline + anidado) + `.agents/skills/` |
@@ -52,7 +52,7 @@ Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 
 | Destino | Salidas principales |
 |---|---|
-| Continue.dev | `.continue/{rules,skills,prompts}/` + `rules.md` anidado |
+| Zed | `AGENTS.md` compartido + `.agents/skills/` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | `.pi/skills/` + `.pi/prompts/` |
@@ -64,7 +64,7 @@ Deja de mantener `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-Cada integración está documentada en [docs/targets/](docs/targets/).
+Cada integración está documentada en [docs/targets/](docs/targets/). Este repositorio solo activa Grok Build; los modos de gitignore y un fan-out pequeño están en [examples/](examples/).
 
 ## Inicio rápido
 
@@ -201,6 +201,7 @@ inject_whatis = true     # add a one-line origin note inside skills
 auto_pull = true         # pull git sources on every sync
 backup = true
 backup_keep = 5
+gitignore = "generated"  # off | generated | portable; empty means generated
 
 [targets]
 claude-code  = { enabled = true,  convert = true }
@@ -212,8 +213,9 @@ gemini       = { enabled = false, convert = true }
 aider        = { enabled = false, convert = true }
 cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
+junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
+zed          = { enabled = false, convert = true }
 
 [sources.default]
 url     = "https://github.com/your-org/ai-standards.git"
@@ -270,7 +272,7 @@ mise run run        # go run ./cmd/stdagent
 
 ## Documentación
 
-- **[docs/spec.md](docs/spec.md)** -- especificación completa: estándar std-agent + divergencia de las 23 herramientas + estrategia de conversión
+- **[docs/spec.md](docs/spec.md)** -- especificación completa: estándar std-agent + divergencia de las 25 herramientas + estrategia de conversión
 - [docs/prd.md](docs/prd.md) -- requisitos del producto
 - [docs/architecture.md](docs/architecture.md) -- estructura de módulos + flujo de datos
 - [docs/commands.md](docs/commands.md) -- referencia de comandos de la CLI
