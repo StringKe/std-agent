@@ -42,12 +42,11 @@ var targetIgnorePrefixes = map[string][]string{
 	"aider":        {"AGENTS.md"},
 	"cline":        {".clinerules/", ".cline/"},
 	"opencode":     {".opencode/"},
-	"roo-code":     {".roo/"},
 	"crush":        {"CRUSH.md", ".crush/"},
 	"amp":          {"AGENTS.md", ".agents/", ".amp/"},
 	"warp":         {"AGENTS.md", ".agents/", ".warp/"},
 	"factory":      {"AGENTS.md", ".factory/"},
-	"continue-dev": {".continue/"},
+	"junie":        {"AGENTS.md", ".junie/"},
 	"antigravity":  {"AGENTS.md", ".agents/"},
 	"qwen-code":    {"QWEN.md", ".qwen/"},
 	"pi":           {"AGENTS.md", ".pi/"},
@@ -58,6 +57,7 @@ var targetIgnorePrefixes = map[string][]string{
 	"kimi-code":    {"AGENTS.md", ".agents/", ".kimi-code/"},
 	"kiro":         {"AGENTS.md", ".kiro/"},
 	"goose":        {"AGENTS.md", ".agents/", ".goose/"},
+	"zed":          {"AGENTS.md", ".agents/", ".zed/"},
 }
 
 // GitignoreEntries 按模式和启用 target（再并入本次 plan 路径）生成忽略列表。

@@ -55,11 +55,11 @@ var ValidTargets = []string{
 	// Tier 1（用户基数大 / 协议主流）
 	"claude-code", "codex", "cursor", "copilot", "windsurf",
 	"gemini", "aider", "cline", "opencode",
-	"roo-code", "crush", "amp", "warp", "factory",
+	"crush", "amp", "warp", "factory", "junie",
 	// Tier 2（新兴 / 小众 / 半实验）
-	"continue-dev", "antigravity",
+	"antigravity",
 	"qwen-code", "pi", "kilo-code", "augment-code", "jules", "grok-build",
-	"kimi-code", "kiro", "goose",
+	"kimi-code", "kiro", "goose", "zed",
 }
 
 // gitignore 模式：off 不改文件；generated 忽略可重建产物；portable 额外保留 AGENTS.md 与 .agents/。
@@ -109,13 +109,12 @@ func Default() *Config {
 			"aider":       {Enabled: false, Convert: true},
 			"cline":       {Enabled: false, Convert: true},
 			"opencode":    {Enabled: false, Convert: true},
-			"roo-code":    {Enabled: false, Convert: true},
 			"crush":       {Enabled: false, Convert: true},
 			"amp":         {Enabled: false, Convert: true},
 			"warp":        {Enabled: false, Convert: true},
 			"factory":     {Enabled: false, Convert: true},
+			"junie":       {Enabled: false, Convert: true},
 			// Tier 2
-			"continue-dev": {Enabled: false, Convert: true},
 			"antigravity":  {Enabled: false, Convert: true},
 			"qwen-code":    {Enabled: false, Convert: true},
 			"pi":           {Enabled: false, Convert: true},
@@ -126,6 +125,7 @@ func Default() *Config {
 			"kimi-code":    {Enabled: false, Convert: true},
 			"kiro":         {Enabled: false, Convert: true},
 			"goose":        {Enabled: false, Convert: true},
+			"zed":          {Enabled: false, Convert: true},
 		},
 	}
 }

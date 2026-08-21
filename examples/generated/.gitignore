@@ -1,0 +1,19 @@
+# BEGIN stdagent
+# 由 stdagent sync/init 维护。块外条目不会改动。
+.agents/
+.claude/
+.claude/settings.local.json
+.codex/
+.kimi-code/local.toml
+.mcp.json
+.qwen/QWEN.local.md
+.stdai/backups/
+.stdai/cache/
+.stdai/logs/
+.stdai/state.json
+AGENTS.local.md
+AGENTS.md
+AGENTS.override.md
+CLAUDE.local.md
+CLAUDE.md
+# END stdagent

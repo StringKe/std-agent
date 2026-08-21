@@ -215,8 +215,9 @@ var rulesyncTargetAliases = map[string]string{
 	"aider":        "aider",
 	"cline":        "cline",
 	"opencode":     "opencode",
-	"continue-dev": "continue",
 	"antigravity":  "antigravity",
+	"junie":        "junie",
+	"zed":          "zed",
 }
 
 // EffectiveApplyTo 返回某 target 实际生效的 applyTo glob：

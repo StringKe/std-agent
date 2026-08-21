@@ -19,7 +19,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 ## Why std-agent?
 
 - **Single source** — write `rules` / `skills` / `commands` / `references` / `subagents` once in YAML frontmatter + Markdown.
-- **Twenty-five targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Roo Code, Crush, Amp, Warp, Factory, Continue.dev, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose.
+- **Twenty-five targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Crush, Amp, Warp, Factory, Junie, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose, Zed.
 - **Spec-accurate** — every output path, frontmatter dialect, and size limit is verified against the tools' official docs (last full audit: 2026-08); native Agent Skills directories everywhere they exist.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
 - **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.
@@ -42,7 +42,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Aider | reuses `AGENTS.md` (noop) |
 | Cline | `.clinerules/` (100/500/900 numeric prefixes) |
 | OpenCode | `.opencode/{skills,commands}/` |
-| Roo Code | `.roo/{rules,skills,commands}/` |
+| Junie (JetBrains) | shared `AGENTS.md` + `.junie/{rules,skills}/` |
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills registration |
 | Amp (Sourcegraph) | `AGENTS.md` (inline) + `.agents/skills/` |
 | Warp | `AGENTS.md` (inline + nested) + `.agents/skills/` |
@@ -52,7 +52,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 
 | Target | Primary outputs |
 |---|---|
-| Continue.dev | `.continue/{rules,skills,prompts}/` + nested `rules.md` |
+| Zed | shared `AGENTS.md` + `.agents/skills/` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | shared `AGENTS.md` + `.pi/skills/` + `.pi/prompts/` |
@@ -64,7 +64,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-Each integration is documented under [docs/targets/](docs/targets/).
+Each integration is documented under [docs/targets/](docs/targets/). This repository only enables the targets it uses; see [examples/](examples/) for gitignore modes and a small two-target fan-out.
 
 ## Quick start
 
@@ -196,8 +196,9 @@ gemini       = { enabled = false, convert = true }
 aider        = { enabled = false, convert = true }
 cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
+junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
+zed          = { enabled = false, convert = true }
 
 [sources.default]
 url     = "https://github.com/your-org/ai-standards.git"

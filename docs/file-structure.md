@@ -128,7 +128,7 @@ references/internal-*.md
 - `portable`：同 `generated`，但保留公约集合 `AGENTS.md` 与 `.agents/`
 - `off`：不改 `.gitignore`
 
-`.stdai/config.toml` 与 `.stdai/standards/` 应被提交到 git。已跟踪的扩散文件不会因为新增 ignore pattern 自动从 index 消失。
+`.stdai/config.toml` 与 `.stdai/standards/` 应被提交到 git。已跟踪的扩散文件不会因为新增 ignore pattern 自动从 index 消失。三种模式的小型对照见仓库 [examples/](../examples/)。
 
 ## 反模式
 

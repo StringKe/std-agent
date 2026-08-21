@@ -15,11 +15,11 @@ stdagent 将统一 source 转换为 25 个 AI CLI target 的原生配置。本�
 
 | protocol | representative targets | primary shape |
 |---|---|---|
-| `AgentsMD` | codex, amp, warp, factory, jules, grok-build, kimi-code, kiro, goose | `AGENTS.md` plus target sidecars |
+| `AgentsMD` | codex, amp, warp, factory, jules, grok-build, kimi-code, kiro, goose, junie, zed | `AGENTS.md` plus target sidecars |
 | `ClaudeMD` | claude-code, gemini, qwen-code | root document plus imports or native directories |
 | `Cursor` | cursor | `.cursor/rules/*.mdc` and native packages |
-| `Clinerules` | cline, roo-code, kilo-code | rules directory with target dialect |
-| `WindsurfStyle` | windsurf, continue-dev, antigravity | rules, workflows and skills directories |
+| `Clinerules` | cline, kilo-code | rules directory with target dialect |
+| `WindsurfStyle` | windsurf, antigravity | rules, workflows and skills directories |
 | `Copilot` | GitHub Copilot | `.github` instructions, prompts, agents and skills |
 
 Targets may add narrowly scoped native output around a protocol plan.

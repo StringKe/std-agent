@@ -1,0 +1,5 @@
+# 用户自己维护的运行时忽略。gitignore=off 时 stdagent 不会改本文件。
+.stdai/state.json
+.stdai/backups/
+.stdai/cache/
+.stdai/logs/

@@ -38,7 +38,7 @@ Tier 1（14 个）：
 - [targets/aider.md](targets/aider.md)
 - [targets/cline.md](targets/cline.md)
 - [targets/opencode.md](targets/opencode.md)
-- [targets/roo-code.md](targets/roo-code.md)
+- [targets/junie.md](targets/junie.md)
 - [targets/crush.md](targets/crush.md)
 - [targets/amp.md](targets/amp.md)
 - [targets/warp.md](targets/warp.md)
@@ -46,7 +46,6 @@ Tier 1（14 个）：
 
 Tier 2（11 个）：
 
-- [targets/continue.md](targets/continue.md)
 - [targets/antigravity.md](targets/antigravity.md)
 - [targets/qwen-code.md](targets/qwen-code.md)
 - [targets/pi.md](targets/pi.md)
@@ -57,6 +56,7 @@ Tier 2（11 个）：
 - [targets/kimi-code.md](targets/kimi-code.md)
 - [targets/kiro.md](targets/kiro.md)
 - [targets/goose.md](targets/goose.md)
+- [targets/zed.md](targets/zed.md)
 
 ## 阅读顺序建议
 

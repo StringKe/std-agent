@@ -19,7 +19,7 @@
 ## 为什么选 std-agent
 
 - **单一来源**：用 YAML frontmatter + Markdown 一次性写好 `rules` / `skills` / `commands` / `references` / `subagents`。
-- **二十五个目标**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Roo Code、Crush、Amp、Warp、Factory、Continue.dev、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code、Kiro、Goose。
+- **二十五个目标**：Claude Code、Codex、Cursor、GitHub Copilot、Windsurf/Devin、Gemini CLI、Aider、Cline、OpenCode、Crush、Amp、Warp、Factory、Junie、Antigravity、Qwen Code、Pi、Kilo Code、Augment Code、Jules、Grok Build、Kimi Code、Kiro、Goose、Zed。
 - **规范精确**：每个输出路径、frontmatter 方言、体积上限都对照各工具的官方文档核实过（最近一次全面审查：2026-07）；凡是原生支持 Agent Skills 目录的工具，都直接落在原生目录下。
 - **零锁定**：writer 只触碰一小份路径白名单；每次 sync 前自动备份；`clean` 一键还原全部改动。
 - **drift 检测**：`status` 显示被外部修改过的文件，`fix` 重新应用源文件。
@@ -42,7 +42,7 @@
 | Aider | 复用 `AGENTS.md`（noop） |
 | Cline | `.clinerules/`（100/500/900 数字前缀） |
 | OpenCode | `.opencode/{skills,commands}/` |
-| Roo Code | `.roo/{rules,skills,commands}/` |
+| Junie (JetBrains) | 共享 `AGENTS.md` + `.junie/{rules,skills}/` |
 | Crush (Charmbracelet) | `CRUSH.md` + `.crush/skills/` + `crush.json` skills 注册 |
 | Amp (Sourcegraph) | `AGENTS.md`（inline） + `.agents/skills/` |
 | Warp | `AGENTS.md`（inline + nested） + `.agents/skills/` |
@@ -52,7 +52,7 @@
 
 | 目标 | 主要输出 |
 |---|---|
-| Continue.dev | `.continue/{rules,skills,prompts}/` + 嵌套 `rules.md` |
+| Zed | 共享 `AGENTS.md` + `.agents/skills/` |
 | Antigravity (Google) | `.agents/{rules,skills,workflows}/` |
 | Qwen Code (Alibaba) | `QWEN.md` + `.qwen/{rules,skills,commands}/` |
 | Pi | `.pi/skills/` + `.pi/prompts/` |
@@ -64,7 +64,7 @@
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
 
-每个集成的详细说明都在 [docs/targets/](docs/targets/) 下。
+每个集成的详细说明都在 [docs/targets/](docs/targets/) 下。本仓库只启用自己用到的 target；gitignore 三种模式和小型 fan-out 见 [examples/](examples/)。
 
 ## 快速开始
 
@@ -213,7 +213,7 @@ gemini       = { enabled = false, convert = true }
 aider        = { enabled = false, convert = true }
 cline        = { enabled = false, convert = true }
 opencode     = { enabled = false, convert = true }
-continue-dev = { enabled = false, convert = true }
+junie        = { enabled = false, convert = true }
 antigravity  = { enabled = false, convert = true }
 
 [sources.default]

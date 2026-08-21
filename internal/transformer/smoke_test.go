@@ -27,9 +27,7 @@ func TestAllTransformersSmoke(t *testing.T) {
 		"aider":        false, // noop
 		"cline":        true,
 		"opencode":     true,
-		"continue-dev": true,
 		"antigravity":  true,
-		"roo-code":     true,
 		"crush":        true,
 		"amp":          true,
 		"qwen-code":    true,
@@ -43,6 +41,8 @@ func TestAllTransformersSmoke(t *testing.T) {
 		"kimi-code":    true,
 		"kiro":         true,
 		"goose":        true,
+		"junie":        true,
+		"zed":          true,
 	}
 
 	for name, tr := range Registry {

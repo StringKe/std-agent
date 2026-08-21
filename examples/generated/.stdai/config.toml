@@ -1,0 +1,11 @@
+version = "1.0"
+inject = true
+inject_whatis = false
+inject_type_glossary = false
+auto_pull = false
+backup = false
+gitignore = "generated"
+
+[targets]
+claude-code = { enabled = true, convert = true }
+codex       = { enabled = true, convert = true }

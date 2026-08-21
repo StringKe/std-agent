@@ -5,37 +5,10 @@ inject_type_glossary = false
 auto_pull = false
 backup = true
 backup_keep = 5
-# 本仓库把 25 个 target 的生成物当作 demo 提交，因此关闭自动 gitignore。
-# 新项目默认 generated（忽略全部可重建产物）；要保留 AGENTS.md + .agents/ 时用 portable。
+# 只同步本仓库实际消费的工具，并提交这些生成物。gitignore 三种模式的完整展示见 examples/。
 gitignore = "off"
 
-# 仓库全开 25 个 target 作为 demo：让其他开发者直接看到 stdagent sync 在各家 AI CLI 工具下的产物形态。
-# 在你自己项目里通常只开 2~3 个用得到的 target，无关的留 false 即可。
 [targets]
-# Tier 1
-claude-code  = { enabled = true,  convert = true }
-codex        = { enabled = true,  convert = true }
-cursor       = { enabled = true,  convert = true }
-copilot      = { enabled = true,  convert = true }
-windsurf     = { enabled = true,  convert = true }
-gemini       = { enabled = true,  convert = true }
-aider        = { enabled = true,  convert = true }
-cline        = { enabled = true,  convert = true }
-opencode     = { enabled = true,  convert = true }
-roo-code     = { enabled = true,  convert = true }
-crush        = { enabled = true,  convert = true }
-amp          = { enabled = true,  convert = true }
-warp         = { enabled = true,  convert = true }
-factory      = { enabled = true,  convert = true }
-# Tier 2
-continue-dev = { enabled = true,  convert = true }
-antigravity  = { enabled = true,  convert = true }
-qwen-code    = { enabled = true,  convert = true }
-pi           = { enabled = true,  convert = true }
-kilo-code    = { enabled = true,  convert = true }
-augment-code = { enabled = true,  convert = true }
-jules        = { enabled = true,  convert = true }
-grok-build   = { enabled = true,  convert = true }
-kimi-code    = { enabled = true,  convert = true }
-kiro         = { enabled = true,  convert = true }
-goose        = { enabled = true,  convert = true }
+claude-code = { enabled = true, convert = true }
+codex       = { enabled = true, convert = true }
+grok-build  = { enabled = true, convert = true }
