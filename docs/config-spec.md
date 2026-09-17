@@ -120,6 +120,17 @@ auth = "ssh"               # ssh | https-token | none；none 仅 public
 多源合并：按字典序遍历 sources，后者覆盖前者；本地手写 `.stdai/standards/`
 始终最高优先级（不会被远端覆盖）。
 
+### `[external]`
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `enabled` | bool | true | false 时关闭外部产物自动采用（等价于每次传 `--no-external`） |
+
+缺省 `[external]` 表（老配置）视为启用。启用时 `sync` 默认扫描
+`.ai/guidelines/`、`.ai/rules/`、`.ai/skills/`、`.agents/skills/` 与根 `.mcp.json`，
+采用结果参与本次转换；`import` 命令把同一批来源显式落盘到
+`.stdai/standards/external/`。`Default()` 新建配置默认写入 `[external] enabled = true`。
+
 ### `[overrides.<target>]`
 
 per-target 字段覆盖（可选高级用法）。允许的 keys 与顶层全局开关同名子集

@@ -33,6 +33,9 @@ my-project/
 │   │   └── references/
 │   │       ├── architecture-overview.md
 │   │       └── ...
+│   │   └── external/                   外部产物采用区（import 落盘；sync 默认内存扫描）
+│   │       ├── guidelines/
+│   │       └── skills/
 │   ├── cache/                        远端 Git 源缓存（git clone 副本）
 │   │   └── default/                  按 sources.<name> 命名的子目录
 │   │       └── standards/

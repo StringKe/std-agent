@@ -125,7 +125,8 @@ After deleting a source, `sync` prunes the old artifacts via state by default. C
 | Command | Result |
 |---|---|
 | `stdagent init` | Initialize `.stdai/` |
-| `stdagent sync` | Parse and generate config for enabled targets |
+| `stdagent sync` | Parse and generate config for enabled targets (auto-adopts `.ai/*` and `.agents/skills` unless `--no-external`) |
+| `stdagent import` | Adopt external artifacts into `.stdai/standards/external/` for review |
 | `stdagent status` | Check rendered output drift |
 | `stdagent fix` | Re-sync to fix drift |
 | `stdagent which <path>` | Query the applicable sources for a file |

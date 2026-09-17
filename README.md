@@ -1,6 +1,6 @@
 # std-agent
 
-![std-agent: one source of truth for 25 AI CLI tools](docs/assets/hero.png)
+![std-agent: one source of truth for 26 AI CLI tools](docs/assets/hero.png)
 
 [![Release](https://img.shields.io/github/v/release/StringKe/std-agent?sort=semver)](https://github.com/StringKe/std-agent/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
@@ -12,14 +12,14 @@
 
 ---
 
-`stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **25 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
+`stdagent` is a lightweight, pure Go CLI that keeps a single `.stdai/` directory as the source of truth for your project's AI configuration, then fans it out to **26 AI CLI tools** with their native file formats, frontmatter dialects, and quirks handled for you.
 
 Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.windsurf/rules/`, `.clinerules/`, `.github/copilot-instructions.md`, ... by hand. Edit once, sync everywhere.
 
 ## Why std-agent?
 
 - **Single source** — write `rules` / `skills` / `commands` / `references` / `subagents` once in YAML frontmatter + Markdown.
-- **Twenty-five targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Crush, Amp, Warp, Factory, Junie, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose, Zed.
+- **Twenty-six targets** — Claude Code, Codex, Cursor, GitHub Copilot, Windsurf/Devin, Gemini CLI, Aider, Cline, OpenCode, Crush, Amp, Warp, Factory, Junie, Antigravity, Qwen Code, Pi, Kilo Code, Augment Code, Jules, Grok Build, Kimi Code, Kiro, Goose, Zed, Muse Code (Meta).
 - **Spec-accurate** — every output path, frontmatter dialect, and size limit is verified against the tools' official docs (last full audit: 2026-08); native Agent Skills directories everywhere they exist.
 - **Zero lock-in** — the writer only touches a tiny whitelist of paths; backups before every sync; `clean` reverses everything.
 - **Drift detection** — `status` shows files modified outside stdagent; `fix` reapplies the source.

@@ -8,6 +8,7 @@ stdagent <command> [flags]
   init           初始化 .stdai/ 与 config.toml
   pull           更新 .stdai/cache/ 中的 Git 源
   sync           核心同步：pull -> parse -> convert -> 向外扩散
+  import         采用外部产物到 .stdai/standards/external/
   fix            重新 sync 修复 drift（sync 的语义别名）
   status         显示 targets 状态与 drift
   clean          清空根目录与平台目录的生成文件
@@ -66,26 +67,40 @@ stdagent pull [--source <name>] [--all]
 ## `stdagent sync`
 
 ```
-stdagent sync [--target <name>...] [--dry-run] [--no-pull] [--no-backup] [--strict]
+stdagent sync [--target <name>...] [--dry-run] [--no-pull] [--no-backup] [--no-external] [--strict]
 ```
 
 行为：
 
 1. 如 `auto_pull=true` 且未传 `--no-pull`，先 `pull`
 2. 解析 `.stdai/standards/` + `cache/<source>/<paths>` 合并出最终 source set
-3. 加载 `.stdai/standards/mcp.json`（若存在）
-4. 对每个 enabled target（或 `--target` 限定的子集）先完成 plan，再统一校验共享路径
-5. 若 `gitignore` 不是 `off`，更新根 `.gitignore` 的 `# BEGIN stdagent` 块（dry-run 只报告不写盘）
-6. 对每个 plan：与现有文件比对，backup 即将覆盖的旧文件，原子写入
-7. 更新 `.stdai/state.json` 的 `last_sync` `outputs[]` `checksums`
+3. 默认扫描外部产物（`.ai/guidelines/`、`.ai/rules/`、`.ai/skills/`、`.agents/skills/`、根 `.mcp.json`），按默认映射采用为内存 source（`--no-external` 跳过；`[external] enabled=false` 同等关闭）
+4. 加载 `.stdai/standards/mcp.json`（若存在），外部根 `.mcp.json` 只合并缺失键
+5. 对每个 enabled target（或 `--target` 限定的子集）先完成 plan，再统一校验共享路径
+6. 若 `gitignore` 不是 `off`，更新根 `.gitignore` 的 `# BEGIN stdagent` 块（dry-run 只报告不写盘）
+7. 对每个 plan：与现有文件比对，backup 即将覆盖的旧文件，原子写入
+8. 更新 `.stdai/state.json` 的 `last_sync` `outputs[]` `checksums`
+
+`sync` 输出外部采用计数行 `[external] N adopted files (.ai/.agents)`（N 为 0 时不输出）。
 
 | flag | 说明 |
 |---|---|
 | `--target <name>` | 多次传可只 sync 指定 target；未传 = 所有 enabled |
-| `--dry-run` | 不写盘，输出 diff 摘要 |
+| `--dry-run` | 不写盘，输出 diff 摘要（外部采用仅内存预览，不落盘） |
 | `--no-pull` | 跳过 pull |
 | `--no-backup` | 跳过 backup |
+| `--no-external` | 跳过外部产物自动采用 |
 | `--strict` | 任何 warn 升级为 error |
+
+## `stdagent import`
+
+```
+stdagent import [--dry-run]
+```
+
+把外部产物显式落盘到 `.stdai/standards/external/`（另合并根 `.mcp.json` 缺失键到 `mcp.json`），供检查与二次编辑后再 `sync`。`sync` 默认已在内存中采用外部产物，`import` 用于固化。重复执行幂等。
+
+映射规则：`.ai/guidelines/` 与 `.ai/rules/` 转 `rules`；单个 `.ai/skills/*.md` 合成为 `skills/<name>/SKILL.md`；成包的 `.ai/skills/<pkg>/` 与 `.agents/skills/<pkg>/` 原样采用（含辅助文件）；provenance 经 `external_source` / `external_path` frontmatter 保留。带 stdagent 生成标记的输出文件会被跳过，避免自循环。
 
 ## `stdagent fix`
 
