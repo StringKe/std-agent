@@ -12,7 +12,7 @@ import (
 //go:embed explain_text.md
 var explainText string
 
-// explainType 是 stdagent explain --json 输出的单条记录
+// explainType is a single record of `stdagent explain --json` output
 type explainType struct {
 	Type      string `json:"type"`
 	Semantics string `json:"semantics"`
@@ -21,43 +21,43 @@ type explainType struct {
 	ExampleFM string `json:"example_frontmatter"`
 }
 
-// explainTypes 是 5 种 type 的结构化语义，供 --json 输出。
-// 与 explain_text.md 内容对应，保持同步。
+// explainTypes holds the structured semantics of the 5 types for --json output.
+// It mirrors explain_text.md; keep them in sync.
 var explainTypes = []explainType{
 	{
 		Type:      "rules",
-		Semantics: "持续生效的编码、架构和操作约束；由 target 自动加载或按路径匹配。",
-		WhenToUse: "违反会造成真实风险、且值得占用常驻上下文的稳定约束。",
-		WhenNot:   "长背景用 references，按需工作流用 skills，用户模板用 commands。",
-		ExampleFM: "---\ntype: rules\nname: exception-handling\ndescription: Go 错误传播与边界转换\npriority: high\napplyTo:\n  - \"**/*.go\"\n---",
+		Semantics: "Always-on coding, architecture, and operational constraints; auto-loaded by targets or matched by path.",
+		WhenToUse: "Stable constraints whose violation causes real risk and that deserve resident context.",
+		WhenNot:   "Long background goes in references, on-demand workflows in skills, user templates in commands.",
+		ExampleFM: "---\ntype: rules\nname: exception-handling\ndescription: Go error propagation and boundary conversion\npriority: high\napplyTo:\n  - \"**/*.go\"\n---",
 	},
 	{
 		Type:      "skills",
-		Semantics: "AI 根据 description 按需调用的能力包，可携带辅助资源。",
-		WhenToUse: "可复用、有明确结果和成功标准的工作流。",
-		WhenNot:   "持续约束用 rules，用户显式模板用 commands。",
-		ExampleFM: "---\ntype: skills\nname: code-review\ndescription: 审查当前改动并报告正确性、安全和回归问题\n---",
+		Semantics: "Capability packages the AI invokes on demand based on description; may carry supporting resources.",
+		WhenToUse: "Reusable workflows with a clear outcome and success criteria.",
+		WhenNot:   "Ongoing constraints go in rules, explicit user templates in commands.",
+		ExampleFM: "---\ntype: skills\nname: code-review\ndescription: Review current changes and report correctness, security, and regression issues\n---",
 	},
 	{
 		Type:      "commands",
-		Semantics: "用户输入 /command-name 显式触发的操作模板。",
-		WhenToUse: "用户需要主动调用的固定操作。",
-		WhenNot:   "AI 自动判断的流程用 skills，持续约束用 rules。",
-		ExampleFM: "---\ntype: commands\nname: review\ndescription: 审查当前分支改动并生成 review 报告\n---",
+		Semantics: "Operation templates the user triggers explicitly via /command-name.",
+		WhenToUse: "Fixed operations the user wants to invoke directly.",
+		WhenNot:   "AI-judged flows go in skills, ongoing constraints in rules.",
+		ExampleFM: "---\ntype: commands\nname: review\ndescription: Review current branch changes and produce a review report\n---",
 	},
 	{
 		Type:      "references",
-		Semantics: "仅在需要时查阅的架构、协议、API 和长篇背景。",
-		WhenToUse: "不应占用默认上下文但需要保留的领域知识。",
-		WhenNot:   "持续约束用 rules，可执行工作流用 skills。",
-		ExampleFM: "---\ntype: references\nname: transformer-design\ndescription: transformer 协议层架构说明\napplyTo:\n  - \"internal/transformer/**\"\n---",
+		Semantics: "Architecture, protocol, API, and long-form background consulted only when needed.",
+		WhenToUse: "Domain knowledge worth keeping but not worth occupying default context.",
+		WhenNot:   "Ongoing constraints go in rules, executable workflows in skills.",
+		ExampleFM: "---\ntype: references\nname: transformer-design\ndescription: Transformer protocol-layer architecture notes\napplyTo:\n  - \"internal/transformer/**\"\n---",
 	},
 	{
 		Type:      "subagents",
-		Semantics: "在隔离上下文中执行的代理定义。",
-		WhenToUse: "可独立执行、需要专门上下文或可安全并行的任务。",
-		WhenNot:   "当前 session 内的流程用 skills，简单模板用 commands。",
-		ExampleFM: "---\ntype: subagents\nname: code-reviewer\ndescription: 在隔离上下文中审查代码并返回问题清单\n---",
+		Semantics: "Agent definitions executed in an isolated context.",
+		WhenToUse: "Tasks that run independently, need a dedicated context, or parallelize safely.",
+		WhenNot:   "In-session flows go in skills, simple templates in commands.",
+		ExampleFM: "---\ntype: subagents\nname: code-reviewer\ndescription: Review code in an isolated context and return an issue list\n---",
 	},
 }
 
@@ -65,17 +65,17 @@ func newExplainCmd() *cobra.Command {
 	var asJSON bool
 	cmd := &cobra.Command{
 		Use:   "explain [type]",
-		Short: "解释 std-agent 5 种类型（rules/skills/commands/references/subagents）的语义",
-		Long: `输出 std-agent 5 种 type 的语义速查：每种类型的触发语义 / 何时使用 / 何时不用 / 示例 frontmatter。
+		Short: "Explain the semantics of the 5 std-agent types (rules/skills/commands/references/subagents)",
+		Long: `Print a semantics cheat sheet for the 5 std-agent types: trigger semantics / when to use / when not to / example frontmatter for each type.
 
-不带参数时输出全部 5 种。带 type 参数时只输出该 type 一段。
+Without arguments, print all 5 types. With a type argument, print only that type's section.
 
-示例：
+Examples:
 
-    stdagent explain                  # 全部 5 种
-    stdagent explain rules            # 只看 rules
-    stdagent explain --json           # JSON 输出（AI 集成）
-    stdagent explain rules --json     # rules 单项 JSON
+    stdagent explain                  # all 5 types
+    stdagent explain rules            # rules only
+    stdagent explain --json           # JSON output (AI integration)
+    stdagent explain rules --json     # single rules item as JSON
 `,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -89,11 +89,12 @@ func newExplainCmd() *cobra.Command {
 			return writeExplainMarkdown(cmd, filter)
 		},
 	}
-	cmd.Flags().BoolVar(&asJSON, "json", false, "JSON 输出（给 AI / 自动化集成）")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "JSON output (for AI / automation integration)")
 	return cmd
 }
 
-// writeExplainMarkdown 输出 markdown 速查。filter 为空输出全部，否则只输出对应 type 段。
+// writeExplainMarkdown prints the markdown cheat sheet. An empty filter prints
+// everything, otherwise only the matching type's section.
 func writeExplainMarkdown(cmd *cobra.Command, filter string) error {
 	if filter == "" {
 		cmd.Print(explainText)
@@ -110,7 +111,7 @@ func writeExplainMarkdown(cmd *cobra.Command, filter string) error {
 	return nil
 }
 
-// writeExplainJSON 输出 []explainType（全部）或 [explainType]（单项过滤）。
+// writeExplainJSON prints []explainType (all) or [explainType] (single-type filter).
 func writeExplainJSON(cmd *cobra.Command, filter string) error {
 	enc := json.NewEncoder(cmd.OutOrStdout())
 	enc.SetIndent("", "  ")
@@ -137,10 +138,12 @@ func isKnownType(t string) bool {
 	return false
 }
 
-// extractSection 从 explain_text.md 抽出 ## <type> 标题对应的段落（含标题，到下一个 ## 之前）。
+// extractSection extracts the `## <type>` section from explain_text.md
+// (including the header, up to the next `##` header).
 //
-// explain_text.md 用 `## rules` / `## skills` 等二级标题分段，最后有一个 `## 速查表` 总表段。
-// 单项查询时只返回该 type 的段，不包含速查表（避免重复信息）。
+// explain_text.md is divided by `## rules` / `## skills` ... level-2 headers
+// plus a trailing `## Quick reference` summary section. Single-type queries
+// return only that type's section, without the summary (to avoid duplication).
 func extractSection(text, typeName string) string {
 	header := "## " + typeName
 	idx := strings.Index(text, header+"\n")
@@ -148,10 +151,10 @@ func extractSection(text, typeName string) string {
 		return ""
 	}
 	rest := text[idx:]
-	// 找下一个 `## ` 二级标题（注意要在行首）
+	// Find the next `## ` level-2 header (must be at line start)
 	next := strings.Index(rest[len(header):], "\n## ")
 	if next < 0 {
 		return rest
 	}
-	return rest[:len(header)+next+1] // +1 包含 next 之前的换行
+	return rest[:len(header)+next+1] // +1 keeps the newline before next
 }

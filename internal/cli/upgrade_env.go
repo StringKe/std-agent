@@ -2,5 +2,5 @@ package cli
 
 import "os"
 
-// osGetenv 包一层方便测试桩替换
+// osGetenv wraps os.Getenv so tests can stub it
 var osGetenv = os.Getenv

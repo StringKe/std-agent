@@ -14,7 +14,7 @@ var (
 	dateStr    = "unknown"
 )
 
-// SetVersion 由 main 注入 ldflags 值；空值不覆盖现有
+// SetVersion injects ldflags values from main; empty values keep the current ones
 func SetVersion(v, c, d string) {
 	if v != "" {
 		versionStr = v
@@ -31,7 +31,7 @@ func newVersionCmd() *cobra.Command {
 	var asJSON bool
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "打印版本与构建信息",
+		Short: "Print version and build info",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			info := map[string]string{
 				"version": versionStr,
@@ -52,6 +52,6 @@ func newVersionCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&asJSON, "json", false, "结构化 JSON 输出")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "Structured JSON output")
 	return cmd
 }

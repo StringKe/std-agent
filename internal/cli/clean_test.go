@@ -17,7 +17,7 @@ func TestCleanCommandRemovesGeneratedFiles(t *testing.T) {
 	setupSyncProject(t, tmp)
 	t.Chdir(tmp)
 
-	// 先 sync 生成 CLAUDE.md / AGENTS.md / .claude/rules/...
+	// first sync to generate CLAUDE.md / AGENTS.md / .claude/rules/...
 	syncCmd := newSyncCmd()
 	syncCmd.SetOut(new(bytes.Buffer))
 	syncCmd.SetErr(new(bytes.Buffer))
@@ -28,7 +28,7 @@ func TestCleanCommandRemovesGeneratedFiles(t *testing.T) {
 		t.Fatal("CLAUDE.md should exist after sync")
 	}
 
-	// clean --yes 跳过交互确认
+	// clean --yes skips interactive confirmation
 	cleanCmd := newCleanCmd()
 	var out bytes.Buffer
 	cleanCmd.SetOut(&out)
@@ -38,13 +38,13 @@ func TestCleanCommandRemovesGeneratedFiles(t *testing.T) {
 		t.Fatalf("clean: %v", err)
 	}
 
-	// 生成文件应被删除
+	// generated files should be removed
 	for _, gone := range []string{"CLAUDE.md", "AGENTS.md", ".claude/rules/style.md"} {
 		if _, err := os.Stat(filepath.Join(tmp, gone)); err == nil {
 			t.Errorf("%s should be removed after clean", gone)
 		}
 	}
-	// .stdai/ 应保留
+	// .stdai/ should be preserved
 	if _, err := os.Stat(filepath.Join(tmp, ".stdai/config.toml")); err != nil {
 		t.Errorf(".stdai should be preserved: %v", err)
 	}
@@ -99,7 +99,7 @@ func TestCleanCommandTargetFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// 仅 clean claude-code
+	// only clean claude-code
 	cleanCmd := newCleanCmd()
 	cleanCmd.SetOut(new(bytes.Buffer))
 	cleanCmd.SetErr(new(bytes.Buffer))
@@ -108,11 +108,11 @@ func TestCleanCommandTargetFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// CLAUDE.md 被删
+	// CLAUDE.md is removed
 	if _, err := os.Stat(filepath.Join(tmp, "CLAUDE.md")); err == nil {
 		t.Error("CLAUDE.md should be removed (target=claude-code)")
 	}
-	// AGENTS.md 保留（target 限定为 claude-code）
+	// AGENTS.md stays (target limited to claude-code)
 	if _, err := os.Stat(filepath.Join(tmp, "AGENTS.md")); err != nil {
 		t.Errorf("AGENTS.md should remain when --target claude-code: %v", err)
 	}

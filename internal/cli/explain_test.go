@@ -17,13 +17,13 @@ func TestExplainAll(t *testing.T) {
 	}
 	got := out.String()
 	for _, want := range []string{
-		"std-agent 类型",
+		"std-agent types",
 		"## rules",
 		"## skills",
 		"## commands",
 		"## references",
 		"## subagents",
-		"## 选择标准",
+		"## Quick reference",
 		"stdagent budget --rendered",
 	} {
 		if !strings.Contains(got, want) {
@@ -48,7 +48,7 @@ func TestExplainSingle(t *testing.T) {
 	if !strings.Contains(got, "applyTo") {
 		t.Error("rules example frontmatter missing applyTo")
 	}
-	// 不应含其他 type 段
+	// must not contain other type sections
 	for _, other := range []string{"## skills", "## commands", "## references", "## subagents"} {
 		if strings.Contains(got, other) {
 			t.Errorf("single explain rules should not contain %q", other)

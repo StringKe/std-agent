@@ -17,9 +17,9 @@ func newCleanCmd() *cobra.Command {
 	var keepBackups, yes bool
 	cmd := &cobra.Command{
 		Use:   "clean",
-		Short: "清空根目录与平台目录的生成文件，保留 .stdai/",
+		Short: "Remove generated files from root and platform dirs, keep .stdai/",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			_ = keepBackups // 当前 v1.0：clean 永远保留 .stdai/backups/
+			_ = keepBackups // v1.0: clean always keeps .stdai/backups/
 			_, root := resolveConfigPath()
 			st, err := state.Load(filepath.Join(root, state.StateFile))
 			if err != nil {
@@ -68,15 +68,16 @@ func newCleanCmd() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
-	f.StringSliceVar(&targets, "target", nil, "仅清理指定 target")
-	f.BoolVar(&keepBackups, "keep-backups", true, "保留 .stdai/backups/")
-	f.BoolVarP(&yes, "yes", "y", false, "跳过确认")
+	f.StringSliceVar(&targets, "target", nil, "Only clean the given target(s)")
+	f.BoolVar(&keepBackups, "keep-backups", true, "Keep .stdai/backups/")
+	f.BoolVarP(&yes, "yes", "y", false, "Skip confirmation")
 	return cmd
 }
 
-// cleanEmptyDirs 删除被清理文件的父目录（若已空）
+// cleanEmptyDirs removes parent dirs of cleaned files when they are empty.
 //
-// 退出条件用 filepath.Dir(dir) == dir 判定 root，跨 OS 安全：
+// The exit condition filepath.Dir(dir) == dir detects the filesystem root
+// and is safe across OSes:
 // Linux/macOS: filepath.Dir("/") == "/"
 // Windows:     filepath.Dir("C:\\") == "C:\\"
 func cleanEmptyDirs(paths []string) {
@@ -86,7 +87,7 @@ func cleanEmptyDirs(paths []string) {
 		for dir != "." && dir != "" {
 			parent := filepath.Dir(dir)
 			if parent == dir {
-				break // 已到 filesystem root
+				break // reached filesystem root
 			}
 			dirs[dir] = true
 			dir = parent
@@ -96,11 +97,11 @@ func cleanEmptyDirs(paths []string) {
 	for d := range dirs {
 		dirList = append(dirList, d)
 	}
-	// 按深度排序，深的先删
+	// Sort by depth so deeper dirs are removed first
 	sort.Slice(dirList, func(i, j int) bool {
 		return len(dirList[i]) > len(dirList[j])
 	})
 	for _, d := range dirList {
-		_ = os.Remove(d) // 非空目录会自然失败，忽略
+		_ = os.Remove(d) // non-empty dirs fail naturally, ignored
 	}
 }

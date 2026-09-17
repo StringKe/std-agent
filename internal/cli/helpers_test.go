@@ -66,7 +66,7 @@ func TestResolveConfigPathWalkUp(t *testing.T) {
 	if !strings.HasSuffix(filepath.ToSlash(cfgPath), ".stdai/config.toml") {
 		t.Errorf("cfgPath = %s", cfgPath)
 	}
-	// 解析 symlink 后 root 应当指向 tmp（macOS /private/var 链接处理）
+	// after resolving symlinks root should point at tmp (macOS /private/var link handling)
 	rootAbs, _ := filepath.EvalSymlinks(root)
 	tmpAbs, _ := filepath.EvalSymlinks(tmp)
 	if rootAbs != tmpAbs {
@@ -82,7 +82,7 @@ func TestResolveConfigPathNoStdai(t *testing.T) {
 	tmp := t.TempDir()
 	t.Chdir(tmp)
 
-	// 没有任何 .stdai/，fallback 到 cwd 自身
+	// with no .stdai/ anywhere, fall back to the cwd itself
 	_, root := resolveConfigPath()
 	rootAbs, _ := filepath.EvalSymlinks(root)
 	tmpAbs, _ := filepath.EvalSymlinks(tmp)

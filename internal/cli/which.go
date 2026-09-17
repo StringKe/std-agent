@@ -20,20 +20,20 @@ func newWhichCmd() *cobra.Command {
 	var typesCSV string
 	cmd := &cobra.Command{
 		Use:   "which <file-path>",
-		Short: "列出与给定文件路径匹配的 rules / references / subagents（按需加载上下文）",
-		Long: `根据传入的相对路径（相对项目根），扫 .stdai/standards/ 下所有 docs 的 frontmatter applyTo glob，
-返回应当为该文件加载的 docs（rules / references / subagents 等）。
+		Short: "List rules / references / subagents matching a file path (load context on demand)",
+		Long: `Given a project-root-relative path, scan the frontmatter applyTo globs of all docs under .stdai/standards/
+and return the docs (rules / references / subagents, etc.) that should be loaded for that file.
 
-设计目的：给 AI 助手（或人）一个 single-shot 查询，让 AI 在编辑某文件前知道
-该读哪些规则，避免预加载全部上下文。
+Purpose: give an AI assistant (or a human) a single-shot query so the AI knows
+which rules to read before editing a file, without preloading all context.
 
-示例：
+Examples:
 
     stdagent which internal/runner/runner.go
     stdagent which internal/runner/runner.go --json
     stdagent which internal/runner/runner.go --paths
     stdagent which internal/runner/runner.go --type=rules,references
-    stdagent which internal/runner/runner.go --include-global   # 也列出无 applyTo 的全局 docs
+    stdagent which internal/runner/runner.go --include-global   # also list global docs without applyTo
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -74,23 +74,24 @@ func newWhichCmd() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
-	f.BoolVar(&asJSON, "json", false, "JSON 输出（给 AI / 自动化集成）")
-	f.BoolVar(&pathsOnly, "paths", false, "只输出源文件路径，方便 pipe")
-	f.BoolVar(&includeGlobal, "include-global", false, "包含无 applyTo 的全局 docs（默认只列匹配的）")
-	f.StringVar(&typesCSV, "type", "", "按 type 过滤，逗号分隔（rules,skills,commands,subagents,references）")
+	f.BoolVar(&asJSON, "json", false, "JSON output (for AI / automation integration)")
+	f.BoolVar(&pathsOnly, "paths", false, "Print source file paths only, convenient for pipes")
+	f.BoolVar(&includeGlobal, "include-global", false, "Include global docs without applyTo (matches only by default)")
+	f.StringVar(&typesCSV, "type", "", "Filter by type, comma-separated (rules,skills,commands,subagents,references)")
 	return cmd
 }
 
 type whichMatch struct {
 	doc          *parser.Document
 	matchedGlobs []string
-	global       bool // true 表示无 applyTo / 仅靠 includeGlobal 命中
+	global       bool // true means no applyTo / matched via includeGlobal only
 }
 
-// normalizeQueryPath 把用户输入的路径归一化为相对项目根的 forward-slash 路径
+// normalizeQueryPath normalizes user input to a root-relative forward-slash path.
 //
-// 接受绝对路径、./xxx、含 ../ 的相对路径，统一转成 root 相对的 slash 路径。
-// 落到 root 外部的路径保持原样（让 glob 匹配自然失败）。
+// Accepts absolute paths, ./xxx, and relative paths with ../, converting them
+// all to root-relative slash paths. Paths landing outside the root are kept
+// as-is (so glob matching naturally fails).
 func normalizeQueryPath(root, in string) string {
 	abs := in
 	if !filepath.IsAbs(in) {
@@ -104,9 +105,11 @@ func normalizeQueryPath(root, in string) string {
 	return filepath.ToSlash(rel)
 }
 
-// loadAllDocs 扫 .stdai/standards/ 下所有 .md，parse 后返回 docs（不跑 transformer）。
+// loadAllDocs scans all .md files under .stdai/standards/ and returns the
+// parsed docs (without running transformers).
 //
-// 复用 source.NewLocal + parser.Parse；与 runner.Sync 路径一致但跳过 git 源 / transformer / writer。
+// Reuses source.NewLocal + parser.Parse; same path as runner.Sync but skips
+// git sources / transformers / writers.
 func loadAllDocs(root string) ([]*parser.Document, error) {
 	localRoot := filepath.Join(root, ".stdai/standards")
 	files, err := source.NewLocal(localRoot).Files()
@@ -131,7 +134,7 @@ func loadAllDocs(root string) ([]*parser.Document, error) {
 	return docs, nil
 }
 
-// isSkillSubdir 与 runner 内部判定一致：skills/<n>/<subdir>/x.md 是 SKILL 辅助文件
+// isSkillSubdir matches the runner's internal rule: skills/<n>/<subdir>/x.md is a SKILL support file
 func isSkillSubdir(p string) bool {
 	if !strings.HasPrefix(p, "skills/") {
 		return false
@@ -255,5 +258,5 @@ func writeWhichJSON(cmd *cobra.Command, target string, matches []whichMatch) err
 	return enc.Encode(out)
 }
 
-// 占位避免某些 build 下 os 未用：当前实现路径都用到了
+// Placeholder so os stays used under some builds: all current paths use it
 var _ = os.Stat

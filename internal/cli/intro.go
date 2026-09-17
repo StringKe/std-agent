@@ -15,15 +15,15 @@ func newIntroCmd() *cobra.Command {
 	var copyOnly bool
 	cmd := &cobra.Command{
 		Use:   "intro",
-		Short: "输出 AI 助手提示词，告诉 AI 如何编写、迁移、同步 std-agent 内容",
-		Long: `输出一段权威提示词给 AI 助手（Claude / GPT / Gemini 等）。
+		Short: "Print the AI assistant prompt explaining how to author, migrate, and sync std-agent content",
+		Long: `Print an authoritative prompt for AI assistants (Claude / GPT / Gemini, etc.).
 
-把输出粘到 AI 对话开头，AI 就能理解如何：
-- 编写 .stdai/standards/ 下的 rules / skills / commands / references
-- 从已有 CLAUDE.md / .cursor/rules/ / .clinerules/ 等迁移到 std-agent
-- 跑 stdagent 命令完成同步与维护
+Paste the output at the start of an AI conversation and the AI will understand how to:
+- Author rules / skills / commands / references under .stdai/standards/
+- Migrate from existing CLAUDE.md / .cursor/rules/ / .clinerules/ etc. to std-agent
+- Run stdagent commands to finish syncing and maintenance
 
-适合放在团队 AI 助手 system prompt 里，或者直接 pipe 给 LLM CLI 工具。`,
+Suitable for a team AI assistant system prompt, or pipe it directly to an LLM CLI tool.`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if asJSON {
 				return writeIntroJSON(cmd, copyOnly)
@@ -32,8 +32,8 @@ func newIntroCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&asJSON, "json", false, "JSON 输出（含 version + prompt 字段）")
-	cmd.Flags().BoolVar(&copyOnly, "copy", false, "JSON 模式下仅输出 prompt 字段值（无引号 json 字符串）")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "JSON output (with version + prompt fields)")
+	cmd.Flags().BoolVar(&copyOnly, "copy", false, "In JSON mode, print only the prompt field value (unquoted raw string)")
 	return cmd
 }
 
@@ -44,7 +44,8 @@ type introPayload struct {
 
 func writeIntroJSON(cmd *cobra.Command, copyOnly bool) error {
 	if copyOnly {
-		// raw 输出（与默认 text 等价，但保留 --copy 语义占位让用户清晰意图）
+		// Raw output (equivalent to the default text, but keeps the --copy
+		// semantics visible so the user's intent is explicit)
 		cmd.Print(introPrompt)
 		return nil
 	}
@@ -53,7 +54,7 @@ func writeIntroJSON(cmd *cobra.Command, copyOnly bool) error {
 	return enc.Encode(introPayload{Version: versionStr, Prompt: introPrompt})
 }
 
-// IntroPrompt 返回内嵌的 AI 助手提示词内容（供其他工具或测试使用）
+// IntroPrompt returns the embedded AI assistant prompt (for other tools or tests)
 func IntroPrompt() string {
 	return introPrompt
 }

@@ -13,22 +13,23 @@ var (
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "stdagent",
-		Short:         "std-agent 多 AI CLI 配置同步器",
-		Long:          "stdagent 以 .stdai/ 为单一真相源，把 YAML frontmatter + Markdown 同步到各 AI CLI 工具的原生配置。",
+		Short:         "std-agent multi-AI CLI config synchronizer",
+		Long:          "stdagent uses .stdai/ as the single source of truth, syncing YAML frontmatter + Markdown into each AI CLI tool's native config.",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 	pf := root.PersistentFlags()
-	pf.StringVar(&flagConfig, "config", ".stdai/config.toml", "配置文件路径")
-	pf.BoolVar(&flagDryRun, "dry-run", false, "只输出将做什么，不写盘")
-	pf.CountVarP(&flagVerbose, "verbose", "v", "详细日志（-v info, -vv debug）")
-	pf.BoolVarP(&flagQuiet, "quiet", "q", false, "仅输出错误")
-	pf.BoolVar(&flagNoColor, "no-color", false, "禁用颜色")
+	pf.StringVar(&flagConfig, "config", ".stdai/config.toml", "Path to the config file")
+	pf.BoolVar(&flagDryRun, "dry-run", false, "Print what would be done without writing")
+	pf.CountVarP(&flagVerbose, "verbose", "v", "Verbose logging (-v info, -vv debug)")
+	pf.BoolVarP(&flagQuiet, "quiet", "q", false, "Errors only")
+	pf.BoolVar(&flagNoColor, "no-color", false, "Disable colors")
 
 	root.AddCommand(
 		newInitCmd(),
 		newPullCmd(),
 		newSyncCmd(),
+		newImportCmd(),
 		newFixCmd(),
 		newStatusCmd(),
 		newCleanCmd(),
@@ -42,7 +43,7 @@ func newRootCmd() *cobra.Command {
 	return root
 }
 
-// Execute 是 cmd 主入口
+// Execute is the main cmd entrypoint
 func Execute() error {
 	return newRootCmd().Execute()
 }

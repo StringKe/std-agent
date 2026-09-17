@@ -25,14 +25,14 @@ func newBudgetCmd() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "budget",
-		Short: "估算 source 与实际 target 输出的 LLM 上下文消耗",
+		Short: "Estimate LLM context usage of sources and rendered target output",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runBudget(cmd, asJSON, rendered || len(targets) > 0, targets)
 		},
 	}
-	cmd.Flags().BoolVar(&asJSON, "json", false, "结构化 JSON 输出")
-	cmd.Flags().BoolVar(&rendered, "rendered", false, "显示启用 target 的实际 root 与 sidecar 体积")
-	cmd.Flags().StringSliceVar(&targets, "target", nil, "限定 rendered target，可重复")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "Structured JSON output")
+	cmd.Flags().BoolVar(&rendered, "rendered", false, "Show actual root and sidecar sizes for enabled targets")
+	cmd.Flags().StringSliceVar(&targets, "target", nil, "Limit rendered targets, repeatable")
 	return cmd
 }
 
@@ -148,7 +148,7 @@ func runBudget(cmd *cobra.Command, asJSON, rendered bool, targets []string) erro
 	pf := func(format string, a ...any) { _, _ = fmt.Fprintf(out, format, a...) }
 	pl := func(s string) { _, _ = fmt.Fprintln(out, s) }
 
-	pf("总文档数 %d   总 rules 字节 %d   估算总 tokens %d\n\n",
+	pf("Total docs %d   total rules bytes %d   estimated total tokens %d\n\n",
 		len(r.Docs), r.TotalRulesBytes, r.TotalTokens)
 	pf("%-50s %-12s %10s %10s\n", "PATH", "TYPE", "BYTES", "~TOKENS")
 	pl(strings.Repeat("-", 86))
@@ -304,14 +304,15 @@ func collectBudgetSkillPackageFiles(docs []*parser.Document, files []source.File
 	}
 }
 
-// isMarkdownFile 判断 path 后缀是否为 markdown
+// isMarkdownFile reports whether the path has a markdown suffix
 func isMarkdownFile(p string) bool {
 	lower := strings.ToLower(p)
 	return strings.HasSuffix(lower, ".md") || strings.HasSuffix(lower, ".markdown")
 }
 
-// isSkillSubdirMarkdownFile 判断是否 SKILL package 子目录的辅助 markdown
-// （与 runner.isSkillSubdirMarkdown 等价；cli 包独立维护避免跨包导出私有 helper）
+// isSkillSubdirMarkdownFile reports whether p is an auxiliary markdown file
+// inside a SKILL package subdirectory (same rule as runner.isSkillSubdirMarkdown;
+// maintained separately here to avoid exporting a private cross-package helper)
 func isSkillSubdirMarkdownFile(p string) bool {
 	return strings.HasPrefix(p, "skills/") && strings.Count(p, "/") >= 3
 }

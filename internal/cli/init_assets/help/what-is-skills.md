@@ -1,6 +1,6 @@
 # Skills
 
-`type: skills` 是 AI 根据 description 按需调用的能力包，适合可复用工作流和领域操作。
+`type: skills` is a capability package the AI invokes on demand based on description, suited for reusable workflows and domain operations.
 
 ```text
 .stdai/standards/skills/code-review/
@@ -14,10 +14,10 @@
 ---
 type: skills
 name: code-review
-description: 审查当前改动并报告正确性、安全和回归问题
+description: Review current changes and report correctness, security, and regression issues
 ---
 ```
 
-SKILL.md 应明确目标和 Done means。只有执行所需的辅助资料进入 package；详细参考按需读取。target 有原生 Agent Skills 时写入原生目录，否则按其已定义的 degradation 转换。
+SKILL.md should state the goal and Done means clearly. Only supporting material needed for execution goes in the package; detailed references load on demand. Targets with native Agent Skills get the native directory; others convert via their defined degradation.
 
-持续硬约束使用 rule，用户显式模板使用 command，隔离执行才使用 subagent。
+Ongoing hard constraints use rules, explicit user templates use commands, and isolated execution alone uses subagents.

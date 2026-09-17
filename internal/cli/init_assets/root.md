@@ -1,20 +1,20 @@
-# 项目名
+# Project name
 
-用一句话说明项目的目标和主要使用者。
+Describe the project's goal and main users in one sentence.
 
-## 结构
+## Structure
 
-- `<path>`：职责。
+- `<path>`: responsibility.
 
-## 关键约束
+## Key constraints
 
-- 只保留跨项目、无法从代码自然推断且违反会造成真实风险的约束。
+- Keep only cross-project constraints that cannot be inferred from the code and whose violation causes real risk.
 
 ## Done means
 
-列出本项目完成变更时必须通过的最小验证命令。
+List the minimal verification commands that must pass when changing this project.
 
-AI 配置源位于 `.stdai/standards/`。修改后运行：
+AI config sources live in `.stdai/standards/`. After editing, run:
 
 ```bash
 stdagent sync --strict

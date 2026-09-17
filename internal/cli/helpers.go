@@ -14,12 +14,14 @@ func sliceContains(ss []string, s string) bool {
 	return false
 }
 
-// resolveConfigPath 决定使用哪个 .stdai/config.toml 与 project root。
+// resolveConfigPath decides which .stdai/config.toml and project root to use.
 //
-// 用户显式 --config 时，root = config 的祖父目录（path/.stdai/config.toml -> path）。
-// 默认情况下，从 cwd 向上 walk，找到最近的 .stdai/config.toml；找不到则 fallback 到 cwd。
+// With an explicit --config, root is the config's grandparent dir
+// (path/.stdai/config.toml -> path). By default, walk up from the cwd to the
+// nearest .stdai/config.toml; fall back to the cwd when none is found.
 //
-// 该 walkUp 行为支持 monorepo 子目录运行 stdagent，自动定位上层项目根。
+// The walk-up behavior supports running stdagent from a monorepo
+// subdirectory, auto-locating the enclosing project root.
 func resolveConfigPath() (cfgPath, root string) {
 	const defaultRel = ".stdai/config.toml"
 

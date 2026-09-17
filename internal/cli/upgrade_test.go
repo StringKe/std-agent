@@ -50,7 +50,7 @@ func TestSHA256Hex(t *testing.T) {
 }
 
 func TestExtractBinaryTarGz(t *testing.T) {
-	// 构造 tar.gz: { stdagent: "fake-binary" }
+	// build tar.gz: { stdagent: "fake-binary" }
 	var gzBuf bytes.Buffer
 	gw := gzip.NewWriter(&gzBuf)
 	tw := tar.NewWriter(gw)

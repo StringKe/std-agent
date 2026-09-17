@@ -236,7 +236,7 @@ func TestIsMarkdownFile(t *testing.T) {
 
 func TestIsSkillSubdirMarkdownFile(t *testing.T) {
 	cases := map[string]bool{
-		"skills/foo/SKILL.md":         false, // 顶层
+		"skills/foo/SKILL.md":         false, // top level
 		"skills/foo/refs/x.md":        true,
 		"skills/foo/scripts/sub/y.md": true,
 		"rules/x.md":                  false,

@@ -15,7 +15,7 @@ func newPullCmd() *cobra.Command {
 	var all bool
 	cmd := &cobra.Command{
 		Use:   "pull",
-		Short: "更新 .stdai/cache/ 中的 Git 源",
+		Short: "Update Git sources in .stdai/cache/",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfgPath, root := resolveConfigPath()
 			cfg, err := config.Load(cfgPath)
@@ -58,8 +58,8 @@ func newPullCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&sourceName, "source", "", "仅 pull 指定 source")
-	cmd.Flags().BoolVar(&all, "all", false, "即使 enabled=false 也 pull")
+	cmd.Flags().StringVar(&sourceName, "source", "", "Only pull the given source")
+	cmd.Flags().BoolVar(&all, "all", false, "Pull even when enabled=false")
 	return cmd
 }
 

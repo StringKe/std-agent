@@ -84,7 +84,7 @@ func TestSyncCommandTargetFilter(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(tmp, "CLAUDE.md")); err != nil {
 		t.Errorf("CLAUDE.md should exist: %v", err)
 	}
-	// codex 没在 --target 列表，AGENTS.md 不应生成
+	// codex is not in --target, so AGENTS.md must not be generated
 	if _, err := os.Stat(filepath.Join(tmp, "AGENTS.md")); err == nil {
 		t.Error("AGENTS.md should not exist when --target only claude-code")
 	}
@@ -123,7 +123,7 @@ func TestStatusCommandAfterSync(t *testing.T) {
 	setupSyncProject(t, tmp)
 	t.Chdir(tmp)
 
-	// 先 sync
+	// sync first
 	syncCmd := newSyncCmd()
 	syncCmd.SetOut(new(bytes.Buffer))
 	syncCmd.SetErr(new(bytes.Buffer))
@@ -131,7 +131,7 @@ func TestStatusCommandAfterSync(t *testing.T) {
 		t.Fatalf("sync: %v", err)
 	}
 
-	// 再 status；无 drift 应当返回 nil
+	// then status; no drift should return nil
 	statusCmd := newStatusCmd()
 	var out bytes.Buffer
 	statusCmd.SetOut(&out)
@@ -200,7 +200,7 @@ func TestStatusCommandDetectsDrift(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// 手动篡改一个生成文件
+	// tamper with a generated file manually
 	if err := os.WriteFile(filepath.Join(tmp, "CLAUDE.md"), []byte("tampered"), 0o600); err != nil {
 		t.Fatal(err)
 	}

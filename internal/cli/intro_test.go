@@ -17,7 +17,7 @@ func TestIntroCommandText(t *testing.T) {
 	}
 	got := out.String()
 	for _, want := range []string{
-		"stdagent AI 配置迁移与维护",
+		"stdagent AI config migration and maintenance",
 		".stdai/standards/",
 		"frontmatter",
 		"rules",
@@ -55,7 +55,7 @@ func TestIntroCommandJSON(t *testing.T) {
 	if p.Version != "1.0.0" {
 		t.Errorf("version = %s", p.Version)
 	}
-	if !strings.Contains(p.Prompt, "stdagent AI 配置迁移与维护") {
+	if !strings.Contains(p.Prompt, "stdagent AI config migration and maintenance") {
 		t.Error("prompt missing header")
 	}
 }
@@ -82,11 +82,11 @@ func TestIntroCommandCopyMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := out.String()
-	// --copy 输出原始 markdown，不应是 JSON 包装
+	// --copy prints raw markdown, not the JSON wrapper
 	if strings.HasPrefix(got, "{") {
 		t.Error("--copy should output raw markdown not JSON")
 	}
-	if !strings.Contains(got, "stdagent AI 配置迁移与维护") {
+	if !strings.Contains(got, "stdagent AI config migration and maintenance") {
 		t.Error("missing prompt content")
 	}
 }

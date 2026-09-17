@@ -63,7 +63,7 @@ func TestWhichPathsOnly(t *testing.T) {
 	}
 	got := strings.TrimSpace(out)
 	want := filepath.ToSlash(filepath.Join(".stdai/standards", "rules/test-requirements.md"))
-	// 把输出按行 split，规范化
+	// split output into lines and normalize
 	lines := strings.Split(got, "\n")
 	found := false
 	for _, l := range lines {
@@ -95,19 +95,19 @@ func TestWhichIncludeGlobalAddsGlobalDocs(t *testing.T) {
 func TestWhichTypeFilter(t *testing.T) {
 	root := t.TempDir()
 	bootstrapWhichFixture(t, root)
-	// 加一条 reference doc，applyTo 匹配同样路径
+	// add a reference doc whose applyTo matches the same path
 	mustMkdirAll(t, filepath.Join(root, ".stdai/standards/references"))
 	mustWriteFile(t, filepath.Join(root, ".stdai/standards/references/runner-arch.md"), `---
 type: references
 name: runner-arch
-description: runner 架构参考
+description: runner architecture reference
 applyTo:
   - "internal/runner/**/*.go"
 ---
 body
 `)
 
-	// 不过滤：应有 test-requirements(rules) + runner-arch(references)
+	// no filter: expect test-requirements(rules) + runner-arch(references)
 	all, err := runWhichCmd(root, []string{"internal/runner/runner.go"})
 	if err != nil {
 		t.Fatal(err)
@@ -118,7 +118,7 @@ body
 		}
 	}
 
-	// 仅 references
+	// references only
 	refs, err := runWhichCmd(root, []string{"internal/runner/runner.go", "--type=references"})
 	if err != nil {
 		t.Fatal(err)
@@ -131,7 +131,7 @@ body
 	}
 }
 
-// runWhichCmd 在 isolated cwd 跑 which，捕获 stdout
+// runWhichCmd runs which in an isolated cwd and captures stdout
 func runWhichCmd(root string, args []string) (string, error) {
 	cwd, _ := os.Getwd()
 	defer os.Chdir(cwd) //nolint:errcheck // test-only
@@ -139,7 +139,7 @@ func runWhichCmd(root string, args []string) (string, error) {
 		return "", err
 	}
 
-	// 重置 flag 状态（cobra command 复用全局 root flag，per-test 重新构造 root）
+	// reset flag state (cobra commands share the global root flag; rebuild root per test)
 	saveConfig := flagConfig
 	flagConfig = ".stdai/config.toml"
 	defer func() { flagConfig = saveConfig }()
@@ -161,22 +161,22 @@ func bootstrapWhichFixture(t *testing.T, root string) {
 [targets]
 claude-code = { enabled = true, convert = true }
 `)
-	// 有 applyTo（runner 路径专属）
+	// with applyTo (runner-path specific)
 	mustWriteFile(t, filepath.Join(stdai, "standards/rules/test-requirements.md"), `---
 type: rules
 name: test-requirements
-description: 改 runner 必带测试
+description: runner changes must include tests
 priority: high
 applyTo:
   - "internal/runner/**/*.go"
 ---
 body
 `)
-	// 无 applyTo（全局，默认不出现，--include-global 才出现）
+	// without applyTo (global; hidden by default, shown with --include-global)
 	mustWriteFile(t, filepath.Join(stdai, "standards/rules/no-history-rewrite.md"), `---
 type: rules
 name: no-history-rewrite
-description: 禁止改写历史
+description: never rewrite history
 priority: high
 ---
 body
@@ -189,7 +189,7 @@ priority: high
 ---
 body
 `)
-	// sanity check: parser 接受 fixture
+	// sanity check: parser accepts the fixture
 	files, _ := os.ReadDir(filepath.Join(stdai, "standards/rules"))
 	if len(files) != 3 {
 		t.Fatalf("fixture: want 3 rule files, got %d", len(files))

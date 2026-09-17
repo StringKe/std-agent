@@ -29,7 +29,7 @@ func newStatusCmd() *cobra.Command {
 	var asJSON bool
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "显示 targets 状态、drift 与最后同步时间",
+		Short: "Show target status, drift, and last sync time",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfgPath, root := resolveConfigPath()
 			cfg, err := config.Load(cfgPath)
@@ -91,7 +91,7 @@ func newStatusCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringSliceVar(&targets, "target", nil, "限定 target")
-	cmd.Flags().BoolVar(&asJSON, "json", false, "结构化 JSON 输出")
+	cmd.Flags().StringSliceVar(&targets, "target", nil, "Limit to the given target(s)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "Structured JSON output")
 	return cmd
 }

@@ -23,15 +23,15 @@ func newInitCmd() *cobra.Command {
 	var sourceURL string
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "初始化 .stdai/ 与 config.toml",
+		Short: "Initialize .stdai/ and config.toml",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runInit(cmd, initOptions{Force: force, Minimal: minimal, Source: sourceURL})
 		},
 	}
 	f := cmd.Flags()
-	f.BoolVar(&force, "force", false, "已存在 .stdai/ 时强制覆盖（先备份）")
-	f.BoolVar(&minimal, "minimal", false, "不写示例文件，只建空目录")
-	f.StringVar(&sourceURL, "source", "", "在 [sources.default] 写入指定 URL")
+	f.BoolVar(&force, "force", false, "Overwrite an existing .stdai/ (back it up first)")
+	f.BoolVar(&minimal, "minimal", false, "Skip example files, create empty dirs only")
+	f.StringVar(&sourceURL, "source", "", "Write the given URL into [sources.default]")
 	return cmd
 }
 
@@ -78,12 +78,14 @@ func runInit(cmd *cobra.Command, opts initOptions) error {
 		}
 	}
 
-	// 分发内置 stdagent 概念文档到 .stdai/help/（不参与 sync，root.md 通过 @<path> 引用）
+	// Ship the built-in stdagent concept docs to .stdai/help/ (excluded from
+	// sync; root.md references them via @<path>).
 	if err := writeHelpAssets(stdaiDir); err != nil {
 		return err
 	}
 
-	// 写示例 .stdai/standards/root.md（AI 接管时按项目实际内容重写）
+	// Write the example .stdai/standards/root.md (the AI rewrites it with the
+	// project's real content on first takeover).
 	if err := writeRootTemplate(stdaiDir); err != nil {
 		return err
 	}
@@ -124,8 +126,9 @@ func runInit(cmd *cobra.Command, opts initOptions) error {
 	return nil
 }
 
-// writeHelpAssets 把 init_assets/help/*.md 拷贝到 .stdai/help/。
-// 这些是 stdagent 自带的概念解释文档，不参与 sync（runner 只扫 .stdai/standards/）。
+// writeHelpAssets copies init_assets/help/*.md to .stdai/help/.
+// These are the built-in stdagent concept docs, excluded from sync
+// (the runner only scans .stdai/standards/).
 func writeHelpAssets(stdaiDir string) error {
 	entries, err := initAssets.ReadDir("init_assets/help")
 	if err != nil {
@@ -147,8 +150,9 @@ func writeHelpAssets(stdaiDir string) error {
 	return nil
 }
 
-// writeRootTemplate 把 init_assets/root.md 拷贝到 .stdai/standards/root.md。
-// AI 第一次接管时应当根据项目实际内容重写本文件，保留 stdagent 概念引用段落。
+// writeRootTemplate copies init_assets/root.md to .stdai/standards/root.md.
+// On first takeover the AI rewrites this file with the project's real
+// content, keeping the stdagent concept reference section.
 func writeRootTemplate(stdaiDir string) error {
 	data, err := initAssets.ReadFile("init_assets/root.md")
 	if err != nil {
@@ -158,15 +162,15 @@ func writeRootTemplate(stdaiDir string) error {
 	return os.WriteFile(dst, data, 0o600)
 }
 
-const stdaiIgnoreTemplate = `# .stdaiignore: gitignore 风格 glob，匹配的源文件不参与 sync
-# 路径相对 .stdai/standards/，支持 doublestar (**) 与 ? * 通配
-# 行首 # 为注释，空行忽略
+const stdaiIgnoreTemplate = `# .stdaiignore: gitignore-style globs; matched source files are excluded from sync
+# Paths are relative to .stdai/standards/; supports doublestar (**) plus ? and * wildcards
+# Lines starting with # are comments; blank lines are ignored
 
-# 草稿文件（示例）
+# Draft files (example)
 # rules/draft-*.md
 # **/wip-*.md
 
-# 内部文档不发到任何 target
+# Internal docs never sent to any target
 # references/internal-*.md
 `
 

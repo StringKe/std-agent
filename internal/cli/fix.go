@@ -6,12 +6,12 @@ import (
 	"github.com/StringKe/std-agent/internal/runner"
 )
 
-// newFixCmd 是 sync 的语义别名：drift auto-fix 即重新 sync 覆盖 drift 文件
+// newFixCmd is a semantic alias of sync: drift auto-fix re-syncs to overwrite drifted files
 func newFixCmd() *cobra.Command {
 	var targets []string
 	cmd := &cobra.Command{
 		Use:   "fix",
-		Short: "重新 sync 修复 drift（等价于 sync）",
+		Short: "Re-sync to fix drift (equivalent to sync)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfgPath, root := resolveConfigPath()
 			res, err := runner.Sync(runner.Options{
@@ -30,6 +30,6 @@ func newFixCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringSliceVar(&targets, "target", nil, "限定 target")
+	cmd.Flags().StringSliceVar(&targets, "target", nil, "Limit to the given target(s)")
 	return cmd
 }

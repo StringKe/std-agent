@@ -20,12 +20,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// upgradeRepo 是发布仓库的 owner/name；默认硬编码到 binary，配合 GH Releases API。
-// 用 STDAGENT_REPO_OWNER / STDAGENT_REPO_NAME 环境变量在 fork 场景覆盖。
+// upgradeRepo is the release repo's owner/name; hardcoded into the binary by
+// default for the GH Releases API. Override in fork scenarios with the
+// STDAGENT_REPO_OWNER / STDAGENT_REPO_NAME environment variables.
 const (
 	defaultUpgradeRepoOwner = "StringKe"
 	defaultUpgradeRepoName  = "std-agent"
-	upgradeProjectName      = "std-agent" // 归档前缀（goreleaser ProjectName）
+	upgradeProjectName      = "std-agent" // archive prefix (goreleaser ProjectName)
 	upgradeBinName          = "stdagent"
 )
 
@@ -48,13 +49,13 @@ func newUpgradeCmd() *cobra.Command {
 	var pin string
 	cmd := &cobra.Command{
 		Use:   "upgrade",
-		Short: "自我升级到最新版本（或 --version 指定的 tag）",
+		Short: "Self-upgrade to the latest version (or the tag given via --version)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runUpgrade(cmd, upgradeOptions{Force: force, Pin: pin})
 		},
 	}
-	cmd.Flags().BoolVar(&force, "force", false, "已是目标版本时仍强制重装")
-	cmd.Flags().StringVar(&pin, "version", "", "指定 tag（如 v0.2.0），默认 latest")
+	cmd.Flags().BoolVar(&force, "force", false, "Reinstall even when already at the target version")
+	cmd.Flags().StringVar(&pin, "version", "", "Pin a tag (e.g. v0.2.0), defaults to latest")
 	return cmd
 }
 
@@ -130,8 +131,8 @@ func runUpgrade(cmd *cobra.Command, opts upgradeOptions) error {
 	return nil
 }
 
-// versionMatchesTag 比较 ldflags 注入的 version 与 tag
-// version 形如 "0.2.0"（goreleaser 注入不带 v）；tag 形如 "v0.2.0"
+// versionMatchesTag compares the ldflags-injected version against a tag.
+// version looks like "0.2.0" (goreleaser injects it without v); tag looks like "v0.2.0"
 func versionMatchesTag(version, tag string) bool {
 	if version == "" || version == "dev" {
 		return false
@@ -195,7 +196,7 @@ func findChecksum(checksums, archiveName string) string {
 	return ""
 }
 
-// extractBinary 从归档（tar.gz 或 zip）提取 stdagent binary 内容
+// extractBinary extracts the stdagent binary content from an archive (tar.gz or zip)
 func extractBinary(data []byte, ext string) ([]byte, error) {
 	binName := upgradeBinName
 	if ext == "zip" {
@@ -241,7 +242,7 @@ func extractBinary(data []byte, ext string) ([]byte, error) {
 	return nil, fmt.Errorf("%s not found in tar.gz", binName)
 }
 
-// getEnv 是 os.Getenv 的薄封装（避免引入 os 依赖到本文件之外的轻测试）
+// getEnv is a thin wrapper over os.Getenv (keeps light tests free of an os import)
 func getEnv(key string) string {
 	return osGetenv(key)
 }

@@ -8,10 +8,10 @@ import (
 
 func newSyncCmd() *cobra.Command {
 	var targets []string
-	var noPull, noBackup, noPrune, strict bool
+	var noPull, noBackup, noPrune, noExternal, strict bool
 	cmd := &cobra.Command{
 		Use:   "sync",
-		Short: "核心同步：pull -> parse -> convert -> 向外扩散（默认 prune 上次写过但本次不再产出的文件）",
+		Short: "Core sync: pull -> parse -> convert -> fan out (prunes previously written but no longer produced files by default)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfgPath, root := resolveConfigPath()
 			res, err := runner.Sync(runner.Options{
@@ -21,6 +21,7 @@ func newSyncCmd() *cobra.Command {
 				NoPull:      noPull,
 				NoBackup:    noBackup,
 				NoPrune:     noPrune,
+				NoExternal:  noExternal,
 				Strict:      strict,
 				Targets:     targets,
 				Version:     versionStr,
@@ -29,6 +30,9 @@ func newSyncCmd() *cobra.Command {
 				return err
 			}
 			cmd.Printf("[parse] %d source files -> %d docs\n", res.SourceFiles, res.Docs)
+			if res.ExternalFiles > 0 {
+				cmd.Printf("[external] %d adopted files (.ai/.agents)\n", res.ExternalFiles)
+			}
 			for _, p := range res.Plans {
 				cmd.Printf("[%s] %d files\n", p.Target, len(p.Files))
 			}
@@ -60,10 +64,11 @@ func newSyncCmd() *cobra.Command {
 		},
 	}
 	f := cmd.Flags()
-	f.StringSliceVar(&targets, "target", nil, "限定 sync 的 target，可重复")
-	f.BoolVar(&noPull, "no-pull", false, "跳过 pull")
-	f.BoolVar(&noBackup, "no-backup", false, "跳过 backup")
-	f.BoolVar(&noPrune, "no-prune", false, "保留上次写入但本次不再产出的孤儿文件（默认会删除）")
-	f.BoolVar(&strict, "strict", false, "任何 warn 升级为 error")
+	f.StringSliceVar(&targets, "target", nil, "Limit sync to the given target(s), repeatable")
+	f.BoolVar(&noPull, "no-pull", false, "Skip pull")
+	f.BoolVar(&noBackup, "no-backup", false, "Skip backup")
+	f.BoolVar(&noPrune, "no-prune", false, "Keep orphan files written last time but no longer produced (deleted by default)")
+	f.BoolVar(&noExternal, "no-external", false, "Skip external artifact auto-adopt (.ai/*, .agents/skills; enabled by default)")
+	f.BoolVar(&strict, "strict", false, "Promote any warning to an error")
 	return cmd
 }
