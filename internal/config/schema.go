@@ -23,6 +23,9 @@ type Config struct {
 	Targets   map[string]TargetConfig `toml:"targets"`
 	Sources   map[string]SourceConfig `toml:"sources"`
 	Overrides map[string]Override     `toml:"overrides"`
+	// External 控制外部产物自动采用（.ai/*、.agents/skills -> external/）。
+	// table 类型字段置于 map 之后不影响 toml marshal 顺序；nil（老配置缺 [external]）视为启用。
+	External *ExternalConfig `toml:"external"`
 
 	// MCP 是 runtime 注入的 MCP 配置（来自 .stdai/standards/mcp.json）
 	MCP *MCPConfig `toml:"-"`
@@ -42,6 +45,19 @@ type SourceConfig struct {
 	Paths    []string `toml:"paths"`
 	Auth     string   `toml:"auth"`
 	TokenEnv string   `toml:"token_env"`
+}
+
+// ExternalConfig 控制外部产物自动采用；Enabled=false 关闭 sync 默认扫描
+type ExternalConfig struct {
+	Enabled bool `toml:"enabled"`
+}
+
+// ExternalEnabled 外部 auto-adopt 是否启用；[external] 缺省（老配置）视为启用
+func (c *Config) ExternalEnabled() bool {
+	if c == nil || c.External == nil {
+		return true
+	}
+	return c.External.Enabled
 }
 
 // Override 是 per-target 字段覆盖
@@ -98,6 +114,7 @@ func Default() *Config {
 		BackupKeep:         5,
 		AutoPull:           true,
 		Gitignore:          GitignoreGenerated,
+		External:           &ExternalConfig{Enabled: true},
 		Targets: map[string]TargetConfig{
 			// Tier 1
 			"claude-code": {Enabled: true, Convert: true},

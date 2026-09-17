@@ -60,6 +60,7 @@ func (l *Local) Files() ([]File, error) {
 // 规则：
 //  1. .md / .markdown 文件总是收
 //  2. skills/<name>/ 子树（任何深度）下的非 markdown 文件也收（SKILL package 辅助文件）
+//  3. 外部采用的 external/skills/<name>/ 子树同规则 2（import/adopt 落盘产物）
 //
 // rel 是相对源根的 slash 风格路径，name 是 basename
 func shouldInclude(rel, name string) bool {
@@ -67,7 +68,10 @@ func shouldInclude(rel, name string) bool {
 		return true
 	}
 	// skills/<name>/<...> 子树下的非 markdown 文件
-	return strings.HasPrefix(rel, "skills/")
+	if strings.HasPrefix(rel, "skills/") {
+		return true
+	}
+	return strings.HasPrefix(rel, "external/skills/")
 }
 
 // isMarkdown 判断扩展名是否为 .md / .markdown

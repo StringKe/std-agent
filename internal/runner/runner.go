@@ -32,6 +32,7 @@ type Options struct {
 	NoPull      bool
 	NoBackup    bool
 	NoPrune     bool
+	NoExternal  bool
 	Strict      bool
 	Targets     []string
 	Version     string
@@ -47,6 +48,7 @@ type Result struct {
 	BackupDir        string
 	SourceFiles      int
 	Docs             int
+	ExternalFiles    int
 	GitignoreUpdated bool
 	Warnings         []string
 }
@@ -94,6 +96,20 @@ func Sync(opts Options) (*Result, error) {
 	// 2. collect docs (local + sources)
 	var allFiles []source.File
 
+	// 2.0 外部产物 auto-adopt（default-on）：先落盘，后续本地收集自然纳入。
+	// 幂等：内容一致跳过；dry-run 不写盘（2.4 处内存预览）。
+	if !opts.NoExternal && cfg.ExternalEnabled() && !cfg.DryRun {
+		if _, extWarns, extErr := source.ImportExternal(opts.ProjectRoot, false); extErr != nil {
+			if opts.Strict {
+				return nil, fmt.Errorf("adopt external: %w", extErr)
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("external: %v", extErr))
+			res.Warnings = append(res.Warnings, extWarns...)
+		} else {
+			res.Warnings = append(res.Warnings, extWarns...)
+		}
+	}
+
 	localRoot := filepath.Join(opts.ProjectRoot, ".stdai/standards")
 	localFiles, err := source.NewLocal(localRoot).Files()
 	if err != nil {
@@ -121,6 +137,29 @@ func Sync(opts Options) (*Result, error) {
 		}
 		allFiles = append(allFiles, files...)
 	}
+	// 2.4 dry-run 外部预览：不写盘，内存并入外部扫描结果（与已收集去重）。
+	if !opts.NoExternal && cfg.ExternalEnabled() && cfg.DryRun {
+		extFiles, extWarns, extErr := source.ScanExternal(opts.ProjectRoot)
+		if extErr != nil {
+			if opts.Strict {
+				return nil, fmt.Errorf("scan external: %w", extErr)
+			}
+			res.Warnings = append(res.Warnings, fmt.Sprintf("external: %v", extErr))
+		} else {
+			seen := make(map[string]struct{}, len(allFiles))
+			for _, f := range allFiles {
+				seen[f.Path] = struct{}{}
+			}
+			for _, f := range extFiles {
+				if _, dup := seen[f.Path]; dup {
+					continue
+				}
+				seen[f.Path] = struct{}{}
+				allFiles = append(allFiles, f)
+			}
+			res.Warnings = append(res.Warnings, extWarns...)
+		}
+	}
 	// 2.5 .stdaiignore 过滤（gitignore 风格 glob，支持 doublestar `**`）
 	ignorePath := filepath.Join(opts.ProjectRoot, ".stdaiignore")
 	ignore, ierr := source.LoadIgnoreFile(ignorePath)
@@ -146,6 +185,11 @@ func Sync(opts Options) (*Result, error) {
 	}
 
 	res.SourceFiles = len(allFiles)
+	for _, f := range allFiles {
+		if strings.HasPrefix(f.Path, "external/") {
+			res.ExternalFiles++
+		}
+	}
 
 	// 3. parse
 	//   - 仅 .md / .markdown 文件参与 parse
@@ -205,6 +249,22 @@ func Sync(opts Options) (*Result, error) {
 			return nil, fmt.Errorf("read mcp.json: %w", rerr)
 		}
 		res.Warnings = append(res.Warnings, fmt.Sprintf("mcp.json: %v", rerr))
+	}
+
+	// 3.6 dry-run 根 .mcp.json 预览：内存合并，不写盘。
+	// 非 dry-run 已在 2.0 由 ImportExternal 落盘合并，mcp.json 加载时自然包含。
+	if !opts.NoExternal && cfg.ExternalEnabled() && cfg.DryRun {
+		if cfg.MCP == nil {
+			cfg.MCP = &config.MCPConfig{Servers: map[string]config.MCPServer{}}
+		}
+		added, mwarns := source.AdoptRootMCP(opts.ProjectRoot, cfg.MCP)
+		res.Warnings = append(res.Warnings, mwarns...)
+		if added > 0 {
+			res.Warnings = append(res.Warnings, fmt.Sprintf("[external] adopted %d MCP servers from .mcp.json", added))
+		}
+		if len(cfg.MCP.Servers) == 0 {
+			cfg.MCP = nil
+		}
 	}
 
 	// 4. plan + apply per target
@@ -487,12 +547,14 @@ func isMarkdownPath(p string) bool {
 //	"skills/code-review/references/check.md"    -> true（子目录辅助）
 //	"skills/code-review/scripts/setup.md"       -> true
 //	"rules/style.md"                            -> false（非 skills/ 子树）
+//	"external/skills/<n>/..."                   -> 去掉 external/ 前缀后同上
 func isSkillSubdirMarkdown(p string) bool {
-	if !strings.HasPrefix(p, "skills/") {
+	q := strings.TrimPrefix(p, "external/")
+	if !strings.HasPrefix(q, "skills/") {
 		return false
 	}
 	// skills/<n>/SKILL.md 共 3 段；子目录辅助路径段数 >= 4
-	return strings.Count(p, "/") >= 3
+	return strings.Count(q, "/") >= 3
 }
 
 // listSubmodulePaths 跑 `git -C <root> submodule status`，返回 submodule 相对路径列表。
