@@ -75,7 +75,7 @@ var ValidTargets = []string{
 	// Tier 2（新兴 / 小众 / 半实验）
 	"antigravity",
 	"qwen-code", "pi", "kilo-code", "augment-code", "jules", "grok-build",
-	"kimi-code", "kiro", "goose", "zed",
+	"kimi-code", "kiro", "goose", "zed", "muse",
 }
 
 // gitignore 模式：off 不改文件；generated 忽略可重建产物；portable 额外保留 AGENTS.md 与 .agents/。
@@ -143,6 +143,7 @@ func Default() *Config {
 			"kiro":         {Enabled: false, Convert: true},
 			"goose":        {Enabled: false, Convert: true},
 			"zed":          {Enabled: false, Convert: true},
+			"muse":         {Enabled: false, Convert: true},
 		},
 	}
 }

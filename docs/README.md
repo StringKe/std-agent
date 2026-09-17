@@ -1,7 +1,7 @@
 # Std-Agent 文档
 
 stdagent 是一个轻量级、纯 Go 实现的 AI CLI 配置同步工具。以 `.stdai/` 为
-内部单一真相源，把 YAML frontmatter + Markdown 同步到 25 个 AI CLI 工具的
+内部单一真相源，把 YAML frontmatter + Markdown 同步到 26 个 AI CLI 工具的
 扩散文件，外加 MCP 服务器配置。
 
 ## 文档索引
@@ -25,7 +25,7 @@ stdagent 是一个轻量级、纯 Go 实现的 AI CLI 配置同步工具。以 `
 
 - [architecture.md](architecture.md) 模块划分与数据流
 
-### 25 个目标工具调研
+### 26 个目标工具调研
 
 Tier 1（14 个）：
 
@@ -44,7 +44,7 @@ Tier 1（14 个）：
 - [targets/warp.md](targets/warp.md)
 - [targets/factory.md](targets/factory.md)
 
-Tier 2（11 个）：
+Tier 2（12 个）：
 
 - [targets/antigravity.md](targets/antigravity.md)
 - [targets/qwen-code.md](targets/qwen-code.md)
@@ -57,6 +57,7 @@ Tier 2（11 个）：
 - [targets/kiro.md](targets/kiro.md)
 - [targets/goose.md](targets/goose.md)
 - [targets/zed.md](targets/zed.md)
+- [targets/muse.md](targets/muse.md)
 
 ## 阅读顺序建议
 

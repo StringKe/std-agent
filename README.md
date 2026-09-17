@@ -48,7 +48,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Warp | `AGENTS.md` (inline + nested) + `.agents/skills/` |
 | Factory (Factory.ai) | shared `AGENTS.md` + `.factory/{rules,skills,commands,droids}/` |
 
-### Tier 2 (11)
+### Tier 2 (12)
 
 | Target | Primary outputs |
 |---|---|
@@ -63,6 +63,7 @@ Stop maintaining `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`, `.wind
 | Kimi Code (Moonshot AI) | `AGENTS.md` + `.agents/skills/` |
 | Kiro (AWS) | `AGENTS.md` + `.kiro/{steering,skills,agents}/` |
 | Goose (AAIF) | `AGENTS.md` + `.agents/skills/` |
+| Muse Code (Meta) | `AGENTS.md` (inline) + `.agents/skills/` + `.agents/memory/` |
 
 Each integration is documented under [docs/targets/](docs/targets/). This repository enables Grok Build only; see [examples/](examples/) for gitignore modes and a small two-target fan-out.
 

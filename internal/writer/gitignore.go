@@ -58,6 +58,7 @@ var targetIgnorePrefixes = map[string][]string{
 	"kiro":         {"AGENTS.md", ".kiro/"},
 	"goose":        {"AGENTS.md", ".agents/", ".goose/"},
 	"zed":          {"AGENTS.md", ".agents/", ".zed/"},
+	"muse":         {"AGENTS.md", ".agents/", ".muse/"},
 }
 
 // GitignoreEntries 按模式和启用 target（再并入本次 plan 路径）生成忽略列表。
