@@ -324,6 +324,34 @@ func TestScanExternalReadoptsModifiedTrackedFile(t *testing.T) {
 	}
 }
 
+// TestScanExternalReadoptsWholePackage 上游只改主文件时，sha 未变的附属文件仍随整包采用，
+// 否则残包渲染后附属文件被当孤儿删除。
+func TestScanExternalReadoptsWholePackage(t *testing.T) {
+	root := t.TempDir()
+	aux := "# checklist\n"
+	mkAll(t, filepath.Join(root, ".agents/skills/pay/reference"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), "---\nname: pay\ndescription: New\n---\nNew body.\n")
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/reference/checklist.md"), aux)
+
+	opts := ExternalScanOptions{SkipPaths: map[string]string{
+		".agents/skills/pay/SKILL.md":               sha256Hex([]byte("old content")),
+		".agents/skills/pay/reference/checklist.md": sha256Hex([]byte(aux)),
+	}}
+	files, _, err := ScanExternal(root, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]string{}
+	for _, f := range files {
+		got[f.Path] = string(f.Raw)
+	}
+	for _, want := range []string{"external/skills/pay/SKILL.md", "external/skills/pay/reference/checklist.md"} {
+		if _, ok := got[want]; !ok {
+			t.Errorf("re-adopted package must keep %s, got %v", want, keys(got))
+		}
+	}
+}
+
 // TestScanExternalFullyTrackedShadowIsSilent 全包都是自生成物时，
 // 即使包名被本地源占用也不报 shadow 噪音。
 func TestScanExternalFullyTrackedShadowIsSilent(t *testing.T) {

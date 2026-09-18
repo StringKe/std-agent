@@ -105,6 +105,7 @@ stdagent import [--dry-run]
 保守过滤（默认启用，`import` 与 `sync` 一致）：
 
 - 不吃未改写的自己生成物：上次 sync 写出的 tracked outputs（`state.json` 记录路径与 sha，含无 marker 的 skill 辅助文件）在磁盘内容一致时不采用，汇总为一条 `[external] skipped N self-generated files` warning；内容被外部改写则放行重新采用并 warning，上游更新不静默丢失。
+- skill 包按整包判定：包内全部文件都是未改写的 tracked outputs 才整包跳过；只要主文件或任一辅助文件被改写，整包重新采用并输出一条 `[external] <pkg> changed outside stdagent, re-adopting the whole package`。逐文件判定会在上游只改 `SKILL.md` 时丢掉未变化的辅助文件，残包渲染后辅助文件被当孤儿删除。
 - 同名外部 skill 包让位于本地显式源：`skills/` 下已有的同名包使整包剩余文件丢弃并 warning，避免同名双源造成 output collision（Boost 更新覆盖同名技能即属此类）；全包都是自生成物时静默跳过，不重复报 shadow 噪音。
 - `.ai/rules/index.md` 是包管理器的发现索引，不是规则，跳过并 warning。
 - rules 的 Boost 写法 `paths:`（标量或列表）在无 `applyTo:`/`globs:` 时自动复制为 `applyTo:`，原键保留；`applyTo:` 经 parser 生效为范围 globs。

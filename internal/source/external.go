@@ -278,19 +278,32 @@ type externalScanner struct {
 // 磁盘内容与记录不一致时返回 false（放行重新采用）并 warning：
 // 上游改写不能静默丢掉，也不能静默覆盖，重新采用后由 transformer 正常渲染。
 func (s *externalScanner) skipSelf(projectPath string) bool {
-	want, ok := s.opts.SkipPaths[filepath.ToSlash(projectPath)]
-	if !ok {
+	tracked, unchanged := s.selfState(projectPath)
+	if !tracked {
 		return false
 	}
-	if want != "" {
-		raw, err := os.ReadFile(filepath.Join(s.root, filepath.FromSlash(projectPath))) //nolint:gosec // 路径来自受控扫描
-		if err == nil && sha256Hex(raw) != want {
-			s.warns = append(s.warns, fmt.Sprintf("[external] %s changed outside stdagent, re-adopting as update", filepath.ToSlash(projectPath)))
-			return false
-		}
+	if !unchanged {
+		s.warns = append(s.warns, fmt.Sprintf("[external] %s changed outside stdagent, re-adopting as update", filepath.ToSlash(projectPath)))
+		return false
 	}
 	s.skippedSelf++
 	return true
+}
+
+// selfState 报告项目相对路径是否为上次 sync 输出（tracked），以及磁盘内容是否与记录 sha 一致（unchanged）。
+func (s *externalScanner) selfState(projectPath string) (tracked, unchanged bool) {
+	want, ok := s.opts.SkipPaths[filepath.ToSlash(projectPath)]
+	if !ok {
+		return false, false
+	}
+	if want == "" {
+		return true, true
+	}
+	raw, err := os.ReadFile(filepath.Join(s.root, filepath.FromSlash(projectPath))) //nolint:gosec // 路径来自受控扫描
+	if err == nil && sha256Hex(raw) != want {
+		return true, false
+	}
+	return true, true
 }
 
 // sha256Hex 返回内容的 SHA256 hex
@@ -532,6 +545,10 @@ func (s *externalScanner) scanOneSkillPackage(srcDir, destPrefix, origin string)
 	}
 	sort.Strings(rels)
 
+	if !s.adoptPackage(filepath.ToSlash(srcDir), rels) {
+		return nil, nil
+	}
+
 	hasMain := false
 	for _, rel := range rels {
 		if isSkillMainFile(rel) {
@@ -541,9 +558,6 @@ func (s *externalScanner) scanOneSkillPackage(srcDir, destPrefix, origin string)
 	}
 	var out []File
 	for _, rel := range rels {
-		if s.skipSelf(filepath.ToSlash(srcDir) + "/" + rel) {
-			continue
-		}
 		raw, rerr := os.ReadFile(filepath.Join(base, filepath.FromSlash(rel))) //nolint:gosec
 		if rerr != nil {
 			return nil, fmt.Errorf("read %s/%s: %w", srcDir, rel, rerr)
@@ -571,6 +585,29 @@ func (s *externalScanner) scanOneSkillPackage(srcDir, destPrefix, origin string)
 		out = append(out, File{Path: dest, Raw: content})
 	}
 	return out, nil
+}
+
+// adoptPackage 按整包判定是否采用：包内全部文件都是未被改写的上次 sync 输出时返回 false（整包静默跳过）。
+// 判定必须整包做：逐文件跳过会在上游只改主文件时丢掉全部附属文件，残包渲染后附属文件被当孤儿删除。
+func (s *externalScanner) adoptPackage(srcDir string, rels []string) bool {
+	changed, tracked := 0, 0
+	for _, rel := range rels {
+		isTracked, unchanged := s.selfState(srcDir + "/" + rel)
+		if isTracked {
+			tracked++
+		}
+		if !isTracked || !unchanged {
+			changed++
+		}
+	}
+	if changed == 0 {
+		s.skippedSelf += len(rels)
+		return false
+	}
+	if tracked > 0 {
+		s.warns = append(s.warns, fmt.Sprintf("[external] %s changed outside stdagent, re-adopting the whole package", srcDir))
+	}
+	return true
 }
 
 // claim 标记 dest 已被占用；返回 true 表示调用方应跳过（冲突，后到者让路并 warning）
