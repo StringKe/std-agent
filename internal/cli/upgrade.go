@@ -153,8 +153,8 @@ func detectInstallMethod() string {
 		return "generic"
 	}
 	paths := []string{exe}
-	if real, rerr := evalSymlinks(exe); rerr == nil {
-		paths = append(paths, real)
+	if resolved, rerr := evalSymlinks(exe); rerr == nil {
+		paths = append(paths, resolved)
 	}
 	for _, p := range paths {
 		if isBrewCellarPath(p) {

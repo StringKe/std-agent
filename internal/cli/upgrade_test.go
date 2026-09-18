@@ -108,24 +108,24 @@ func TestIsBrewCellarPath(t *testing.T) {
 	}
 }
 
-func stubUpgradeEnv(t *testing.T, env map[string]string, exe string, exeErr error, real string, realErr error) {
+func stubUpgradeEnv(t *testing.T, env map[string]string, exe string, exeErr error, linkTarget string, linkErr error) {
 	t.Helper()
 	oldEnv, oldExe, oldEval := osGetenv, osExecutable, evalSymlinks
 	osGetenv = func(k string) string { return env[k] }
 	osExecutable = func() (string, error) { return exe, exeErr }
-	evalSymlinks = func(p string) (string, error) { return real, realErr }
+	evalSymlinks = func(_ string) (string, error) { return linkTarget, linkErr }
 	t.Cleanup(func() { osGetenv, osExecutable, evalSymlinks = oldEnv, oldExe, oldEval })
 }
 
 func TestDetectInstallMethod(t *testing.T) {
 	cases := []struct {
-		name    string
-		env     map[string]string
-		exe     string
-		exeErr  error
-		real    string
-		realErr error
-		want    string
+		name       string
+		env        map[string]string
+		exe        string
+		exeErr     error
+		linkTarget string
+		linkErr    error
+		want       string
 	}{
 		{"env override brew", map[string]string{"STDAGENT_INSTALL_METHOD": "brew"}, "/x/stdagent", nil, "/x/stdagent", nil, "brew"},
 		{"env override other", map[string]string{"STDAGENT_INSTALL_METHOD": "curl"}, "/opt/homebrew/Cellar/stdagent/0.0.18/bin/stdagent", nil, "", nil, "generic"},
@@ -136,7 +136,7 @@ func TestDetectInstallMethod(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			stubUpgradeEnv(t, c.env, c.exe, c.exeErr, c.real, c.realErr)
+			stubUpgradeEnv(t, c.env, c.exe, c.exeErr, c.linkTarget, c.linkErr)
 			if got := detectInstallMethod(); got != c.want {
 				t.Errorf("detectInstallMethod() = %q, want %q", got, c.want)
 			}
@@ -158,7 +158,7 @@ func TestRunBrewUpgradeDelegates(t *testing.T) {
 	oldFetch, oldExec := fetchLatestTag, execBrewUpgrade
 	fetchLatestTag = func() (string, error) { return "v9.9.9", nil }
 	called := false
-	execBrewUpgrade = func(cmd *cobra.Command) error { called = true; return nil }
+	execBrewUpgrade = func(_ *cobra.Command) error { called = true; return nil }
 	t.Cleanup(func() { fetchLatestTag, execBrewUpgrade = oldFetch, oldExec })
 
 	var out bytes.Buffer
@@ -181,7 +181,7 @@ func TestRunBrewUpgradeUpToDate(t *testing.T) {
 	fetchLatestTag = func() (string, error) { return "v9.9.9", nil }
 	versionStr = "9.9.9"
 	called := false
-	execBrewUpgrade = func(cmd *cobra.Command) error { called = true; return nil }
+	execBrewUpgrade = func(_ *cobra.Command) error { called = true; return nil }
 	t.Cleanup(func() { fetchLatestTag, execBrewUpgrade, versionStr = oldFetch, oldExec, oldVer })
 
 	var out bytes.Buffer
