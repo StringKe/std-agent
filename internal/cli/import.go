@@ -20,12 +20,12 @@ func newImportCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfgPath, root := resolveConfigPath()
 			_ = cfgPath
-			// 与 sync 相同的保守过滤：不吃上次 sync 输出，同名外部包让位本地源
-			skip := map[string]bool{}
+			// 与 sync 相同的保守过滤：不吃未改写的上次 sync 输出，同名外部包让位本地源
+			skip := map[string]string{}
 			if st, serr := state.Load(filepath.Join(root, state.StateFile)); serr == nil && st != nil {
 				for _, t := range st.Targets {
-					for p := range t.Outputs {
-						skip[filepath.ToSlash(p)] = true
+					for p, sha := range t.Outputs {
+						skip[filepath.ToSlash(p)] = sha
 					}
 				}
 			}

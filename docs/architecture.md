@@ -119,8 +119,9 @@ sync 命令:
      -> git pull (auto_pull=true)
      -> 收集 .stdai/standards/ + cache/<src>/<paths>
      -> 外部采用（默认启用）：扫描 .ai/*、.agents/skills、根 .mcp.json，
-        按默认映射转为内存 source（--no-external 或 [external] enabled=false 跳过；
-        import 命令把同一批来源显式落盘到 standards/external/）
+        按默认映射先落盘到 standards/external/（幂等；--no-external 或
+        [external] enabled=false 跳过；dry-run 仅内存预览）。
+        import 命令在 sync 之外手动固化同一批来源。
 3. parser.ParseAll(files)
      -> 校验 frontmatter
      -> 产出 []Document

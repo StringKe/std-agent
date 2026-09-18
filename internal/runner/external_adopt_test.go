@@ -286,3 +286,56 @@ codex = { enabled = true, convert = true }
 		t.Errorf("repeat sync should be stable, wrote %d", again.Written)
 	}
 }
+
+// TestSyncExternalUpdateFollowsUpstream 已纳管的外部技能被上游改写后，
+// 下次 sync 把改动合进来，而不是静默丢掉或覆盖回旧版本。
+func TestSyncExternalUpdateFollowsUpstream(t *testing.T) {
+	tmp := t.TempDir()
+	stdai := filepath.Join(tmp, ".stdai")
+	mustMkdir(t, filepath.Join(stdai, "standards/rules"))
+	mustWrite(t, filepath.Join(stdai, "standards/rules/base.md"), "---\ntype: rules\nname: base\n---\nBase rule.\n")
+	mustWrite(t, filepath.Join(stdai, "config.toml"), `version = "1.0"
+inject = false
+backup = false
+auto_pull = false
+
+[targets]
+codex = { enabled = true, convert = true }
+`)
+
+	// 上游技能首次出现：被纳管并渲染
+	mustMkdir(t, filepath.Join(tmp, ".agents/skills/helper"))
+	mustWrite(t, filepath.Join(tmp, ".agents/skills/helper/SKILL.md"), "---\nname: helper\ndescription: Helper v1\n---\nBody v1.\n")
+	if _, err := Sync(Options{ProjectRoot: tmp, ConfigPath: filepath.Join(stdai, "config.toml"), Version: "test"}); err != nil {
+		t.Fatalf("first Sync: %v", err)
+	}
+	src, err := os.ReadFile(filepath.Join(stdai, "standards/external/skills/helper/SKILL.md"))
+	if err != nil || !strings.Contains(string(src), "Body v1.") {
+		t.Fatalf("helper not adopted: %v\n%s", err, src)
+	}
+
+	// 上游改写（模拟 boost:update）：内容变化
+	mustWrite(t, filepath.Join(tmp, ".agents/skills/helper/SKILL.md"), "---\nname: helper\ndescription: Helper v2\n---\nBody v2.\n")
+	if _, err := Sync(Options{ProjectRoot: tmp, ConfigPath: filepath.Join(stdai, "config.toml"), Version: "test"}); err != nil {
+		t.Fatalf("update Sync: %v", err)
+	}
+
+	// 源已跟进新版本
+	src, err = os.ReadFile(filepath.Join(stdai, "standards/external/skills/helper/SKILL.md"))
+	if err != nil || !strings.Contains(string(src), "Body v2.") {
+		t.Errorf("adopted source must follow upstream update:\n%s", src)
+	}
+	// 渲染输出跟进，而非覆盖回旧版本
+	out, err := os.ReadFile(filepath.Join(tmp, ".agents/skills/helper/SKILL.md"))
+	if err != nil || !strings.Contains(string(out), "Body v2.") {
+		t.Errorf("rendered output must follow upstream update:\n%s", out)
+	}
+	// 三次同步稳定（更新只合入一次）
+	again, err := Sync(Options{ProjectRoot: tmp, ConfigPath: filepath.Join(stdai, "config.toml"), Version: "test"})
+	if err != nil {
+		t.Fatalf("repeat Sync: %v", err)
+	}
+	if again.Written != 0 {
+		t.Errorf("repeat sync should be stable, wrote %d", again.Written)
+	}
+}

@@ -53,16 +53,16 @@ type Result struct {
 	Warnings         []string
 }
 
-// trackedOutputPaths 汇总 state 中各 target 上次写出的路径集合
-// （slash 风格相对路径），供外部扫描跳过自生成文件。
-func trackedOutputPaths(st *state.State) map[string]bool {
-	out := map[string]bool{}
+// trackedOutputPaths 汇总 state 中各 target 上次写出的路径到 sha 集合
+// （slash 风格相对路径），供外部扫描跳过未改写的自生成文件。
+func trackedOutputPaths(st *state.State) map[string]string {
+	out := map[string]string{}
 	if st == nil {
 		return out
 	}
 	for _, t := range st.Targets {
-		for p := range t.Outputs {
-			out[filepath.ToSlash(p)] = true
+		for p, sha := range t.Outputs {
+			out[filepath.ToSlash(p)] = sha
 		}
 	}
 	return out

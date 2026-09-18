@@ -268,15 +268,17 @@ func keys(m map[string]string) []string {
 // （无 marker 的 skill 辅助文件也一样）。
 func TestScanExternalSkipsTrackedOutputs(t *testing.T) {
 	root := t.TempDir()
+	skillMain := "---\nname: pay\ndescription: Pay\n---\nPay.\n"
+	aux := "#!/bin/sh\necho pay\n"
 	mkAll(t, filepath.Join(root, ".agents/skills/pay/scripts"))
-	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), "---\nname: pay\ndescription: Pay\n---\nPay.\n")
-	mustWrite(t, filepath.Join(root, ".agents/skills/pay/scripts/check.sh"), "#!/bin/sh\necho pay\n")
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), skillMain)
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/scripts/check.sh"), aux)
 	mkAll(t, filepath.Join(root, ".agents/skills/fresh"))
 	mustWrite(t, filepath.Join(root, ".agents/skills/fresh/SKILL.md"), "---\nname: fresh\ndescription: Fresh\n---\nFresh.\n")
 
-	opts := ExternalScanOptions{SkipPaths: map[string]bool{
-		".agents/skills/pay/SKILL.md":         true,
-		".agents/skills/pay/scripts/check.sh": true,
+	opts := ExternalScanOptions{SkipPaths: map[string]string{
+		".agents/skills/pay/SKILL.md":         sha256Hex([]byte(skillMain)),
+		".agents/skills/pay/scripts/check.sh": sha256Hex([]byte(aux)),
 	}}
 	files, warns, err := ScanExternal(root, opts)
 	if err != nil {
@@ -293,6 +295,60 @@ func TestScanExternalSkipsTrackedOutputs(t *testing.T) {
 	joined := strings.Join(warns, "\n")
 	if !strings.Contains(joined, "self-generated") {
 		t.Errorf("expected self-generated summary warning, got %v", warns)
+	}
+}
+
+// TestScanExternalReadoptsModifiedTrackedFile 记录 sha 与磁盘不一致时放行，
+// 上游改写不被静默丢掉。
+func TestScanExternalReadoptsModifiedTrackedFile(t *testing.T) {
+	root := t.TempDir()
+	mkAll(t, filepath.Join(root, ".agents/skills/pay"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), "---\nname: pay\ndescription: New\n---\nNew body.\n")
+
+	opts := ExternalScanOptions{SkipPaths: map[string]string{
+		// 记录的是旧内容 sha，磁盘已被外部改写
+		".agents/skills/pay/SKILL.md": sha256Hex([]byte("old content")),
+	}}
+	files, warns, err := ScanExternal(root, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) != 1 || files[0].Path != "external/skills/pay/SKILL.md" {
+		t.Fatalf("modified tracked file must be re-adopted, got %v", files)
+	}
+	if !strings.Contains(string(files[0].Raw), "New body.") {
+		t.Errorf("re-adopted content must be the new body:\n%s", files[0].Raw)
+	}
+	if !strings.Contains(strings.Join(warns, "\n"), "changed outside stdagent") {
+		t.Errorf("expected changed-outside warning, got %v", warns)
+	}
+}
+
+// TestScanExternalFullyTrackedShadowIsSilent 全包都是自生成物时，
+// 即使包名被本地源占用也不报 shadow 噪音。
+func TestScanExternalFullyTrackedShadowIsSilent(t *testing.T) {
+	root := t.TempDir()
+	skillMain := "---\nname: pay\ndescription: Pay\n---\nPay.\n"
+	mkAll(t, filepath.Join(root, ".agents/skills/pay"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), skillMain)
+
+	opts := ExternalScanOptions{
+		SkipPaths:  map[string]string{".agents/skills/pay/SKILL.md": sha256Hex([]byte(skillMain))},
+		UserSkills: map[string]bool{"pay": true},
+	}
+	files, warns, err := ScanExternal(root, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) != 0 {
+		t.Errorf("fully tracked package must yield nothing, got %v", files)
+	}
+	joined := strings.Join(warns, "\n")
+	if strings.Contains(joined, "shadows user skill") {
+		t.Errorf("fully tracked package must not warn shadow, got %v", warns)
+	}
+	if !strings.Contains(joined, "self-generated") {
+		t.Errorf("expected self-generated summary, got %v", warns)
 	}
 }
 

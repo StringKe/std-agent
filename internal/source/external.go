@@ -1,6 +1,8 @@
 package source
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -42,9 +44,11 @@ const (
 
 // ExternalScanOptions 控制外部扫描的保守过滤。零值 = 全部采用（历史行为）。
 type ExternalScanOptions struct {
-	// SkipPaths 是项目相对 slash 路径集合（如 state.json 记录的上次 sync 输出）。
-	// 命中者一律不采用：stdagent 不吃自己写出的文件。
-	SkipPaths map[string]bool
+	// SkipPaths 是项目相对 slash 路径到上次 sync 记录 sha 的映射。
+	// 命中且磁盘内容与记录一致时不采用：stdagent 不吃自己写出的文件。
+	// 磁盘内容与记录不一致说明有外部改写（如 Boost 更新），放行重新采用并 warning。
+	// 空 sha 表示无条件跳过（调用方无 state 时使用）。
+	SkipPaths map[string]string
 	// UserSkills 是本地源已拥有的 skill 名（kebab 归一后）。
 	// 同名外部包整体跳过并 warning：显式源优先，避免同名双源造成 output collision。
 	UserSkills map[string]bool
@@ -269,24 +273,52 @@ type externalScanner struct {
 	skippedSelf int
 }
 
-// skipSelf 报告项目相对路径是否为上次 sync 写出的 tracked output。
-// 是则计数并返回 true，调用方应跳过该候选。
+// skipSelf 报告项目相对路径是否为"未被外部改写的"上次 sync 输出。
+// 路径命中且磁盘内容与记录 sha 一致时计数并返回 true，调用方跳过该候选。
+// 磁盘内容与记录不一致时返回 false（放行重新采用）并 warning：
+// 上游改写不能静默丢掉，也不能静默覆盖，重新采用后由 transformer 正常渲染。
 func (s *externalScanner) skipSelf(projectPath string) bool {
-	if s.opts.SkipPaths[filepath.ToSlash(projectPath)] {
-		s.skippedSelf++
-		return true
+	want, ok := s.opts.SkipPaths[filepath.ToSlash(projectPath)]
+	if !ok {
+		return false
 	}
-	return false
+	if want != "" {
+		raw, err := os.ReadFile(filepath.Join(s.root, filepath.FromSlash(projectPath))) //nolint:gosec // 路径来自受控扫描
+		if err == nil && sha256Hex(raw) != want {
+			s.warns = append(s.warns, fmt.Sprintf("[external] %s changed outside stdagent, re-adopting as update", filepath.ToSlash(projectPath)))
+			return false
+		}
+	}
+	s.skippedSelf++
+	return true
+}
+
+// sha256Hex 返回内容的 SHA256 hex
+func sha256Hex(data []byte) string {
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
 }
 
 // shadowed 报告 skill 包名是否已被本地显式源占用。
 // 是则 warning 并返回 true，调用方应整体跳过该外部包。
+// 仅用于单文件 skill（已确认是新增外部内容）；整包走 discardIfShadowed。
 func (s *externalScanner) shadowed(origin, pkg string) bool {
 	if s.opts.UserSkills[kebab(pkg)] {
 		s.warns = append(s.warns, fmt.Sprintf("[external] %s/%s shadows user skill %q, skipped", origin, pkg, kebab(pkg)))
 		return true
 	}
 	return false
+}
+
+// discardIfShadowed 在整包扫描后判定：包内经自生成过滤仍有剩余文件、
+// 且包名被本地显式源占用时 warning 并返回 true（调用方丢弃整包）。
+// 全包都是自生成物时静默跳过，避免每次 sync 对自有输出重复报 shadow 噪音。
+func (s *externalScanner) discardIfShadowed(origin, pkg string, pkgFiles []File) bool {
+	if len(pkgFiles) == 0 || !s.opts.UserSkills[kebab(pkg)] {
+		return false
+	}
+	s.warns = append(s.warns, fmt.Sprintf("[external] %s/%s shadows user skill %q, skipped", origin, pkg, kebab(pkg)))
+	return true
 }
 
 // scan 按固定顺序执行各源扫描（.ai 优先于 .agents，保证冲突时 .ai 胜出）
@@ -426,13 +458,13 @@ func (s *externalScanner) scanAiSkills() ([]File, error) {
 			out = append(out, File{Path: dest, Raw: raw})
 			continue
 		}
-		// 子目录整包
-		if s.shadowed(".ai/skills", name) {
-			continue
-		}
+		// 子目录整包（先过滤自生成文件，再判 shadow，避免自有输出的重复噪音）
 		pkgFiles, perr := s.scanOneSkillPackage(filepath.Join(".ai", "skills", name), "external/skills/"+name, ".ai/skills")
 		if perr != nil {
 			return nil, perr
+		}
+		if s.discardIfShadowed(".ai/skills", name, pkgFiles) {
+			continue
 		}
 		out = append(out, pkgFiles...)
 	}
@@ -461,12 +493,12 @@ func (s *externalScanner) scanSkillPackages(srcDir, origin string) ([]File, erro
 			s.warns = append(s.warns, fmt.Sprintf("[external] %s/%s is a legacy cmd-* path, left to prune", origin, de.Name()))
 			continue
 		}
-		if s.shadowed(origin, de.Name()) {
-			continue
-		}
 		pkgFiles, perr := s.scanOneSkillPackage(srcDir+"/"+de.Name(), "external/skills/"+de.Name(), origin)
 		if perr != nil {
 			return nil, perr
+		}
+		if s.discardIfShadowed(origin, de.Name(), pkgFiles) {
+			continue
 		}
 		out = append(out, pkgFiles...)
 	}
