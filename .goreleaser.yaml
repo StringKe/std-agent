@@ -24,6 +24,8 @@ builds:
       - linux
       - darwin
       - windows
+      - freebsd
+      - openbsd
     goarch:
       - amd64
       - arm64
@@ -43,6 +45,9 @@ checksum:
   name_template: "checksums.txt"
   algorithm: sha256
 
+# Homebrew distribution is maintained natively in StringKe/homebrew-tap
+# (templates/stdagent.rb + scripts/sync.sh + hourly sync.yml);
+# GoReleaser does not push there, so no cross-repo token is needed.
 snapshot:
   version_template: "{{ incpatch .Version }}-next"
 

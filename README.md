@@ -73,6 +73,9 @@ Each integration is documented under [docs/targets/](docs/targets/). This reposi
 # Install (macOS / Linux)
 curl -fsSL https://raw.githubusercontent.com/StringKe/std-agent/main/install.sh | sh
 
+# Install via Homebrew (macOS / Linux)
+brew install StringKe/tap/stdagent
+
 # Install (Windows PowerShell)
 irm https://raw.githubusercontent.com/StringKe/std-agent/main/install.ps1 | iex
 

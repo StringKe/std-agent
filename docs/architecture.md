@@ -33,7 +33,8 @@ internal/
 │   ├── root.go
 │   ├── init.go
 │   ├── pull.go
-│   ├── sync.go
+│   ├── sync.go                 核心同步（--no-external 可关外部采用）
+│   ├── import.go               外部产物显式落盘到 standards/external/
 │   ├── status.go
 │   ├── clean.go
 │   └── version.go
@@ -43,9 +44,10 @@ internal/
 │   ├── loader.go               toml 解析 + env 覆盖
 │   └── validator.go            字段校验
 │
-├── source/                     远端 + 本地源
+├── source/                     远端 + 本地 + 外部采用源
 │   ├── git.go                  go-git 操作
 │   ├── local.go                .stdai/standards/ 直读
+│   ├── external.go             外部产物扫描与采用（.ai/*、.agents/skills、根 .mcp.json）
 │   └── merger.go               多源合并 + 冲突仲裁
 │
 ├── parser/                     std 文件解析
@@ -116,6 +118,9 @@ sync 命令:
 2. source.Fetch(cfg) 
      -> git pull (auto_pull=true)
      -> 收集 .stdai/standards/ + cache/<src>/<paths>
+     -> 外部采用（默认启用）：扫描 .ai/*、.agents/skills、根 .mcp.json，
+        按默认映射转为内存 source（--no-external 或 [external] enabled=false 跳过；
+        import 命令把同一批来源显式落盘到 standards/external/）
 3. parser.ParseAll(files)
      -> 校验 frontmatter
      -> 产出 []Document
