@@ -38,7 +38,7 @@ func TestScanExternalMappings(t *testing.T) {
 	root := t.TempDir()
 	setupExternalFixture(t, root)
 
-	files, warns, err := ScanExternal(root)
+	files, warns, err := ScanExternal(root, ExternalScanOptions{})
 	if err != nil {
 		t.Fatalf("ScanExternal: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestScanExternalAgentsConflictSkipped(t *testing.T) {
 	mustWrite(t, filepath.Join(root, ".ai/skills/dup/SKILL.md"), "---\nname: dup\ndescription: ai wins\n---\nai\n")
 	mustWrite(t, filepath.Join(root, ".agents/skills/dup/SKILL.md"), "---\nname: dup\ndescription: agents loses\n---\nagents\n")
 
-	files, warns, err := ScanExternal(root)
+	files, warns, err := ScanExternal(root, ExternalScanOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +149,7 @@ func TestScanExternalSkipsGenerated(t *testing.T) {
 	mkAll(t, filepath.Join(root, ".ai/guidelines"))
 	mustWrite(t, filepath.Join(root, ".ai/guidelines/real.md"), "real user content\n")
 
-	files, _, err := ScanExternal(root)
+	files, _, err := ScanExternal(root, ExternalScanOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +159,7 @@ func TestScanExternalSkipsGenerated(t *testing.T) {
 }
 
 func TestScanExternalEmpty(t *testing.T) {
-	files, warns, err := ScanExternal(t.TempDir())
+	files, warns, err := ScanExternal(t.TempDir(), ExternalScanOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +201,7 @@ func TestImportExternalRoundTrip(t *testing.T) {
 	root := t.TempDir()
 	setupExternalFixture(t, root)
 
-	adopted, _, err := ImportExternal(root, false)
+	adopted, _, err := ImportExternal(root, false, ExternalScanOptions{})
 	if err != nil {
 		t.Fatalf("ImportExternal: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestImportExternalRoundTrip(t *testing.T) {
 		t.Fatal("expected adopted files")
 	}
 	// 落盘文件与内存扫描字节一致（sync 去重可互换的前提）
-	mem, _, err := ScanExternal(root)
+	mem, _, err := ScanExternal(root, ExternalScanOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +232,7 @@ func TestImportExternalRoundTrip(t *testing.T) {
 		t.Errorf("mcp.json missing gh server:\n%s", mcpRaw)
 	}
 	// 二次 import 幂等：无新写入
-	adopted2, _, err := ImportExternal(root, false)
+	adopted2, _, err := ImportExternal(root, false, ExternalScanOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -244,7 +244,7 @@ func TestImportExternalRoundTrip(t *testing.T) {
 func TestImportExternalDryRun(t *testing.T) {
 	root := t.TempDir()
 	setupExternalFixture(t, root)
-	adopted, _, err := ImportExternal(root, true)
+	adopted, _, err := ImportExternal(root, true, ExternalScanOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -262,4 +262,193 @@ func keys(m map[string]string) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// TestScanExternalSkipsTrackedOutputs 上次 sync 写出的文件不得再被采用
+// （无 marker 的 skill 辅助文件也一样）。
+func TestScanExternalSkipsTrackedOutputs(t *testing.T) {
+	root := t.TempDir()
+	mkAll(t, filepath.Join(root, ".agents/skills/pay/scripts"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), "---\nname: pay\ndescription: Pay\n---\nPay.\n")
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/scripts/check.sh"), "#!/bin/sh\necho pay\n")
+	mkAll(t, filepath.Join(root, ".agents/skills/fresh"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/fresh/SKILL.md"), "---\nname: fresh\ndescription: Fresh\n---\nFresh.\n")
+
+	opts := ExternalScanOptions{SkipPaths: map[string]bool{
+		".agents/skills/pay/SKILL.md":         true,
+		".agents/skills/pay/scripts/check.sh": true,
+	}}
+	files, warns, err := ScanExternal(root, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range files {
+		if strings.HasPrefix(f.Path, "external/skills/pay/") {
+			t.Errorf("tracked output re-adopted: %s", f.Path)
+		}
+	}
+	if len(files) != 1 || files[0].Path != "external/skills/fresh/SKILL.md" {
+		t.Errorf("untracked skill must still be adopted, got %v", files)
+	}
+	joined := strings.Join(warns, "\n")
+	if !strings.Contains(joined, "self-generated") {
+		t.Errorf("expected self-generated summary warning, got %v", warns)
+	}
+}
+
+// TestScanExternalSkipsShadowedSkill 同名外部包让位于本地显式源
+func TestScanExternalSkipsShadowedSkill(t *testing.T) {
+	root := t.TempDir()
+	mkAll(t, filepath.Join(root, ".agents/skills/pay"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/pay/SKILL.md"), "---\nname: pay\ndescription: Boost pay\n---\nBoost.\n")
+	mkAll(t, filepath.Join(root, ".ai/skills"))
+	mustWrite(t, filepath.Join(root, ".ai/skills/pay.md"), "---\nname: pay\ndescription: AI pay\n---\nAI.\n")
+	mkAll(t, filepath.Join(root, ".agents/skills/fresh"))
+	mustWrite(t, filepath.Join(root, ".agents/skills/fresh/SKILL.md"), "---\nname: fresh\ndescription: Fresh\n---\nFresh.\n")
+
+	opts := ExternalScanOptions{UserSkills: map[string]bool{"pay": true}}
+	files, warns, err := ScanExternal(root, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range files {
+		if strings.Contains(f.Path, "/pay/") {
+			t.Errorf("shadowed skill adopted: %s", f.Path)
+		}
+	}
+	if len(files) != 1 || files[0].Path != "external/skills/fresh/SKILL.md" {
+		t.Errorf("unshadowed skill must be adopted, got %v", files)
+	}
+	joined := strings.Join(warns, "\n")
+	if !strings.Contains(joined, "shadows user skill") {
+		t.Errorf("expected shadow warning, got %v", warns)
+	}
+}
+
+// TestLocalSkillNames 收集目录名 + frontmatter name（kebab 归一）
+func TestLocalSkillNames(t *testing.T) {
+	root := t.TempDir()
+	mkAll(t, filepath.Join(root, "skills/pay"))
+	mustWrite(t, filepath.Join(root, "skills/pay/SKILL.md"), "---\nname: Pay_Rules\ndescription: x\n---\nBody.\n")
+	mkAll(t, filepath.Join(root, "skills/plain"))
+	mustWrite(t, filepath.Join(root, "skills/plain/SKILL.md"), "no frontmatter\n")
+
+	got := LocalSkillNames(root)
+	for _, want := range []string{"pay", "pay-rules", "plain"} {
+		if !got[want] {
+			t.Errorf("missing skill name %q (got %v)", want, got)
+		}
+	}
+	if len(LocalSkillNames(filepath.Join(root, "missing"))) != 0 {
+		t.Error("missing dir should yield empty set")
+	}
+}
+
+// TestScanExternalSkipsIndex .ai/rules/index.md 是发现索引，不是规则
+func TestScanExternalSkipsIndex(t *testing.T) {
+	root := t.TempDir()
+	mkAll(t, filepath.Join(root, ".ai/rules"))
+	mustWrite(t, filepath.Join(root, ".ai/rules/app.md"), "---\npaths:\n  - app/**\n---\nApp.\n")
+	mustWrite(t, filepath.Join(root, ".ai/rules/index.md"), "# index\n")
+
+	files, warns, err := ScanExternal(root, ExternalScanOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) != 1 || files[0].Path != "external/rules/app.md" {
+		t.Fatalf("want only app.md adopted, got %v", files)
+	}
+	joined := strings.Join(warns, "\n")
+	if !strings.Contains(joined, "discovery index") {
+		t.Errorf("expected index warning, got %v", warns)
+	}
+	// paths: 转译为 applyTo，经 parser 生效
+	d, err := parser.Parse(files[0].Path, files[0].Raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d.ApplyTo) != 1 || d.ApplyTo[0] != "app/**" {
+		t.Errorf("paths should translate to ApplyTo, got %v", d.ApplyTo)
+	}
+	if !strings.Contains(string(files[0].Raw), "paths:") {
+		t.Error("original paths: key must be preserved")
+	}
+}
+
+// TestTranslateRulesPaths 转译表
+func TestTranslateRulesPaths(t *testing.T) {
+	cases := []struct {
+		name     string
+		front    string
+		contains []string
+		absent   []string
+	}{
+		{"list", "paths:\n  - app/**\n  - web/**\n", []string{"applyTo:\n  - app/**\n  - web/**\n"}, nil},
+		{"scalar", "title: x\npaths: app/**\n", []string{"applyTo: app/**"}, nil},
+		{"has applyTo", "paths:\n  - a/**\napplyTo:\n  - b/**\n", []string{"- b/**"}, []string{"applyTo:\n  - a/**"}},
+		{"has globs", "paths:\n  - a/**\nglobs:\n  - b/**\n", nil, []string{"applyTo:"}},
+		{"no paths", "title: x\n", nil, []string{"applyTo:"}},
+		{"block scalar", "paths: |\n  multi\n  line\n", nil, []string{"applyTo:"}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := string(translateRulesPaths([]byte(c.front)))
+			for _, want := range c.contains {
+				if !strings.Contains(got, want) {
+					t.Errorf("missing %q in:\n%s", want, got)
+				}
+			}
+			for _, no := range c.absent {
+				if strings.Contains(got, no) {
+					t.Errorf("must not contain %q in:\n%s", no, got)
+				}
+			}
+		})
+	}
+}
+
+// TestImportExternalOmitsEmptyMCPVersion 空 version 不得序列化
+func TestImportExternalOmitsEmptyMCPVersion(t *testing.T) {
+	root := t.TempDir()
+	mustWrite(t, filepath.Join(root, ".mcp.json"), `{"mcpServers": {"b": {"command": "b-bin"}}}`)
+
+	if _, _, err := ImportExternal(root, false, ExternalScanOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(filepath.Join(root, ".stdai", "standards", "mcp.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), `"version"`) {
+		t.Errorf("empty version must be omitted:\n%s", raw)
+	}
+	// 预设版本不受合并影响
+	mkAll(t, filepath.Join(root, ".stdai", "standards"))
+	mustWrite(t, filepath.Join(root, ".stdai", "standards", "mcp.json"), `{"version": "1.0", "servers": {}}`)
+	if _, _, err := ImportExternal(root, false, ExternalScanOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ = os.ReadFile(filepath.Join(root, ".stdai", "standards", "mcp.json"))
+	if !strings.Contains(string(raw), `"version": "1.0"`) {
+		t.Errorf("preset version must survive:\n%s", raw)
+	}
+	// 旧版空 version 一次性规范化：去掉该键，server 保留，二次 import 稳定
+	mustWrite(t, filepath.Join(root, ".stdai", "standards", "mcp.json"), `{"version": "", "servers": {"b": {"command": "b-bin"}}}`)
+	if _, _, err := ImportExternal(root, false, ExternalScanOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ = os.ReadFile(filepath.Join(root, ".stdai", "standards", "mcp.json"))
+	if strings.Contains(string(raw), `"version"`) {
+		t.Errorf("stale empty version must be normalized away:\n%s", raw)
+	}
+	if !strings.Contains(string(raw), `"b-bin"`) {
+		t.Errorf("servers must survive normalization:\n%s", raw)
+	}
+	if _, _, err := ImportExternal(root, false, ExternalScanOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	raw2, _ := os.ReadFile(filepath.Join(root, ".stdai", "standards", "mcp.json"))
+	if string(raw2) != string(raw) {
+		t.Error("normalization must be one-shot: content changed again")
+	}
 }

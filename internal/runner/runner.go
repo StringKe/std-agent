@@ -53,6 +53,21 @@ type Result struct {
 	Warnings         []string
 }
 
+// trackedOutputPaths 汇总 state 中各 target 上次写出的路径集合
+// （slash 风格相对路径），供外部扫描跳过自生成文件。
+func trackedOutputPaths(st *state.State) map[string]bool {
+	out := map[string]bool{}
+	if st == nil {
+		return out
+	}
+	for _, t := range st.Targets {
+		for p := range t.Outputs {
+			out[filepath.ToSlash(p)] = true
+		}
+	}
+	return out
+}
+
 // Sync 执行完整同步流
 func Sync(opts Options) (*Result, error) {
 	transformerutil.SetVersion(opts.Version)
@@ -96,10 +111,22 @@ func Sync(opts Options) (*Result, error) {
 	// 2. collect docs (local + sources)
 	var allFiles []source.File
 
+	// 外部扫描过滤：跳过上次 sync 写出的 tracked outputs（不吃自己生成物），
+	// 同名外部 skill 包让位于本地显式源（防 output collision）。
+	// state 提前加载：后段 prune/保存复用同一份。
+	stEarly, _ := state.Load(filepath.Join(opts.ProjectRoot, state.StateFile))
+	if stEarly == nil {
+		stEarly = &state.State{Version: "1.0"}
+	}
+	extOpts := source.ExternalScanOptions{
+		SkipPaths:  trackedOutputPaths(stEarly),
+		UserSkills: source.LocalSkillNames(filepath.Join(opts.ProjectRoot, ".stdai/standards")),
+	}
+
 	// 2.0 外部产物 auto-adopt（default-on）：先落盘，后续本地收集自然纳入。
 	// 幂等：内容一致跳过；dry-run 不写盘（2.4 处内存预览）。
 	if !opts.NoExternal && cfg.ExternalEnabled() && !cfg.DryRun {
-		if _, extWarns, extErr := source.ImportExternal(opts.ProjectRoot, false); extErr != nil {
+		if _, extWarns, extErr := source.ImportExternal(opts.ProjectRoot, false, extOpts); extErr != nil {
 			if opts.Strict {
 				return nil, fmt.Errorf("adopt external: %w", extErr)
 			}
@@ -139,7 +166,7 @@ func Sync(opts Options) (*Result, error) {
 	}
 	// 2.4 dry-run 外部预览：不写盘，内存并入外部扫描结果（与已收集去重）。
 	if !opts.NoExternal && cfg.ExternalEnabled() && cfg.DryRun {
-		extFiles, extWarns, extErr := source.ScanExternal(opts.ProjectRoot)
+		extFiles, extWarns, extErr := source.ScanExternal(opts.ProjectRoot, extOpts)
 		if extErr != nil {
 			if opts.Strict {
 				return nil, fmt.Errorf("scan external: %w", extErr)
@@ -341,7 +368,7 @@ func Sync(opts Options) (*Result, error) {
 		}
 	}
 
-	st, _ := state.Load(filepath.Join(opts.ProjectRoot, state.StateFile))
+	st := stEarly
 	if st.Targets == nil {
 		st.Targets = map[string]state.Target{}
 	}

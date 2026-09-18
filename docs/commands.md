@@ -102,6 +102,14 @@ stdagent import [--dry-run]
 
 映射规则：`.ai/guidelines/` 与 `.ai/rules/` 转 `rules`；单个 `.ai/skills/*.md` 合成为 `skills/<name>/SKILL.md`；成包的 `.ai/skills/<pkg>/` 与 `.agents/skills/<pkg>/` 原样采用（含辅助文件）；provenance 经 `external_source` / `external_path` frontmatter 保留。带 stdagent 生成标记的输出文件会被跳过，避免自循环。
 
+保守过滤（默认启用，`import` 与 `sync` 一致）：
+
+- 不吃自己生成物：上次 sync 写出的 tracked outputs（`state.json` 记录，含无 marker 的 skill 辅助文件）一律不采用，汇总为一条 `[external] skipped N self-generated files` warning。
+- 同名外部 skill 包让位于本地显式源：`skills/` 下已有的同名包使整包跳过并 warning，避免同名双源造成 output collision（Boost 更新覆盖同名技能即属此类）。
+- `.ai/rules/index.md` 是包管理器的发现索引，不是规则，跳过并 warning。
+- rules 的 Boost 写法 `paths:`（标量或列表）在无 `applyTo:`/`globs:` 时自动复制为 `applyTo:`，原键保留；`applyTo:` 经 parser 生效为范围 globs。
+- 根 `.mcp.json` 只补缺失 servers；旧版本写出的空 `"version": ""` 首次遇到时一次性去掉该键（仅一次，不造成 mtime 抖动）。
+
 ## `stdagent fix`
 
 ```

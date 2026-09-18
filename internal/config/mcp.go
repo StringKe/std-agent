@@ -4,7 +4,8 @@ package config
 //
 // 只在 runtime 由 runner 加载注入到 Config.MCP 字段，不参与 toml 持久化。
 type MCPConfig struct {
-	Version string               `json:"version"`
+	// Version 为空时不序列化（外部 .mcp.json 合并的 server 常无版本信息）
+	Version string               `json:"version,omitempty"`
 	Servers map[string]MCPServer `json:"servers"`
 }
 

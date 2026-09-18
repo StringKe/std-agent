@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 
 	"github.com/StringKe/std-agent/internal/source"
+	"github.com/StringKe/std-agent/internal/state"
 )
 
 // newImportCmd adopts external artifacts (.ai/*, .agents/skills, root .mcp.json)
@@ -17,7 +20,20 @@ func newImportCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cfgPath, root := resolveConfigPath()
 			_ = cfgPath
-			adopted, warns, err := source.ImportExternal(root, flagDryRun)
+			// 与 sync 相同的保守过滤：不吃上次 sync 输出，同名外部包让位本地源
+			skip := map[string]bool{}
+			if st, serr := state.Load(filepath.Join(root, state.StateFile)); serr == nil && st != nil {
+				for _, t := range st.Targets {
+					for p := range t.Outputs {
+						skip[filepath.ToSlash(p)] = true
+					}
+				}
+			}
+			opts := source.ExternalScanOptions{
+				SkipPaths:  skip,
+				UserSkills: source.LocalSkillNames(filepath.Join(root, ".stdai/standards")),
+			}
+			adopted, warns, err := source.ImportExternal(root, flagDryRun, opts)
 			if err != nil {
 				return err
 			}
