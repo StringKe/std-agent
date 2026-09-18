@@ -221,8 +221,9 @@ parser 与 runner 层
   metadata）并存入 `Document`
 - source.Local.Files 收集 `skills/` 子树下所有非 markdown 文件
   （scripts/ references/ assets/ 等）
-- runner 在 parse 阶段跳过 `skills/<name>/<subdir>/*.md`（视为 SKILL
-  package 辅助文件而非独立 Document）
+- runner、budget 与 which 在 parse 阶段调用 parser.IsSkillSupportFile 跳过
+  `skills/<name>/<subdir>/*.md` 与 `external/skills/<name>/<subdir>/*.md`
+  （视为 SKILL package 辅助文件而非独立 Document）
 - runner.collectSkillPackageFiles 把同 skill 目录辅助文件附到
   `Document.SkillFiles`
 - 远端 git 源（source.Git.Files）通过复用 Local.Files，自动也支持 SKILL

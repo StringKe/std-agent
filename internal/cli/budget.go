@@ -95,7 +95,7 @@ func runBudget(cmd *cobra.Command, asJSON, rendered bool, targets []string) erro
 		if !isMarkdownFile(f.Path) {
 			continue
 		}
-		if isSkillSubdirMarkdownFile(f.Path) {
+		if parser.IsSkillSupportFile(f.Path) {
 			continue
 		}
 		d, perr := parser.Parse(f.Path, f.Raw)
@@ -308,11 +308,4 @@ func collectBudgetSkillPackageFiles(docs []*parser.Document, files []source.File
 func isMarkdownFile(p string) bool {
 	lower := strings.ToLower(p)
 	return strings.HasSuffix(lower, ".md") || strings.HasSuffix(lower, ".markdown")
-}
-
-// isSkillSubdirMarkdownFile reports whether p is an auxiliary markdown file
-// inside a SKILL package subdirectory (same rule as runner.isSkillSubdirMarkdown;
-// maintained separately here to avoid exporting a private cross-package helper)
-func isSkillSubdirMarkdownFile(p string) bool {
-	return strings.HasPrefix(p, "skills/") && strings.Count(p, "/") >= 3
 }

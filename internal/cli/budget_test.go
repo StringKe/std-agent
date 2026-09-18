@@ -198,6 +198,18 @@ func TestBudgetCommandSkipsSkillSubdirMarkdown(t *testing.T) {
 		[]byte("aux"), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	// 纳管的外部技能包同构：附属文件同样不算 rules
+	if err := os.MkdirAll(filepath.Join(tmp, ".stdai/standards/external/skills/bar/rules"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, ".stdai/standards/external/skills/bar/SKILL.md"),
+		[]byte("---\ntype: skills\nname: bar\n---\nbody"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(tmp, ".stdai/standards/external/skills/bar/rules/eloquent.md"),
+		[]byte(strings.Repeat("b", 5000)), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	t.Chdir(tmp)
 
 	cmd := newBudgetCmd()
@@ -212,8 +224,11 @@ func TestBudgetCommandSkipsSkillSubdirMarkdown(t *testing.T) {
 	if err := json.Unmarshal(out.Bytes(), &r); err != nil {
 		t.Fatal(err)
 	}
-	if len(r.Docs) != 1 {
-		t.Errorf("got %d docs, want 1 (refs/check.md should be skipped)", len(r.Docs))
+	if len(r.Docs) != 2 {
+		t.Errorf("got %d docs, want 2 (skill support files should be skipped)", len(r.Docs))
+	}
+	if r.TotalRulesBytes != 0 {
+		t.Errorf("skill support files must not count as rules, got %d bytes", r.TotalRulesBytes)
 	}
 }
 
@@ -230,21 +245,6 @@ func TestIsMarkdownFile(t *testing.T) {
 	for in, want := range cases {
 		if got := isMarkdownFile(in); got != want {
 			t.Errorf("isMarkdownFile(%q) = %v, want %v", in, got, want)
-		}
-	}
-}
-
-func TestIsSkillSubdirMarkdownFile(t *testing.T) {
-	cases := map[string]bool{
-		"skills/foo/SKILL.md":         false, // top level
-		"skills/foo/refs/x.md":        true,
-		"skills/foo/scripts/sub/y.md": true,
-		"rules/x.md":                  false,
-		"skills/foo":                  false,
-	}
-	for in, want := range cases {
-		if got := isSkillSubdirMarkdownFile(in); got != want {
-			t.Errorf("isSkillSubdirMarkdownFile(%q) = %v, want %v", in, got, want)
 		}
 	}
 }

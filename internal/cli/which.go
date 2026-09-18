@@ -122,7 +122,7 @@ func loadAllDocs(root string) ([]*parser.Document, error) {
 		if !strings.HasSuffix(lower, ".md") && !strings.HasSuffix(lower, ".markdown") {
 			continue
 		}
-		if isSkillSubdir(f.Path) {
+		if parser.IsSkillSupportFile(f.Path) {
 			continue
 		}
 		d, perr := parser.Parse(f.Path, f.Raw)
@@ -132,14 +132,6 @@ func loadAllDocs(root string) ([]*parser.Document, error) {
 		docs = append(docs, d)
 	}
 	return docs, nil
-}
-
-// isSkillSubdir matches the runner's internal rule: skills/<n>/<subdir>/x.md is a SKILL support file
-func isSkillSubdir(p string) bool {
-	if !strings.HasPrefix(p, "skills/") {
-		return false
-	}
-	return strings.Count(p, "/") >= 3
 }
 
 func parseTypeFilter(csv string) map[parser.DocType]struct{} {

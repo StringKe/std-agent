@@ -458,3 +458,21 @@ func TestParseTopRootNotNested(t *testing.T) {
 		t.Errorf("top root should have empty NestedPath, got %q", d.NestedPath)
 	}
 }
+
+func TestIsSkillSupportFile(t *testing.T) {
+	cases := map[string]bool{
+		"skills/code-review/SKILL.md":            false,
+		"skills/code-review/references/check.md": true,
+		"skills/code-review/scripts/sub/run.sh":  true,
+		"skills/code-review":                     false,
+		"rules/style.md":                         false,
+		"external/skills/laravel/SKILL.md":       false,
+		"external/skills/laravel/rules/x.md":     true,
+		"external/rules/api.md":                  false,
+	}
+	for in, want := range cases {
+		if got := IsSkillSupportFile(in); got != want {
+			t.Errorf("IsSkillSupportFile(%q) = %v, want %v", in, got, want)
+		}
+	}
+}

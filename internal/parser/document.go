@@ -1,5 +1,7 @@
 package parser
 
+import "strings"
+
 // DocType 是 std 文件 frontmatter type 字段枚举
 type DocType string
 
@@ -123,6 +125,22 @@ func IsValidPriority(p string) bool {
 		return true
 	}
 	return false
+}
+
+// IsSkillSupportFile 判断源相对路径是否为 SKILL package 子目录里的辅助文件。
+// 辅助文件不 parse 成 Document，由 skill 主文件关联携带。
+//
+//	"skills/code-review/SKILL.md"                  -> false（包顶层主文件）
+//	"skills/code-review/references/check.md"       -> true
+//	"external/skills/laravel/rules/eloquent.md"    -> true（纳管的外部包同构）
+//	"rules/style.md"                               -> false
+func IsSkillSupportFile(p string) bool {
+	q := strings.TrimPrefix(p, "external/")
+	if !strings.HasPrefix(q, "skills/") {
+		return false
+	}
+	// skills/<pkg>/SKILL.md 共 3 段；子目录辅助路径段数 >= 4
+	return strings.Count(q, "/") >= 3
 }
 
 // PriorityRank 把 priority 翻成排序整数（越小越靠前）

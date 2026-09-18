@@ -228,7 +228,7 @@ func Sync(opts Options) (*Result, error) {
 		if !isMarkdownPath(f.Path) {
 			continue
 		}
-		if isSkillSubdirMarkdown(f.Path) {
+		if parser.IsSkillSupportFile(f.Path) {
 			continue
 		}
 		d, err := parser.Parse(f.Path, f.Raw)
@@ -566,22 +566,6 @@ func splitSkillPath(p string) (string, string) {
 func isMarkdownPath(p string) bool {
 	lower := strings.ToLower(p)
 	return strings.HasSuffix(lower, ".md") || strings.HasSuffix(lower, ".markdown")
-}
-
-// isSkillSubdirMarkdown 判断是否为 SKILL package 子目录里的 markdown 辅助文件
-//
-//	"skills/code-review/SKILL.md"               -> false（顶层 SKILL.md）
-//	"skills/code-review/references/check.md"    -> true（子目录辅助）
-//	"skills/code-review/scripts/setup.md"       -> true
-//	"rules/style.md"                            -> false（非 skills/ 子树）
-//	"external/skills/<n>/..."                   -> 去掉 external/ 前缀后同上
-func isSkillSubdirMarkdown(p string) bool {
-	q := strings.TrimPrefix(p, "external/")
-	if !strings.HasPrefix(q, "skills/") {
-		return false
-	}
-	// skills/<n>/SKILL.md 共 3 段；子目录辅助路径段数 >= 4
-	return strings.Count(q, "/") >= 3
 }
 
 // listSubmodulePaths 跑 `git -C <root> submodule status`，返回 submodule 相对路径列表。
