@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -64,7 +65,13 @@ type upgradeOptions struct {
 	Pin   string
 }
 
+// brewTapRef is the Homebrew tap reference installed binaries upgrade through
+const brewTapRef = "StringKe/tap/stdagent"
+
 func runUpgrade(cmd *cobra.Command, opts upgradeOptions) error {
+	if detectInstallMethod() == "brew" {
+		return runBrewUpgrade(cmd, opts)
+	}
 	tag := opts.Pin
 	if tag == "" {
 		latest, err := fetchLatestTag()
@@ -131,6 +138,70 @@ func runUpgrade(cmd *cobra.Command, opts upgradeOptions) error {
 	return nil
 }
 
+// detectInstallMethod reports how this binary was installed: "brew" for
+// Homebrew-managed copies, "generic" otherwise (curl script, go install,
+// manual builds). STDAGENT_INSTALL_METHOD overrides autodetection.
+func detectInstallMethod() string {
+	if v := osGetenv("STDAGENT_INSTALL_METHOD"); v != "" {
+		if v == "brew" {
+			return "brew"
+		}
+		return "generic"
+	}
+	exe, err := osExecutable()
+	if err != nil {
+		return "generic"
+	}
+	paths := []string{exe}
+	if real, rerr := evalSymlinks(exe); rerr == nil {
+		paths = append(paths, real)
+	}
+	for _, p := range paths {
+		if isBrewCellarPath(p) {
+			return "brew"
+		}
+	}
+	return "generic"
+}
+
+// isBrewCellarPath matches <prefix>/Cellar/stdagent/<version>/bin/... layouts
+// (both stock /opt/homebrew, /usr/local and Linuxbrew prefixes)
+func isBrewCellarPath(p string) bool {
+	parts := strings.Split(filepath.ToSlash(p), "/")
+	for i := 0; i+2 < len(parts); i++ {
+		if parts[i] == "Cellar" && parts[i+1] == "stdagent" {
+			return true
+		}
+	}
+	return false
+}
+
+// runBrewUpgrade delegates to Homebrew instead of replacing the binary
+// in place, which would break brew's ownership and checksum tracking
+func runBrewUpgrade(cmd *cobra.Command, opts upgradeOptions) error {
+	if opts.Pin != "" {
+		return errors.New("version pinning is not supported for Homebrew installs; reinstall via the curl script to pin a version")
+	}
+	tag := opts.Pin
+	if tag == "" {
+		latest, err := fetchLatestTag()
+		if err != nil {
+			return fmt.Errorf("fetch latest tag: %w", err)
+		}
+		tag = latest
+	}
+	if !strings.HasPrefix(tag, "v") {
+		tag = "v" + tag
+	}
+	cmd.Printf("[upgrade] target: %s (current: %s)\n", tag, versionStr)
+	if !opts.Force && versionMatchesTag(versionStr, tag) {
+		cmd.Println("[upgrade] already up-to-date; use --force to reinstall")
+		return nil
+	}
+	cmd.Printf("[upgrade] homebrew-managed install; delegating to `brew upgrade %s`\n", brewTapRef)
+	return execBrewUpgrade(cmd)
+}
+
 // versionMatchesTag compares the ldflags-injected version against a tag.
 // version looks like "0.2.0" (goreleaser injects it without v); tag looks like "v0.2.0"
 func versionMatchesTag(version, tag string) bool {
@@ -142,7 +213,8 @@ func versionMatchesTag(version, tag string) bool {
 	return v == t
 }
 
-func fetchLatestTag() (string, error) {
+// fetchLatestTag is a var so tests can stub the GitHub API call
+var fetchLatestTag = func() (string, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", upgradeRepoOwner(), upgradeRepoName())
 	body, err := httpGetBytes(url)
 	if err != nil {

@@ -5,8 +5,11 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 func TestVersionMatchesTag(t *testing.T) {
@@ -82,6 +85,117 @@ func TestExtractBinaryTarGzNotFound(t *testing.T) {
 	_, err := extractBinary(gzBuf.Bytes(), "tar.gz")
 	if err == nil || !strings.Contains(err.Error(), "not found") {
 		t.Errorf("expected not-found error, got %v", err)
+	}
+}
+
+func TestIsBrewCellarPath(t *testing.T) {
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{"/opt/homebrew/Cellar/stdagent/0.0.18/bin/stdagent", true},
+		{"/usr/local/Cellar/stdagent/0.0.18/bin/stdagent", true},
+		{"/home/linuxbrew/.linuxbrew/Cellar/stdagent/0.0.18/bin/stdagent", true},
+		{"/opt/homebrew/bin/stdagent", false},
+		{"/Users/x/.local/bin/stdagent", false},
+		{"/opt/homebrew/Cellar/tomato-cli/0.1.2/bin/tomato", false},
+		{"", false},
+	}
+	for _, c := range cases {
+		if got := isBrewCellarPath(c.path); got != c.want {
+			t.Errorf("isBrewCellarPath(%q) = %v, want %v", c.path, got, c.want)
+		}
+	}
+}
+
+func stubUpgradeEnv(t *testing.T, env map[string]string, exe string, exeErr error, real string, realErr error) {
+	t.Helper()
+	oldEnv, oldExe, oldEval := osGetenv, osExecutable, evalSymlinks
+	osGetenv = func(k string) string { return env[k] }
+	osExecutable = func() (string, error) { return exe, exeErr }
+	evalSymlinks = func(p string) (string, error) { return real, realErr }
+	t.Cleanup(func() { osGetenv, osExecutable, evalSymlinks = oldEnv, oldExe, oldEval })
+}
+
+func TestDetectInstallMethod(t *testing.T) {
+	cases := []struct {
+		name    string
+		env     map[string]string
+		exe     string
+		exeErr  error
+		real    string
+		realErr error
+		want    string
+	}{
+		{"env override brew", map[string]string{"STDAGENT_INSTALL_METHOD": "brew"}, "/x/stdagent", nil, "/x/stdagent", nil, "brew"},
+		{"env override other", map[string]string{"STDAGENT_INSTALL_METHOD": "curl"}, "/opt/homebrew/Cellar/stdagent/0.0.18/bin/stdagent", nil, "", nil, "generic"},
+		{"cellar direct", nil, "/opt/homebrew/Cellar/stdagent/0.0.18/bin/stdagent", nil, "/opt/homebrew/Cellar/stdagent/0.0.18/bin/stdagent", nil, "brew"},
+		{"symlink into cellar", nil, "/opt/homebrew/bin/stdagent", nil, "/opt/homebrew/Cellar/stdagent/0.0.18/bin/stdagent", nil, "brew"},
+		{"curl install", nil, "/Users/x/.local/bin/stdagent", nil, "/Users/x/.local/bin/stdagent", nil, "generic"},
+		{"exe error", nil, "", errors.New("no exe"), "", errors.New("no link"), "generic"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			stubUpgradeEnv(t, c.env, c.exe, c.exeErr, c.real, c.realErr)
+			if got := detectInstallMethod(); got != c.want {
+				t.Errorf("detectInstallMethod() = %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+func TestRunBrewUpgradePinRejected(t *testing.T) {
+	cmd := &cobra.Command{}
+	cmd.SetOut(new(bytes.Buffer))
+	cmd.SetErr(new(bytes.Buffer))
+	err := runBrewUpgrade(cmd, upgradeOptions{Pin: "v0.0.18"})
+	if err == nil || !strings.Contains(err.Error(), "pinning") {
+		t.Errorf("expected pinning error, got %v", err)
+	}
+}
+
+func TestRunBrewUpgradeDelegates(t *testing.T) {
+	oldFetch, oldExec := fetchLatestTag, execBrewUpgrade
+	fetchLatestTag = func() (string, error) { return "v9.9.9", nil }
+	called := false
+	execBrewUpgrade = func(cmd *cobra.Command) error { called = true; return nil }
+	t.Cleanup(func() { fetchLatestTag, execBrewUpgrade = oldFetch, oldExec })
+
+	var out bytes.Buffer
+	cmd := &cobra.Command{}
+	cmd.SetOut(&out)
+	cmd.SetErr(new(bytes.Buffer))
+	if err := runBrewUpgrade(cmd, upgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if !called {
+		t.Error("expected brew upgrade delegation")
+	}
+	if !strings.Contains(out.String(), "delegating") {
+		t.Errorf("expected delegating message, got %q", out.String())
+	}
+}
+
+func TestRunBrewUpgradeUpToDate(t *testing.T) {
+	oldFetch, oldExec, oldVer := fetchLatestTag, execBrewUpgrade, versionStr
+	fetchLatestTag = func() (string, error) { return "v9.9.9", nil }
+	versionStr = "9.9.9"
+	called := false
+	execBrewUpgrade = func(cmd *cobra.Command) error { called = true; return nil }
+	t.Cleanup(func() { fetchLatestTag, execBrewUpgrade, versionStr = oldFetch, oldExec, oldVer })
+
+	var out bytes.Buffer
+	cmd := &cobra.Command{}
+	cmd.SetOut(&out)
+	cmd.SetErr(new(bytes.Buffer))
+	if err := runBrewUpgrade(cmd, upgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if called {
+		t.Error("must not delegate when already up-to-date")
+	}
+	if !strings.Contains(out.String(), "already up-to-date") {
+		t.Errorf("expected up-to-date message, got %q", out.String())
 	}
 }
 

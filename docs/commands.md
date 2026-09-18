@@ -210,7 +210,14 @@ stdagent intro --json | jq -r .prompt
 stdagent upgrade [--version vX.Y.Z] [--force]
 ```
 
-流程：
+安装源识别：先判断当前二进制是否为 Homebrew 管理（可执行路径解析后位于 `Cellar/stdagent/` 下，或 `STDAGENT_INSTALL_METHOD=brew` 显式指定）。brew 安装走 Homebrew 流程，否则走自替换流程。
+
+Homebrew 流程：
+
+1. 调 GitHub Releases API 拿 latest tag（已是最新且无 `--force` 则直接退出）
+2. 转调 `brew upgrade StringKe/tap/stdagent`（`--version` 定版不被支持，会直接报错）
+
+自替换流程：
 
 1. 调 GitHub Releases API 拿 latest tag（或 `--version` 指定）
 2. 下载平台对应归档：`std-agent_<ver>_<os>_<arch>.<tar.gz|zip>`
